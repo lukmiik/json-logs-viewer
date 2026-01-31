@@ -4,6 +4,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from textual.app import App
+from textual.screen import Screen
 
 from json_logs_viewer.app import (
     AppState,
@@ -20,6 +22,20 @@ from json_logs_viewer.models import (
     LogLevel,
     SearchHistory,
 )
+
+
+class DummyApp(App[None]):
+    pass
+
+
+def _attach_app(*, screen: Screen) -> tuple[DummyApp, MagicMock, MagicMock]:
+    app: DummyApp = DummyApp()
+    copy_mock: MagicMock = MagicMock()
+    notify_mock: MagicMock = MagicMock()
+    app.copy_to_clipboard = copy_mock  # type: ignore[method-assign]
+    app.notify = notify_mock  # type: ignore[method-assign]
+    screen._parent = app
+    return app, copy_mock, notify_mock
 
 
 class TestAppState:
@@ -893,6 +909,48 @@ class TestMainScreenActions:
         screen.action_goto_last()
         assert screen._log_list.selected_index == 1
 
+    def test_action_copy_no_selection(self) -> None:
+        """Test copy action with no selection."""
+        state = AppState()
+        screen = MainScreen(app_state=state)
+        _, copy_mock, notify_mock = _attach_app(screen=screen)
+
+        screen.action_copy()
+
+        copy_mock.assert_not_called()
+        notify_mock.assert_called_once()
+        args = notify_mock.call_args.args
+        kwargs = notify_mock.call_args.kwargs
+        assert args[0] == "No log selected."
+        assert kwargs["title"] == "Clipboard"
+        assert kwargs["severity"] == "warning"
+
+    def test_action_copy_copies_raw_line(self) -> None:
+        """Test copy action copies raw line."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "test"}',
+                parsed_data={"level": "info", "message": "test"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="test",
+            )
+        ]
+        state = AppState()
+        screen = MainScreen(app_state=state)
+        screen._log_list._entries = entries
+        screen._log_list.selected_index = 0
+        _, copy_mock, notify_mock = _attach_app(screen=screen)
+
+        screen.action_copy()
+
+        copy_mock.assert_called_once_with(entries[0].raw_line)
+        notify_mock.assert_called_once()
+        args = notify_mock.call_args.args
+        kwargs = notify_mock.call_args.kwargs
+        assert args[0] == "Copied log line to clipboard."
+        assert kwargs["title"] == "Clipboard"
+
     def test_toggle_level_actions(self) -> None:
         """Test level toggle actions."""
         state = AppState()
@@ -985,6 +1043,28 @@ class TestDetailScreenActions:
         assert screen._current_index == 1
         # Entry at index 1 should be ERROR level
         assert screen._entries[screen._current_index].level == LogLevel.ERROR
+
+    def test_action_copy_formatted_json(self) -> None:
+        """Test copy action copies formatted JSON."""
+        entry = LogEntry(
+            raw_line='{"level": "info", "message": "test"}',
+            parsed_data={"level": "info", "message": "test"},
+            line_number=1,
+            level=LogLevel.INFO,
+            message="test",
+        )
+        screen = DetailScreen(entries=[entry], current_index=0)
+        _, copy_mock, notify_mock = _attach_app(screen=screen)
+
+        screen.action_copy()
+
+        expected = entry.to_formatted_json(indent=2)
+        copy_mock.assert_called_once_with(expected)
+        notify_mock.assert_called_once()
+        args = notify_mock.call_args.args
+        kwargs = notify_mock.call_args.kwargs
+        assert args[0] == "Copied formatted JSON to clipboard."
+        assert kwargs["title"] == "Clipboard"
 
     def test_action_previous_entry_updates_display(self) -> None:
         """Test that previous entry updates the display state."""

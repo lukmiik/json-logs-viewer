@@ -17,6 +17,7 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Header, Static
 
 from json_logs_viewer.filter import FilterEngine, create_filter_state
+from json_logs_viewer.level_bar import LevelFilterBar
 from json_logs_viewer.models import (
     FilterState,
     LogEntry,
@@ -254,6 +255,13 @@ class MainScreen(Screen):
         height: 1;
         background: $surface;
         color: $text;
+        dock: top;
+    }
+
+    #level-filter-bar {
+        height: 1;
+        background: $surface;
+        dock: top;
     }
 
     #log-container {
@@ -265,6 +273,7 @@ class MainScreen(Screen):
         height: 1;
         background: $surface;
         color: $text-muted;
+        dock: bottom;
     }
     """
 
@@ -274,6 +283,7 @@ class MainScreen(Screen):
         self._app_state = app_state
         self._log_list = LogListWidget(entries=[])
         self._search_bar: SearchBarOverlay | None = None
+        self._level_bar: LevelFilterBar | None = None
         self._filter_engine = FilterEngine()
 
     def compose(self) -> ComposeResult:
@@ -286,6 +296,13 @@ class MainScreen(Screen):
             on_cancel=self._on_search_cancel,
         )
         yield self._search_bar
+
+        self._level_bar = LevelFilterBar(
+            enabled_levels=self._app_state.filter_state.enabled_levels,
+            on_level_toggle=self._on_level_toggle,
+            on_show_all=self._on_show_all_levels,
+        )
+        yield self._level_bar
 
         with Container(id="log-container"):
             yield self._log_list
@@ -313,6 +330,7 @@ class MainScreen(Screen):
         )
 
         self._log_list.set_entries(entries=filtered)
+        self._update_level_bar()
 
     def _on_search(self, query: str) -> None:
         """Handle search submission."""
@@ -332,6 +350,51 @@ class MainScreen(Screen):
         """Handle search cancellation."""
         pass
 
+    def _count_entries_by_level(
+        self,
+        *,
+        entries: list[LogEntry],
+    ) -> dict[LogLevel, int]:
+        """Count entries by log level.
+
+        Args:
+            entries: List of log entries.
+
+        Returns:
+            Dictionary mapping levels to counts.
+        """
+        counts: dict[LogLevel, int] = {level: 0 for level in LogLevel}
+        for entry in entries:
+            counts[entry.level] = counts.get(entry.level, 0) + 1
+        return counts
+
+    def _on_level_toggle(self, level: LogLevel) -> None:
+        """Handle level toggle from level bar."""
+        self._toggle_level(level=level)
+        self._update_level_bar()
+
+    def _on_show_all_levels(self) -> None:
+        """Handle show all levels from level bar."""
+        self._app_state.filter_state = FilterState(
+            raw_query=self._app_state.filter_state.raw_query,
+            parsed_filters=self._app_state.filter_state.parsed_filters,
+            enabled_levels=set(LogLevel),
+            case_sensitive=self._app_state.filter_state.case_sensitive,
+        )
+        self._update_level_bar()
+
+    def _update_level_bar(self) -> None:
+        """Update the level filter bar with current state."""
+        if self._level_bar and self._app_state.parse_result:
+            # Count entries before filtering
+            counts = self._count_entries_by_level(
+                entries=self._app_state.parse_result.entries
+            )
+            self._level_bar.update_counts(counts=counts)
+            self._level_bar.update_enabled_levels(
+                enabled_levels=self._app_state.filter_state.enabled_levels
+            )
+
     def action_quit(self) -> None:
         """Quit the application."""
         self.app.exit()
@@ -344,7 +407,23 @@ class MainScreen(Screen):
 
     def action_copy(self) -> None:
         """Copy selected log entry."""
-        pass  # Will be implemented in T10
+        selected = self._log_list.get_selected_entry()
+        if not selected:
+            self.app.notify(
+                "No log selected.",
+                title="Clipboard",
+                severity="warning",
+            )
+            return
+        self._copy_to_clipboard(
+            text=selected.raw_line,
+            success_message="Copied log line to clipboard.",
+        )
+
+    def _copy_to_clipboard(self, *, text: str, success_message: str) -> None:
+        """Copy text to clipboard and show success toast."""
+        self.app.copy_to_clipboard(text)
+        self.app.notify(success_message, title="Clipboard")
 
     def action_toggle_follow(self) -> None:
         """Toggle follow mode."""
@@ -410,12 +489,16 @@ class MainScreen(Screen):
             enabled_levels=set(LogLevel),
             case_sensitive=self._app_state.filter_state.case_sensitive,
         )
+        self._refresh_entries()
+        self._update_level_bar()
 
     def _toggle_level(self, level: LogLevel) -> None:
         """Toggle a specific log level."""
         self._app_state.filter_state = (
             self._app_state.filter_state.with_level_toggled(level=level)
         )
+        self._refresh_entries()
+        self._update_level_bar()
 
 
 class DetailWidget(Static):
@@ -484,7 +567,7 @@ class DetailWidget(Static):
 
     def _format_value(
         self,
-        value: Any,
+        value: object,
         *,
         indent: int,
         current_indent: int,
@@ -514,18 +597,22 @@ class DetailWidget(Static):
             return f'[{self.COLORS["string"]}]"{escaped}"[/]'
         elif isinstance(value, dict):
             return self._format_dict(
-                value, indent=indent, current_indent=current_indent
+                data={str(key): item for key, item in value.items()},
+                indent=indent,
+                current_indent=current_indent,
             )
         elif isinstance(value, list):
             return self._format_list(
-                value, indent=indent, current_indent=current_indent
+                data=list(value),
+                indent=indent,
+                current_indent=current_indent,
             )
         else:
             return str(value)
 
     def _format_dict(
         self,
-        data: dict[str, Any],
+        data: dict[str, object],
         *,
         indent: int,
         current_indent: int,
@@ -566,7 +653,7 @@ class DetailWidget(Static):
 
     def _format_list(
         self,
-        data: list[Any],
+        data: list[object],
         *,
         indent: int,
         current_indent: int,
@@ -743,7 +830,24 @@ class DetailScreen(Screen):
 
     def action_copy(self) -> None:
         """Copy the JSON content."""
-        pass  # Will be implemented in T10
+        if not self._entries:
+            self.app.notify(
+                "No log selected.",
+                title="Clipboard",
+                severity="warning",
+            )
+            return
+        entry = self._entries[self._current_index]
+        formatted = entry.to_formatted_json(indent=2)
+        self._copy_to_clipboard(
+            text=formatted,
+            success_message="Copied formatted JSON to clipboard.",
+        )
+
+    def _copy_to_clipboard(self, *, text: str, success_message: str) -> None:
+        """Copy text to clipboard and show success toast."""
+        self.app.copy_to_clipboard(text)
+        self.app.notify(success_message, title="Clipboard")
 
     def action_scroll_down(self) -> None:
         """Scroll down."""

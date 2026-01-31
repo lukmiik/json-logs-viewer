@@ -65,12 +65,12 @@ filtering, and detail view.
     - Include tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T9: Add level filter bar**
+- [x] **T9: Add level filter bar**
     - Toggle buttons, counts, keyboard shortcuts 1-5/0
     - Include tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T10: Add clipboard copy functionality**
+- [x] **T10: Add clipboard copy functionality**
     - Copy formatted JSON or raw log line with success toast
     - Include tests
       <promise>READY_FOR_NEXT_TASK</promise>

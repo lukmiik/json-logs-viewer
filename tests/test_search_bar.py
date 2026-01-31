@@ -102,9 +102,9 @@ class TestSearchBarWidget:
             on_search=on_search,
         )
 
-        widget._input = type(
+        widget._input = type(  # type: ignore[assignment]
             "MockInput", (), {"value": "my search", "blur": lambda self: None}
-        )()  # type: ignore[assignment]
+        )()
         widget._submit_search()
 
         assert search_calls == ["my search"]
