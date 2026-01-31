@@ -8,6 +8,7 @@ import pytest
 from json_logs_viewer.app import (
     AppState,
     DetailScreen,
+    DetailWidget,
     LogListWidget,
     LogsApp,
     MainScreen,
@@ -260,6 +261,139 @@ class TestLogListWidget:
         assert widget._entries[0].message == "test"
 
 
+class TestDetailWidget:
+    """Tests for DetailWidget."""
+
+    def test_initialization(self) -> None:
+        """Test DetailWidget initialization."""
+        entry = LogEntry(
+            raw_line='{"level": "info", "message": "test"}',
+            parsed_data={"level": "info", "message": "test"},
+            line_number=1,
+            level=LogLevel.INFO,
+            message="test",
+        )
+        widget = DetailWidget(log_entry=entry, indent=2)
+        assert widget._log_entry == entry
+        assert widget._indent == 2
+
+    def test_get_selected_entry(self) -> None:
+        """Test getting the displayed log entry."""
+        entry = LogEntry(
+            raw_line='{"level": "error", "message": "error message"}',
+            parsed_data={"level": "error", "message": "error message"},
+            line_number=5,
+            level=LogLevel.ERROR,
+            message="error message",
+        )
+        widget = DetailWidget(log_entry=entry)
+        assert widget.get_selected_entry() == entry
+
+    def test_format_json_with_colors_simple(self) -> None:
+        """Test JSON formatting with simple object."""
+        entry = LogEntry(
+            raw_line=(
+                '{"level": "info", "count": 42, "active": true, "data": null}'
+            ),
+            parsed_data={
+                "level": "info",
+                "count": 42,
+                "active": True,
+                "data": None,
+            },
+            line_number=1,
+        )
+        widget = DetailWidget(log_entry=entry)
+        formatted = widget._format_json_with_colors(
+            entry.parsed_data, indent=2
+        )
+
+        # Should contain formatted content with color markup
+        assert "level" in formatted
+        assert "info" in formatted
+        assert "42" in formatted
+        assert "true" in formatted
+        assert "null" in formatted
+
+    def test_format_json_with_colors_nested(self) -> None:
+        """Test JSON formatting with nested objects."""
+        entry = LogEntry(
+            raw_line=(
+                '{"user": {"name": "test", "id": 123}, "items": [1, 2, 3]}'
+            ),
+            parsed_data={
+                "user": {"name": "test", "id": 123},
+                "items": [1, 2, 3],
+            },
+            line_number=1,
+        )
+        widget = DetailWidget(log_entry=entry)
+        formatted = widget._format_json_with_colors(
+            entry.parsed_data, indent=2
+        )
+
+        # Should contain nested structure
+        assert "user" in formatted
+        assert "name" in formatted
+        assert "test" in formatted
+        assert "items" in formatted
+
+    def test_format_value_string_escaping(self) -> None:
+        """Test string value escaping."""
+        entry = LogEntry(
+            raw_line='{"msg": "line1\\nline2"}',
+            parsed_data={"msg": "line1\nline2"},
+            line_number=1,
+        )
+        widget = DetailWidget(log_entry=entry)
+        formatted = widget._format_value(
+            "line1\nline2", indent=2, current_indent=0
+        )
+
+        # Newline should be escaped
+        assert "\\n" in formatted
+
+    def test_format_empty_dict(self) -> None:
+        """Test formatting empty dictionary."""
+        entry = LogEntry(
+            raw_line="{}",
+            parsed_data={},
+            line_number=1,
+        )
+        widget = DetailWidget(log_entry=entry)
+        formatted = widget._format_value({}, indent=2, current_indent=0)
+        assert formatted == "{}"
+
+    def test_format_empty_list(self) -> None:
+        """Test formatting empty list."""
+        entry = LogEntry(
+            raw_line="[]",
+            parsed_data={"items": []},
+            line_number=1,
+        )
+        widget = DetailWidget(log_entry=entry)
+        formatted = widget._format_value([], indent=2, current_indent=0)
+        assert formatted == "[]"
+
+    def test_colors_defined(self) -> None:
+        """Test that syntax highlighting colors are defined."""
+        widget = DetailWidget(
+            log_entry=LogEntry(raw_line="{}", parsed_data={}, line_number=1)
+        )
+        expected_colors = [
+            "key",
+            "string",
+            "number",
+            "boolean",
+            "null",
+            "punctuation",
+        ]
+        for color in expected_colors:
+            assert color in widget.COLORS
+            assert isinstance(widget.COLORS[color], str)
+            assert widget.COLORS[color].startswith("#")
+
+
 class TestMainScreen:
     """Tests for MainScreen."""
 
@@ -308,20 +442,44 @@ class TestMainScreen:
         # Should have Header, Container with LogListWidget, and Footer
         assert len(composed) == 3
 
+    def test_on_detail_navigate(self) -> None:
+        """Test detail navigation callback."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            ),
+            LogEntry(
+                raw_line='{"level": "error"}',
+                parsed_data={"level": "error"},
+                line_number=2,
+            ),
+        ]
+        state = AppState()
+        screen = MainScreen(app_state=state)
+        screen._log_list._entries = entries
+        screen._log_list.selected_index = 0
+
+        screen._on_detail_navigate(1)
+        assert screen._log_list.selected_index == 1
+
 
 class TestDetailScreen:
     """Tests for DetailScreen."""
 
     def test_bindings(self) -> None:
         """Test that DetailScreen has expected keybindings."""
-        entry = LogEntry(
-            raw_line='{"level": "info"}',
-            parsed_data={"level": "info"},
-            line_number=1,
-        )
-        screen = DetailScreen(log_entry=entry)
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
 
-        # Check bindings exist - BINDINGS is a list of tuples
+        # Check bindings exist
         binding_keys = []
         for b in screen.BINDINGS:
             if isinstance(b, tuple):
@@ -331,33 +489,202 @@ class TestDetailScreen:
         assert "escape,h,q" in binding_keys
         assert "j,down" in binding_keys
         assert "k,up" in binding_keys
+        assert "n,right" in binding_keys
+        assert "p,left" in binding_keys
         assert "ctrl+c" in binding_keys
 
     def test_initialization(self) -> None:
         """Test DetailScreen initialization."""
-        entry = LogEntry(
-            raw_line='{"level": "info", "message": "test"}',
-            parsed_data={"level": "info", "message": "test"},
-            line_number=1,
-            level=LogLevel.INFO,
-            message="test",
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "test1"}',
+                parsed_data={"level": "info", "message": "test1"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="test1",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "message": "test2"}',
+                parsed_data={"level": "error", "message": "test2"},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="test2",
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=1)
+        assert screen._entries == entries
+        assert screen._current_index == 1
+        assert screen._on_navigate is None
+
+    def test_initialization_with_callback(self) -> None:
+        """Test DetailScreen initialization with navigation callback."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            )
+        ]
+        callback_called = False
+
+        def on_navigate(index: int) -> None:
+            nonlocal callback_called
+            callback_called = True
+
+        screen = DetailScreen(
+            entries=entries, current_index=0, on_navigate=on_navigate
         )
-        screen = DetailScreen(log_entry=entry)
-        assert screen._log_entry == entry
+        assert screen._on_navigate is on_navigate
+
+    def test_get_header_text(self) -> None:
+        """Test header text generation."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "error", "message": "error occurred"}',
+                parsed_data={"level": "error", "message": "error occurred"},
+                line_number=42,
+                level=LogLevel.ERROR,
+                message="error occurred",
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+        header = screen._get_header_text()
+
+        assert "Line 42" in header
+        assert "ERROR" in header
+        assert "error occurred" in header
+
+    def test_get_header_text_long_message(self) -> None:
+        """Test header text with long message truncation."""
+        entries = [
+            LogEntry(
+                raw_line='{"message": "a" * 100}',
+                parsed_data={"message": "a" * 100},
+                line_number=1,
+                message="a" * 100,
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+        header = screen._get_header_text()
+
+        # Long message should be truncated with "..."
+        assert "..." in header
+
+    def test_get_footer_text(self) -> None:
+        """Test footer text generation."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            ),
+            LogEntry(
+                raw_line='{"level": "error"}',
+                parsed_data={"level": "error"},
+                line_number=2,
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=1)
+        footer = screen._get_footer_text()
+
+        assert "Entry 2/2" in footer
+        assert "n/p" in footer
+        assert "Esc/h/q" in footer
+
+    def test_action_next_entry(self) -> None:
+        """Test navigating to next entry."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            ),
+            LogEntry(
+                raw_line='{"level": "error"}',
+                parsed_data={"level": "error"},
+                line_number=2,
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+
+        screen.action_next_entry()
+        assert screen._current_index == 1
+
+        # Should not go past last entry
+        screen.action_next_entry()
+        assert screen._current_index == 1
+
+    def test_action_previous_entry(self) -> None:
+        """Test navigating to previous entry."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            ),
+            LogEntry(
+                raw_line='{"level": "error"}',
+                parsed_data={"level": "error"},
+                line_number=2,
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=1)
+
+        screen.action_previous_entry()
+        assert screen._current_index == 0
+
+        # Should not go below 0
+        screen.action_previous_entry()
+        assert screen._current_index == 0
+
+    def test_action_next_entry_single_entry(self) -> None:
+        """Test next entry with only one entry."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+
+        screen.action_next_entry()
+        assert screen._current_index == 0  # Should stay at 0
+
+    def test_action_previous_entry_first_entry(self) -> None:
+        """Test previous entry when at first entry."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            ),
+            LogEntry(
+                raw_line='{"level": "error"}',
+                parsed_data={"level": "error"},
+                line_number=2,
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+
+        screen.action_previous_entry()
+        assert screen._current_index == 0  # Should stay at 0
 
     @pytest.mark.skip(reason="Requires active app context")
     def test_compose_structure(self) -> None:
         """Test DetailScreen compose generates expected structure."""
-        entry = LogEntry(
-            raw_line='{"level": "info"}',
-            parsed_data={"level": "info"},
-            line_number=1,
-        )
-        screen = DetailScreen(log_entry=entry)
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
         composed = list(screen.compose())
 
-        # Should have Container with Static
-        assert len(composed) == 1
+        # Should have Static header, Container with DetailWidget, Static footer
+        assert len(composed) == 3
 
 
 class TestLogsApp:
@@ -599,3 +926,91 @@ class TestMainScreenActions:
         screen.action_show_all_levels()
         assert LogLevel.ERROR in state.filter_state.enabled_levels
         assert LogLevel.DEBUG in state.filter_state.enabled_levels
+
+
+class TestDetailScreenActions:
+    """Tests for DetailScreen action methods."""
+
+    def test_action_scroll_down_no_widget(self) -> None:
+        """Test scroll down when widget not mounted."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+        # Should not raise error when widget is None
+        screen.action_scroll_down()
+
+    def test_action_scroll_up_no_widget(self) -> None:
+        """Test scroll up when widget not mounted."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info"}',
+                parsed_data={"level": "info"},
+                line_number=1,
+            )
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+        # Should not raise error when widget is None
+        screen.action_scroll_up()
+
+    def test_action_next_entry_updates_display(self) -> None:
+        """Test that next entry updates the display state."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "n": 1}',
+                parsed_data={"level": "info", "n": 1},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="first",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "n": 2}',
+                parsed_data={"level": "error", "n": 2},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="second",
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=0)
+
+        # Verify initial state
+        assert screen._current_index == 0
+
+        # Navigate to next
+        screen.action_next_entry()
+        assert screen._current_index == 1
+        # Entry at index 1 should be ERROR level
+        assert screen._entries[screen._current_index].level == LogLevel.ERROR
+
+    def test_action_previous_entry_updates_display(self) -> None:
+        """Test that previous entry updates the display state."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "n": 1}',
+                parsed_data={"level": "info", "n": 1},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="first",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "n": 2}',
+                parsed_data={"level": "error", "n": 2},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="second",
+            ),
+        ]
+        screen = DetailScreen(entries=entries, current_index=1)
+
+        # Verify initial state
+        assert screen._current_index == 1
+        assert screen._entries[screen._current_index].level == LogLevel.ERROR
+
+        # Navigate to previous
+        screen.action_previous_entry()
+        assert screen._current_index == 0
+        assert screen._entries[screen._current_index].level == LogLevel.INFO

@@ -49,7 +49,7 @@ filtering, and detail view.
     - Include UI tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T6: Implement detail view widget**
+- [x] **T6: Implement detail view widget**
     - Formatted JSON view with navigation between entries
     - Include UI tests
       <promise>READY_FOR_NEXT_TASK</promise>

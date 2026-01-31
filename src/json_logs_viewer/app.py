@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
@@ -310,7 +312,19 @@ class MainScreen(Screen):
 
     def action_view_detail(self) -> None:
         """View detail of selected entry."""
-        pass  # Will be implemented in T6
+        selected = self._log_list.get_selected_entry()
+        if selected and self._log_list.entries:
+            self.app.push_screen(
+                DetailScreen(
+                    entries=self._log_list.entries,
+                    current_index=self._log_list.selected_index,
+                    on_navigate=self._on_detail_navigate,
+                )
+            )
+
+    def _on_detail_navigate(self, new_index: int) -> None:
+        """Handle navigation from detail screen."""
+        self._log_list.selected_index = new_index
 
     def action_goto_first(self) -> None:
         """Go to first entry."""
@@ -356,13 +370,207 @@ class MainScreen(Screen):
         )
 
 
+class DetailWidget(Static):
+    """Widget for displaying formatted JSON with syntax highlighting."""
+
+    DEFAULT_CSS = """
+    DetailWidget {
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background: transparent;
+    }
+    """
+
+    # Catppuccin Mocha colors for JSON syntax highlighting
+    COLORS = {
+        "key": "#fab387",  # Peach
+        "string": "#a6e3a1",  # Green
+        "number": "#f9e2af",  # Yellow
+        "boolean": "#cba6f7",  # Mauve
+        "null": "#f38ba8",  # Red
+        "punctuation": "#6c7086",  # Overlay0
+    }
+
+    def __init__(
+        self,
+        *,
+        log_entry: LogEntry,
+        indent: int = 2,
+    ) -> None:
+        """Initialize the detail widget.
+
+        Args:
+            log_entry: The log entry to display.
+            indent: Indentation level for JSON formatting.
+        """
+        super().__init__()
+        self._log_entry = log_entry
+        self._indent = indent
+        self._formatted_content = ""
+
+    def on_mount(self) -> None:
+        """Render the formatted JSON on mount."""
+        self._formatted_content = self._format_json_with_colors(
+            self._log_entry.parsed_data,
+            indent=self._indent,
+        )
+        self.update(self._formatted_content)
+
+    def _format_json_with_colors(
+        self,
+        data: dict[str, Any],
+        *,
+        indent: int = 2,
+    ) -> str:
+        """Format JSON with syntax highlighting colors.
+
+        Args:
+            data: The data to format.
+            indent: Indentation level.
+
+        Returns:
+            Rich-formatted JSON string with color markup.
+        """
+        return self._format_value(data, indent=indent, current_indent=0)
+
+    def _format_value(
+        self,
+        value: Any,
+        *,
+        indent: int,
+        current_indent: int,
+    ) -> str:
+        """Format a single value with appropriate coloring.
+
+        Args:
+            value: The value to format.
+            indent: Indentation level.
+            current_indent: Current indentation depth.
+
+        Returns:
+            Rich-formatted value string.
+        """
+        if value is None:
+            return f"[{self.COLORS['null']}]null[/]"
+        elif isinstance(value, bool):
+            return f"[{self.COLORS['boolean']}]{str(value).lower()}[/]"
+        elif isinstance(value, (int, float)):
+            return f"[{self.COLORS['number']}]{value}[/]"
+        elif isinstance(value, str):
+            escaped = (
+                value.replace("\\", "\\\\")
+                .replace('"', '\\"')
+                .replace("\n", "\\n")
+            )
+            return f'[{self.COLORS["string"]}]"{escaped}"[/]'
+        elif isinstance(value, dict):
+            return self._format_dict(
+                value, indent=indent, current_indent=current_indent
+            )
+        elif isinstance(value, list):
+            return self._format_list(
+                value, indent=indent, current_indent=current_indent
+            )
+        else:
+            return str(value)
+
+    def _format_dict(
+        self,
+        data: dict[str, Any],
+        *,
+        indent: int,
+        current_indent: int,
+    ) -> str:
+        """Format a dictionary with syntax highlighting.
+
+        Args:
+            data: The dictionary to format.
+            indent: Indentation level.
+            current_indent: Current indentation depth.
+
+        Returns:
+            Rich-formatted dictionary string.
+        """
+        if not data:
+            return "{}"
+
+        inner_indent = " " * (current_indent + indent)
+        closing_indent = " " * current_indent
+
+        items = []
+        for key, value in data.items():
+            formatted_value = self._format_value(
+                value,
+                indent=indent,
+                current_indent=current_indent + indent,
+            )
+            items.append(
+                f'{inner_indent}[{self.COLORS["key"]}]"{key}"[/]'
+                f"[{self.COLORS['punctuation']}]:[/] {formatted_value}"
+            )
+
+        return "\n".join(
+            [f"[{self.COLORS['punctuation']}]{{[/]"]
+            + items
+            + [f"{closing_indent}[{self.COLORS['punctuation']}]}}[/]"]
+        )
+
+    def _format_list(
+        self,
+        data: list[Any],
+        *,
+        indent: int,
+        current_indent: int,
+    ) -> str:
+        """Format a list with syntax highlighting.
+
+        Args:
+            data: The list to format.
+            indent: Indentation level.
+            current_indent: Current indentation depth.
+
+        Returns:
+            Rich-formatted list string.
+        """
+        if not data:
+            return "[]"
+
+        inner_indent = " " * (current_indent + indent)
+        closing_indent = " " * current_indent
+
+        items = []
+        for value in data:
+            formatted_value = self._format_value(
+                value,
+                indent=indent,
+                current_indent=current_indent + indent,
+            )
+            items.append(f"{inner_indent}{formatted_value}")
+
+        open_b = "["
+        close_b = "]"
+        punct = self.COLORS["punctuation"]
+        return "\n".join(
+            [f"[{punct}]{open_b * 2}[/]"]
+            + items
+            + [f"{closing_indent}[{punct}]{close_b * 2}[/]"]
+        )
+
+    def get_selected_entry(self) -> LogEntry:
+        """Return the currently displayed log entry."""
+        return self._log_entry
+
+
 class DetailScreen(Screen):
-    """Detail screen for viewing formatted JSON."""
+    """Detail screen for viewing formatted JSON with navigation."""
 
     BINDINGS = [
         Binding("escape,h,q", "back", "Back", show=True),
         Binding("j,down", "scroll_down", "Down", show=False),
         Binding("k,up", "scroll_up", "Up", show=False),
+        Binding("n,right", "next_entry", "Next", show=True),
+        Binding("p,left", "previous_entry", "Previous", show=True),
         Binding("ctrl+c", "copy", "Copy", show=True),
     ]
 
@@ -371,34 +579,118 @@ class DetailScreen(Screen):
         layout: vertical;
     }
 
+    #detail-header {
+        height: 1;
+        background: $surface;
+        color: $text;
+        text-style: bold;
+        content-align: center middle;
+        padding: 0 2;
+    }
+
     #detail-container {
         height: 1fr;
         background: $surface-darken-1;
         padding: 1;
     }
 
-    #json-content {
+    #detail-widget {
         width: 100%;
         height: 100%;
         overflow: auto;
     }
+
+    #detail-footer {
+        height: 1;
+        background: $surface;
+        color: $text-muted;
+        content-align: center middle;
+    }
     """
 
-    def __init__(self, *, log_entry: LogEntry) -> None:
-        """Initialize the detail screen."""
+    def __init__(
+        self,
+        *,
+        entries: list[LogEntry],
+        current_index: int,
+        on_navigate: Callable[[int], None] | None = None,
+    ) -> None:
+        """Initialize the detail screen.
+
+        Args:
+            entries: List of all log entries for navigation.
+            current_index: Index of the currently displayed entry.
+            on_navigate: Optional callback when navigating to a new entry.
+        """
         super().__init__()
-        self._log_entry = log_entry
+        self._entries = list(entries)
+        self._current_index = current_index
+        self._on_navigate = on_navigate
+        self._detail_widget: DetailWidget | None = None
 
     def compose(self) -> ComposeResult:
         """Compose the detail screen."""
+        yield Static(
+            self._get_header_text(),
+            id="detail-header",
+        )
         with Container(id="detail-container"):
-            yield Static(
-                self._log_entry.to_formatted_json(indent=2),
-                id="json-content",
+            self._detail_widget = DetailWidget(
+                log_entry=self._entries[self._current_index],
+                indent=2,
             )
+            yield self._detail_widget
+        yield Static(
+            self._get_footer_text(),
+            id="detail-footer",
+        )
+
+    def _get_header_text(self) -> str:
+        """Generate header text with entry info."""
+        entry = self._entries[self._current_index]
+        level_color = LogListWidget.LEVEL_COLORS.get(
+            entry.level, Color.parse("#cdd6f4")
+        )
+        return (
+            f"Line {entry.line_number} | "
+            f"[{level_color.hex}]{entry.level.name}[/] | "
+            f"{entry.message[:50]}{'...' if len(entry.message) > 50 else ''}"
+        )
+
+    def _get_footer_text(self) -> str:
+        """Generate footer text with navigation info."""
+        total = len(self._entries)
+        current = self._current_index + 1
+        return (
+            f"Entry {current}/{total} | n/p or j/k to navigate | "
+            f"Esc/h/q to go back"
+        )
+
+    def _update_display(self) -> None:
+        """Update the display with current entry."""
+        if not self._detail_widget or not self._entries:
+            return
+
+        entry = self._entries[self._current_index]
+        self._detail_widget._log_entry = entry
+        self._detail_widget._formatted_content = (
+            self._detail_widget._format_json_with_colors(
+                entry.parsed_data,
+                indent=2,
+            )
+        )
+        self._detail_widget.update(self._detail_widget._formatted_content)
+
+        # Update header and footer
+        header = self.query_one("#detail-header", Static)
+        header.update(self._get_header_text())
+        footer = self.query_one("#detail-footer", Static)
+        footer.update(self._get_footer_text())
 
     def action_back(self) -> None:
         """Go back to main screen."""
+        if self._on_navigate:
+            self._on_navigate(self._current_index)
         self.app.pop_screen()
 
     def action_copy(self) -> None:
@@ -407,15 +699,25 @@ class DetailScreen(Screen):
 
     def action_scroll_down(self) -> None:
         """Scroll down."""
-        content = self.query_one("#json-content", Static)
-        if content:
-            content.scroll_down()
+        if self._detail_widget:
+            self._detail_widget.scroll_down()
 
     def action_scroll_up(self) -> None:
         """Scroll up."""
-        content = self.query_one("#json-content", Static)
-        if content:
-            content.scroll_up()
+        if self._detail_widget:
+            self._detail_widget.scroll_up()
+
+    def action_next_entry(self) -> None:
+        """Navigate to the next log entry."""
+        if self._current_index < len(self._entries) - 1:
+            self._current_index += 1
+            self._update_display()
+
+    def action_previous_entry(self) -> None:
+        """Navigate to the previous log entry."""
+        if self._current_index > 0:
+            self._current_index -= 1
+            self._update_display()
 
 
 class LogsApp(App):
