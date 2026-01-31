@@ -60,7 +60,7 @@ filtering, and detail view.
     - Include filter tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T8: Add search bar with history**
+- [x] **T8: Add search bar with history**
     - Input widget, history dropdown, persistence, navigation through history
     - Include tests
       <promise>READY_FOR_NEXT_TASK</promise>

@@ -16,6 +16,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Header, Static
 
+from json_logs_viewer.filter import FilterEngine, create_filter_state
 from json_logs_viewer.models import (
     FilterState,
     LogEntry,
@@ -23,6 +24,7 @@ from json_logs_viewer.models import (
     SearchHistory,
 )
 from json_logs_viewer.parser import LogParser, ParseResult
+from json_logs_viewer.search_bar import SearchBarOverlay
 from json_logs_viewer.watcher import BatchProcessor, FileWatcher
 
 
@@ -271,10 +273,20 @@ class MainScreen(Screen):
         super().__init__()
         self._app_state = app_state
         self._log_list = LogListWidget(entries=[])
+        self._search_bar: SearchBarOverlay | None = None
+        self._filter_engine = FilterEngine()
 
     def compose(self) -> ComposeResult:
         """Compose the main screen."""
         yield Header(id="header")
+
+        self._search_bar = SearchBarOverlay(
+            search_history=self._app_state.search_history,
+            on_search=self._on_search,
+            on_cancel=self._on_search_cancel,
+        )
+        yield self._search_bar
+
         with Container(id="log-container"):
             yield self._log_list
         yield Footer(id="status-bar")
@@ -282,9 +294,43 @@ class MainScreen(Screen):
     def on_mount(self) -> None:
         """Handle mount event."""
         if self._app_state.parse_result:
-            self._log_list.set_entries(
-                entries=self._app_state.parse_result.entries
-            )
+            self._refresh_entries()
+
+    def _refresh_entries(self) -> None:
+        """Refresh the log list with current filters."""
+        if not self._app_state.parse_result:
+            return
+
+        all_entries = self._app_state.parse_result.entries
+        filter_state = self._app_state.filter_state
+
+        # Apply filters
+        filtered = self._filter_engine.apply_filters(
+            entries=all_entries,
+            predicates=filter_state.parsed_filters,
+            enabled_levels=filter_state.enabled_levels,
+            case_sensitive=filter_state.case_sensitive,
+        )
+
+        self._log_list.set_entries(entries=filtered)
+
+    def _on_search(self, query: str) -> None:
+        """Handle search submission."""
+        if not self._app_state.parse_result:
+            return
+
+        # Create new filter state with the query
+        new_filter_state = create_filter_state(
+            query=query,
+            enabled_levels=self._app_state.filter_state.enabled_levels,
+        )
+
+        self._app_state.filter_state = new_filter_state
+        self._refresh_entries()
+
+    def _on_search_cancel(self) -> None:
+        """Handle search cancellation."""
+        pass
 
     def action_quit(self) -> None:
         """Quit the application."""
@@ -292,7 +338,9 @@ class MainScreen(Screen):
 
     def action_search(self) -> None:
         """Open search dialog."""
-        pass  # Will be implemented in T8
+        if self._search_bar:
+            self._search_bar.show()
+            self._search_bar.focus_input()
 
     def action_copy(self) -> None:
         """Copy selected log entry."""
