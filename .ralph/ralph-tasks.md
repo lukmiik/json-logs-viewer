@@ -28,7 +28,7 @@ filtering, and detail view.
     - Write unit tests alongside
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T2: Implement JSON/JSONL parser**
+- [x] **T2: Implement JSON/JSONL parser**
     - Load file, detect JSON vs JSONL, parse safely, collect invalid lines as skipped
     - Include parser tests
       <promise>READY_FOR_NEXT_TASK</promise>
