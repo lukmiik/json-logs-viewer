@@ -7,11 +7,12 @@ from pathlib import Path
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.color import Color
 from textual.containers import Container
 from textual.css.query import NoMatches
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Static
+from textual.widgets import DataTable, Footer, Header, Static
 
 from json_logs_viewer.models import (
     FilterState,
@@ -37,75 +38,186 @@ class AppState:
     selected_index: int = 0
 
 
-class LogListWidget(Static):
-    """Widget for displaying the list of log entries."""
+class LogListWidget(DataTable):
+    """Widget for displaying log entries with level colors."""
 
     DEFAULT_CSS = """
     LogListWidget {
         width: 100%;
         height: 100%;
-        overflow-y: auto;
+        border: none;
+        background: $bg;
+    }
+    
+    LogListWidget > .datatable--header {
+        background: $surface;
+        color: $text;
+        text-style: bold;
+    }
+    
+    LogListWidget > .datatable--row {
+        background: $bg;
+        color: $text;
+        height: 1;
+    }
+    
+    LogListWidget > .datatable--row:hover {
+        background: $surface-darken-1;
+    }
+    
+    LogListWidget:focus > .datatable--row-cursor {
+        background: $selection;
+    }
+    
+    LogListWidget > .datatable--row-cursor {
+        background: $selection;
     }
     """
 
-    entries = reactive[list[LogEntry]](lambda: [])
-    selected_index: reactive[int] = reactive(0)
+    # Catppuccin Mocha colors for log levels
+    LEVEL_COLORS: dict[LogLevel, Color] = {
+        LogLevel.ERROR: Color.parse("#f38ba8"),  # Red
+        LogLevel.WARNING: Color.parse("#f9e2af"),  # Yellow
+        LogLevel.INFO: Color.parse("#89b4fa"),  # Blue
+        LogLevel.DEBUG: Color.parse("#a6e3a1"),  # Green
+        LogLevel.TRACE: Color.parse("#cba6f7"),  # Purple
+    }
+
+    selected_index: reactive[int] = reactive(0, always_update=True)
 
     def __init__(self, *, entries: list[LogEntry] | None = None) -> None:
         """Initialize the log list widget."""
-        super().__init__()
-        self.entries = entries or []
+        super().__init__(
+            show_cursor=True,
+            zebra_stripes=False,
+            header_height=1,
+            cursor_type="row",
+        )
+        self._entries: list[LogEntry] = entries or []
+        self._internal_update = False
 
-    def watch_entries(self, entries: list[LogEntry]) -> None:
-        """React to entries change."""
-        self.refresh()
+    @property
+    def entries(self) -> list[LogEntry]:
+        """Return the list of log entries."""
+        return list(self._entries)
+
+    def set_entries(self, *, entries: list[LogEntry]) -> None:
+        """Set the log entries and refresh the display."""
+        self._entries = list(entries)
+        if self.is_mounted:
+            self._refresh_rows()
+
+    def append_entries(self, *, entries: list[LogEntry]) -> None:
+        """Append new entries to the list."""
+        self._entries.extend(entries)
+        if self.is_mounted:
+            for entry in entries:
+                self._add_entry_row(entry)
+
+    def on_mount(self) -> None:
+        """Set up the table columns on mount."""
+        super().on_mount()
+        self._setup_columns()
+        self._refresh_rows()
+
+    def _setup_columns(self) -> None:
+        """Configure table columns."""
+        self.add_columns("Level", "Time", "Message", "Line")
+
+    def _refresh_rows(self) -> None:
+        """Refresh all table rows from entries."""
+        # Guard against refreshing before columns are set up
+        if not self.ordered_columns:
+            return
+        self.clear()
+        for entry in self._entries:
+            self._add_entry_row(entry)
+
+        # Restore cursor position
+        if self._entries and self.selected_index < len(self._entries):
+            self.move_cursor(row=self.selected_index)
+
+    def _add_entry_row(self, entry: LogEntry) -> None:
+        """Add a single entry as a table row."""
+        level_color = self.LEVEL_COLORS.get(
+            entry.level, Color.parse("#cdd6f4")
+        )
+
+        level_str = entry.level.name[:8]
+        timestamp_str = (
+            entry.timestamp.strftime("%H:%M:%S")
+            if entry.timestamp
+            else "--:--:--"
+        )
+        message_str = (
+            entry.message[:60] + "..."
+            if len(entry.message) > 60
+            else entry.message
+        )
+        line_str = str(entry.line_number)
+
+        # Create styled cells with rich markup
+        level_cell = f"[{level_color.hex}]{level_str:8}[/]"
+        time_cell = f"[{timestamp_str}]"
+        message_cell = message_str
+        line_cell = f"[{line_str}]"
+
+        self.add_row(level_cell, time_cell, message_cell, line_cell)
 
     def watch_selected_index(self, index: int) -> None:
         """React to selection change."""
-        self.refresh()
+        if self._internal_update:
+            return
+        if self._entries and 0 <= index < len(self._entries):
+            self.move_cursor(row=index)
 
-    def render(self) -> str:
-        """Render the log list."""
-        if not self.entries:
-            return "No log entries to display."
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Handle row selection via DataTable."""
+        cursor_row = event.cursor_row
+        if cursor_row is not None:
+            self._internal_update = True
+            self.selected_index = cursor_row
+            self._internal_update = False
 
-        lines: list[str] = []
-        for i, entry in enumerate(self.entries):
-            prefix = "> " if i == self.selected_index else "  "
-            level_color = self._get_level_color(entry.level)
-            message = (
-                entry.message[:60] + "..."
-                if len(entry.message) > 60
-                else entry.message
-            )
-            level_str = entry.level.name[:8]
-            line = f"{prefix}[{level_color}]{level_str:8}[/"
-            lines.append(f"{line}{level_color}] {message}")
-
-        return "\n".join(lines)
-
-    def _get_level_color(self, level: LogLevel) -> str:
-        """Get color for log level."""
-        colors = {
-            LogLevel.ERROR: "red",
-            LogLevel.WARNING: "yellow",
-            LogLevel.INFO: "blue",
-            LogLevel.DEBUG: "green",
-            LogLevel.TRACE: "magenta",
-        }
-        return colors.get(level, "white")
+    def on_data_table_row_highlighted(
+        self, event: DataTable.RowHighlighted
+    ) -> None:
+        """Handle row highlight (cursor movement)."""
+        cursor_row = event.cursor_row
+        if cursor_row is not None:
+            self._internal_update = True
+            self.selected_index = cursor_row
+            self._internal_update = False
 
     def select_next(self) -> None:
         """Select the next entry."""
-        if self.entries:
-            self.selected_index = min(
-                self.selected_index + 1, len(self.entries) - 1
-            )
+        if self._entries and self.selected_index < len(self._entries) - 1:
+            self.selected_index += 1
+            self.move_cursor(row=self.selected_index)
 
     def select_previous(self) -> None:
         """Select the previous entry."""
-        if self.entries:
-            self.selected_index = max(self.selected_index - 1, 0)
+        if self._entries and self.selected_index > 0:
+            self.selected_index -= 1
+            self.move_cursor(row=self.selected_index)
+
+    def select_first(self) -> None:
+        """Select the first entry."""
+        if self._entries:
+            self.selected_index = 0
+            self.move_cursor(row=0)
+
+    def select_last(self) -> None:
+        """Select the last entry."""
+        if self._entries:
+            self.selected_index = len(self._entries) - 1
+            self.move_cursor(row=self.selected_index)
+
+    def get_selected_entry(self) -> LogEntry | None:
+        """Get the currently selected log entry."""
+        if self._entries and 0 <= self.selected_index < len(self._entries):
+            return self._entries[self.selected_index]
+        return None
 
 
 class MainScreen(Screen):
@@ -168,7 +280,9 @@ class MainScreen(Screen):
     def on_mount(self) -> None:
         """Handle mount event."""
         if self._app_state.parse_result:
-            self._log_list.entries = self._app_state.parse_result.entries
+            self._log_list.set_entries(
+                entries=self._app_state.parse_result.entries
+            )
 
     def action_quit(self) -> None:
         """Quit the application."""
@@ -200,12 +314,11 @@ class MainScreen(Screen):
 
     def action_goto_first(self) -> None:
         """Go to first entry."""
-        self._log_list.selected_index = 0
+        self._log_list.select_first()
 
     def action_goto_last(self) -> None:
         """Go to last entry."""
-        if self._log_list.entries:
-            self._log_list.selected_index = len(self._log_list.entries) - 1
+        self._log_list.select_last()
 
     def action_toggle_level_error(self) -> None:
         """Toggle ERROR level."""

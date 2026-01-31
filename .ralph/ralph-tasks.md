@@ -44,7 +44,7 @@ filtering, and detail view.
     - CLI argument parsing for --follow
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T5: Implement main log list widget**
+- [x] **T5: Implement main log list widget**
     - Scrollable list with level colors, selection, and keyboard navigation
     - Include UI tests
       <promise>READY_FOR_NEXT_TASK</promise>

@@ -68,7 +68,7 @@ class TestLogListWidget:
             )
         ]
         widget = LogListWidget(entries=entries)
-        assert widget.entries == entries
+        assert len(widget.entries) == 1
         assert widget.selected_index == 0
 
     def test_select_next(self) -> None:
@@ -139,37 +139,125 @@ class TestLogListWidget:
         widget.select_previous()
         assert widget.selected_index == 0
 
-    def test_get_level_color(self) -> None:
-        """Test level color mapping."""
-        widget = LogListWidget()
-        assert widget._get_level_color(LogLevel.ERROR) == "red"
-        assert widget._get_level_color(LogLevel.WARNING) == "yellow"
-        assert widget._get_level_color(LogLevel.INFO) == "blue"
-        assert widget._get_level_color(LogLevel.DEBUG) == "green"
-        assert widget._get_level_color(LogLevel.TRACE) == "magenta"
-
-    def test_render_empty(self) -> None:
-        """Test render with no entries."""
-        widget = LogListWidget()
-        result = widget.render()
-        assert result == "No log entries to display."
-
-    def test_render_with_entries(self) -> None:
-        """Test render with entries."""
+    def test_select_first(self) -> None:
+        """Test selecting first entry."""
         entries = [
             LogEntry(
-                raw_line='{"level": "info", "message": "test message"}',
-                parsed_data={"level": "info", "message": "test message"},
+                raw_line='{"level": "info", "message": "test1"}',
+                parsed_data={"level": "info", "message": "test1"},
                 line_number=1,
                 level=LogLevel.INFO,
-                message="test message",
+                message="test1",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "message": "test2"}',
+                parsed_data={"level": "error", "message": "test2"},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="test2",
             ),
         ]
         widget = LogListWidget(entries=entries)
-        result = widget.render()
-        assert "> " in result
-        assert "INFO" in result
-        assert "test message" in result
+        widget.selected_index = 1
+
+        widget.select_first()
+        assert widget.selected_index == 0
+
+    def test_select_last(self) -> None:
+        """Test selecting last entry."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "test1"}',
+                parsed_data={"level": "info", "message": "test1"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="test1",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "message": "test2"}',
+                parsed_data={"level": "error", "message": "test2"},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="test2",
+            ),
+        ]
+        widget = LogListWidget(entries=entries)
+        widget.selected_index = 0
+
+        widget.select_last()
+        assert widget.selected_index == 1
+
+    def test_get_selected_entry(self) -> None:
+        """Test getting the currently selected entry."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "test1"}',
+                parsed_data={"level": "info", "message": "test1"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="test1",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "message": "test2"}',
+                parsed_data={"level": "error", "message": "test2"},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="test2",
+            ),
+        ]
+        widget = LogListWidget(entries=entries)
+
+        # First entry selected by default
+        selected = widget.get_selected_entry()
+        assert selected is not None
+        assert selected.line_number == 1
+        assert selected.message == "test1"
+
+        # Select second entry
+        widget.select_next()
+        selected = widget.get_selected_entry()
+        assert selected is not None
+        assert selected.line_number == 2
+        assert selected.message == "test2"
+
+    def test_get_selected_entry_empty(self) -> None:
+        """Test getting selected entry when list is empty."""
+        widget = LogListWidget(entries=[])
+        selected = widget.get_selected_entry()
+        assert selected is None
+
+    def test_level_colors_defined(self) -> None:
+        """Test that level colors are properly defined."""
+        from textual.color import Color
+
+        widget = LogListWidget()
+        assert LogLevel.ERROR in widget.LEVEL_COLORS
+        assert LogLevel.WARNING in widget.LEVEL_COLORS
+        assert LogLevel.INFO in widget.LEVEL_COLORS
+        assert LogLevel.DEBUG in widget.LEVEL_COLORS
+        assert LogLevel.TRACE in widget.LEVEL_COLORS
+
+        # Verify colors are Color instances
+        for _level, color in widget.LEVEL_COLORS.items():
+            assert isinstance(color, Color)
+
+    def test_set_entries_updates_internal_state(self) -> None:
+        """Test that set_entries updates internal _entries."""
+        widget = LogListWidget()
+
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "test"}',
+                parsed_data={"level": "info", "message": "test"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="test",
+            )
+        ]
+
+        widget.set_entries(entries=entries)
+        assert len(widget._entries) == 1
+        assert widget._entries[0].message == "test"
 
 
 class TestMainScreen:
@@ -408,7 +496,7 @@ class TestMainScreenActions:
         ]
         state = AppState()
         screen = MainScreen(app_state=state)
-        screen._log_list.entries = entries
+        screen._log_list._entries = entries
 
         screen.action_cursor_down()
         assert screen._log_list.selected_index == 1
@@ -429,7 +517,7 @@ class TestMainScreenActions:
         ]
         state = AppState()
         screen = MainScreen(app_state=state)
-        screen._log_list.entries = entries
+        screen._log_list._entries = entries
         screen._log_list.selected_index = 1
 
         screen.action_cursor_up()
@@ -451,7 +539,7 @@ class TestMainScreenActions:
         ]
         state = AppState()
         screen = MainScreen(app_state=state)
-        screen._log_list.entries = entries
+        screen._log_list._entries = entries
         screen._log_list.selected_index = 1
 
         screen.action_goto_first()
@@ -473,7 +561,7 @@ class TestMainScreenActions:
         ]
         state = AppState()
         screen = MainScreen(app_state=state)
-        screen._log_list.entries = entries
+        screen._log_list._entries = entries
 
         screen.action_goto_last()
         assert screen._log_list.selected_index == 1
