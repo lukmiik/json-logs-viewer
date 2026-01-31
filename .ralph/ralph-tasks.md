@@ -39,7 +39,7 @@ filtering, and detail view.
     - Include watcher tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T4: Build base Textual app shell**
+- [x] **T4: Build base Textual app shell**
     - App class, screens wiring, Ctrl-only keybindings, Catppuccin Mocha theme CSS
     - CLI argument parsing for --follow
       <promise>READY_FOR_NEXT_TASK</promise>
