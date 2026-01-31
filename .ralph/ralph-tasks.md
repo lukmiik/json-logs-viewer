@@ -33,7 +33,7 @@ filtering, and detail view.
     - Include parser tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T3: Create file watcher for follow mode**
+- [x] **T3: Create file watcher for follow mode**
     - Track file offset, append new lines, batch UI updates, handle rotation
     - Support --follow CLI flag
     - Include watcher tests
