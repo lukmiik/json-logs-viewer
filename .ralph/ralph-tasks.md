@@ -54,7 +54,7 @@ filtering, and detail view.
     - Include UI tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T7: Implement query parser and filter engine**
+- [x] **T7: Implement query parser and filter engine**
     - Parse field:value tokens, AND/OR operators, negation, quoted values, numeric
       compare, and apply filters
     - Include filter tests
