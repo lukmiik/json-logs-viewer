@@ -1,0 +1,37 @@
+name: main
+
+on: [ push, pull_request ]
+
+jobs:
+  uv-example:
+    name: python
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # the official GitHub setup-python action can be faster,
+      # because GitHub caches the Python versions alongside the runner.
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install uv and enable caching
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          # Install a specific version of uv (best practice)
+          version: "0.8.22"
+
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+
+      - name: Run ruff lint
+        run: uv run ruff check
+
+      - name: Run ruff format check
+        run: uv run ruff format --check
+
+      - name: Run ty check
+        run: uv run ty check

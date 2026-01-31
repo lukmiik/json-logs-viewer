@@ -1,0 +1,88 @@
+{
+  "project": "json-logs-viewer",
+  "objective": "Keyboard-centric Textual TUI for viewing JSON/JSONL logs with follow mode, filtering, and detail view.",
+  "decisions": {
+    "search_syntax": "field:value with AND/OR operators",
+    "theme": "catppuccin_mocha",
+    "single_file_only": true,
+    "non_json_fallback": false,
+    "export": false,
+    "modifiers": "ctrl_only",
+    "follow_mode": "cli_and_tui_toggleable",
+    "testing": "tdd_alongside_code"
+  },
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Define core data models",
+      "details": "Create LogEntry, FilterState, SearchHistoryEntry with full typing and keyword-only args. Write unit tests alongside.",
+      "status": "to do"
+    },
+    {
+      "id": "T2",
+      "title": "Implement JSON/JSONL parser",
+      "details": "Load file, detect JSON vs JSONL, parse safely, collect invalid lines as skipped. Include parser tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T3",
+      "title": "Create file watcher for follow mode",
+      "details": "Track file offset, append new lines, batch UI updates, handle rotation. Support --follow CLI flag. Include watcher tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T4",
+      "title": "Build base Textual app shell",
+      "details": "App class, screens wiring, Ctrl-only keybindings, Catppuccin Mocha theme CSS, CLI argument parsing for --follow.",
+      "status": "to do"
+    },
+    {
+      "id": "T5",
+      "title": "Implement main log list widget",
+      "details": "Scrollable list with level colors, selection, and keyboard navigation. Include UI tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T6",
+      "title": "Implement detail view widget",
+      "details": "Formatted JSON view with navigation between entries. Include UI tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T7",
+      "title": "Implement query parser and filter engine",
+      "details": "Parse field:value tokens, AND/OR operators, negation, quoted values, numeric compare, and apply filters. Include filter tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T8",
+      "title": "Add search bar with history",
+      "details": "Input widget, history dropdown, persistence, navigation through history. Include tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T9",
+      "title": "Add level filter bar",
+      "details": "Toggle buttons, counts, keyboard shortcuts 1-5/0. Include tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T10",
+      "title": "Add clipboard copy functionality",
+      "details": "Copy formatted JSON or raw log line with success toast. Include tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T11",
+      "title": "Integrate follow mode behavior",
+      "details": "Auto-scroll when following; pause on manual scroll. Toggle via Ctrl+T. Include UI tests.",
+      "status": "to do"
+    },
+    {
+      "id": "T12",
+      "title": "Add GitHub Actions CI",
+      "details": "Create GitHub Actions workflow for running pytest and Textual tests on push/PR.",
+      "status": "to do"
+    }
+  ]
+}
