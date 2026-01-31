@@ -81,7 +81,7 @@ filtering, and detail view.
     - Include UI tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T12: Add GitHub Actions CI**
+- [x] **T12: Add GitHub Actions CI**
     - Create GitHub Actions workflow for running pytest and Textual tests on push/PR
       <promise>READY_FOR_NEXT_TASK</promise>
 

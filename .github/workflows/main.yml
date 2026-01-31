@@ -1,10 +1,10 @@
-name: main
+name: ci
 
 on: [ push, pull_request ]
 
 jobs:
-  uv-example:
-    name: python
+  tests:
+    name: lint-and-test
     runs-on: ubuntu-latest
 
     steps:
@@ -28,10 +28,13 @@ jobs:
         run: uv sync --locked --all-extras --dev
 
       - name: Run ruff lint
-        run: uv run ruff check
+        run: uv run ruff check --fix .
 
-      - name: Run ruff format check
-        run: uv run ruff format --check
+      - name: Run ruff format
+        run: uv run ruff format .
 
       - name: Run ty check
         run: uv run ty check
+
+      - name: Run pytest
+        run: uv run pytest
