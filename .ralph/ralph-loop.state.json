@@ -1,0 +1,13 @@
+{
+  "active": true,
+  "iteration": 1,
+  "minIterations": 1,
+  "maxIterations": 50,
+  "completionPromise": "COMPLETE",
+  "tasksMode": true,
+  "taskPromise": "READY_FOR_NEXT_TASK",
+  "prompt": "Read @PLAN.md. Pick first not complete task and implement it. Create\ntests and run code quality checks after every task.",
+  "startedAt": "2026-01-31T19:54:08.474Z",
+  "model": "opencode/kimi-k2.5-free",
+  "agent": "opencode"
+}

@@ -22,7 +22,7 @@ filtering, and detail view.
 
 ## Tasks
 
-- [ ] **T1: Define core data models**
+- [x] **T1: Define core data models**
     - Create LogEntry, FilterState, SearchHistoryEntry with full typing and keyword-only
       args
     - Write unit tests alongside
