@@ -75,7 +75,7 @@ filtering, and detail view.
     - Include tests
       <promise>READY_FOR_NEXT_TASK</promise>
 
-- [ ] **T11: Integrate follow mode behavior**
+- [x] **T11: Integrate follow mode behavior**
     - Auto-scroll when following; pause on manual scroll
     - Toggle via Ctrl+T
     - Include UI tests

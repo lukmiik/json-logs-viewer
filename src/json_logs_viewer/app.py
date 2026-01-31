@@ -100,6 +100,7 @@ class LogListWidget(DataTable):
         )
         self._entries: list[LogEntry] = entries or []
         self._internal_update = False
+        self._on_user_navigation: Callable[[], None] | None = None
 
     @property
     def entries(self) -> list[LogEntry]:
@@ -111,6 +112,12 @@ class LogListWidget(DataTable):
         self._entries = list(entries)
         if self.is_mounted:
             self._refresh_rows()
+
+    def set_on_user_navigation(
+        self, *, on_user_navigation: Callable[[], None] | None
+    ) -> None:
+        """Register callback for user navigation events."""
+        self._on_user_navigation = on_user_navigation
 
     def append_entries(self, *, entries: list[LogEntry]) -> None:
         """Append new entries to the list."""
@@ -183,6 +190,8 @@ class LogListWidget(DataTable):
             self._internal_update = True
             self.selected_index = cursor_row
             self._internal_update = False
+            if self._on_user_navigation:
+                self._on_user_navigation()
 
     def on_data_table_row_highlighted(
         self, event: DataTable.RowHighlighted
@@ -193,30 +202,40 @@ class LogListWidget(DataTable):
             self._internal_update = True
             self.selected_index = cursor_row
             self._internal_update = False
+            if self._on_user_navigation:
+                self._on_user_navigation()
 
-    def select_next(self) -> None:
+    def select_next(self, *, user_initiated: bool = True) -> None:
         """Select the next entry."""
         if self._entries and self.selected_index < len(self._entries) - 1:
             self.selected_index += 1
             self.move_cursor(row=self.selected_index)
+            if user_initiated and self._on_user_navigation:
+                self._on_user_navigation()
 
-    def select_previous(self) -> None:
+    def select_previous(self, *, user_initiated: bool = True) -> None:
         """Select the previous entry."""
         if self._entries and self.selected_index > 0:
             self.selected_index -= 1
             self.move_cursor(row=self.selected_index)
+            if user_initiated and self._on_user_navigation:
+                self._on_user_navigation()
 
-    def select_first(self) -> None:
+    def select_first(self, *, user_initiated: bool = True) -> None:
         """Select the first entry."""
         if self._entries:
             self.selected_index = 0
             self.move_cursor(row=0)
+            if user_initiated and self._on_user_navigation:
+                self._on_user_navigation()
 
-    def select_last(self) -> None:
+    def select_last(self, *, user_initiated: bool = True) -> None:
         """Select the last entry."""
         if self._entries:
             self.selected_index = len(self._entries) - 1
             self.move_cursor(row=self.selected_index)
+            if user_initiated and self._on_user_navigation:
+                self._on_user_navigation()
 
     def get_selected_entry(self) -> LogEntry | None:
         """Get the currently selected log entry."""
@@ -273,7 +292,8 @@ class MainScreen(Screen):
         height: 1;
         background: $surface;
         color: $text-muted;
-        dock: bottom;
+        content-align: left middle;
+        padding: 0 1;
     }
     """
 
@@ -285,6 +305,7 @@ class MainScreen(Screen):
         self._search_bar: SearchBarOverlay | None = None
         self._level_bar: LevelFilterBar | None = None
         self._filter_engine = FilterEngine()
+        self._auto_scroll_enabled = app_state.follow_mode
 
     def compose(self) -> ComposeResult:
         """Compose the main screen."""
@@ -306,12 +327,17 @@ class MainScreen(Screen):
 
         with Container(id="log-container"):
             yield self._log_list
-        yield Footer(id="status-bar")
+        yield Static("", id="status-bar")
+        yield Footer()
 
     def on_mount(self) -> None:
         """Handle mount event."""
+        self._log_list.set_on_user_navigation(
+            on_user_navigation=self._disable_auto_follow
+        )
         if self._app_state.parse_result:
             self._refresh_entries()
+        self._update_follow_indicator()
 
     def _refresh_entries(self) -> None:
         """Refresh the log list with current filters."""
@@ -331,6 +357,7 @@ class MainScreen(Screen):
 
         self._log_list.set_entries(entries=filtered)
         self._update_level_bar()
+        self._auto_follow_if_enabled()
 
     def _on_search(self, query: str) -> None:
         """Handle search submission."""
@@ -428,14 +455,18 @@ class MainScreen(Screen):
     def action_toggle_follow(self) -> None:
         """Toggle follow mode."""
         self._app_state.follow_mode = not self._app_state.follow_mode
+        if self._app_state.follow_mode:
+            self._auto_scroll_enabled = True
+            self._auto_follow_if_enabled()
+        self._update_follow_indicator()
 
     def action_cursor_down(self) -> None:
         """Move cursor down."""
-        self._log_list.select_next()
+        self._log_list.select_next(user_initiated=True)
 
     def action_cursor_up(self) -> None:
         """Move cursor up."""
-        self._log_list.select_previous()
+        self._log_list.select_previous(user_initiated=True)
 
     def action_view_detail(self) -> None:
         """View detail of selected entry."""
@@ -455,11 +486,11 @@ class MainScreen(Screen):
 
     def action_goto_first(self) -> None:
         """Go to first entry."""
-        self._log_list.select_first()
+        self._log_list.select_first(user_initiated=True)
 
     def action_goto_last(self) -> None:
         """Go to last entry."""
-        self._log_list.select_last()
+        self._log_list.select_last(user_initiated=True)
 
     def action_toggle_level_error(self) -> None:
         """Toggle ERROR level."""
@@ -499,6 +530,38 @@ class MainScreen(Screen):
         )
         self._refresh_entries()
         self._update_level_bar()
+
+    def _disable_auto_follow(self) -> None:
+        """Disable auto-follow when user navigates manually."""
+        if self._app_state.follow_mode and self._auto_scroll_enabled:
+            self._auto_scroll_enabled = False
+            self._update_follow_indicator()
+
+    def _auto_follow_if_enabled(self) -> None:
+        """Auto-scroll to the latest entry when following."""
+        if not self._app_state.follow_mode or not self._auto_scroll_enabled:
+            return
+        self._log_list.select_last(user_initiated=False)
+
+    def _update_follow_indicator(self) -> None:
+        """Update the status bar to reflect follow state."""
+        try:
+            status_bar = self.query_one("#status-bar", Static)
+        except NoMatches:
+            return
+        status = "ON" if self._app_state.follow_mode else "OFF"
+        suffix = (
+            " (paused)"
+            if self._app_state.follow_mode and not self._auto_scroll_enabled
+            else ""
+        )
+        status_bar.update(f"Follow: {status}{suffix}")
+
+    def handle_new_entries(self, *, entries: list[LogEntry]) -> None:
+        """Handle new entries appended while following."""
+        if not entries:
+            return
+        self._refresh_entries()
 
 
 class DetailWidget(Static):
@@ -1038,8 +1101,7 @@ class LogsApp(App):
             try:
                 screen = self.screen
                 if isinstance(screen, MainScreen):
-                    # Update the log list
-                    pass  # Will refresh via reactive
+                    screen.handle_new_entries(entries=entries)
             except NoMatches:
                 pass
 

@@ -22,6 +22,7 @@ from json_logs_viewer.models import (
     LogLevel,
     SearchHistory,
 )
+from json_logs_viewer.parser import ParseResult
 
 
 class DummyApp(App[None]):
@@ -908,6 +909,69 @@ class TestMainScreenActions:
 
         screen.action_goto_last()
         assert screen._log_list.selected_index == 1
+
+    def test_follow_auto_scroll_on_new_entries(self) -> None:
+        """Test auto-scroll to latest entry while following."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "first"}',
+                parsed_data={"level": "info", "message": "first"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="first",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "message": "second"}',
+                parsed_data={"level": "error", "message": "second"},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="second",
+            ),
+        ]
+        state = AppState(follow_mode=True)
+        screen = MainScreen(app_state=state)
+        state.parse_result = ParseResult(
+            entries=entries,
+            skipped_lines=[],
+            file_path=Path("/test/logs.jsonl"),
+            format_type="jsonl",
+        )
+
+        screen.handle_new_entries(entries=entries)
+
+        assert screen._log_list.selected_index == len(entries) - 1
+
+    def test_follow_pauses_on_user_navigation(self) -> None:
+        """Test user navigation pauses auto-follow."""
+        entries = [
+            LogEntry(
+                raw_line='{"level": "info", "message": "first"}',
+                parsed_data={"level": "info", "message": "first"},
+                line_number=1,
+                level=LogLevel.INFO,
+                message="first",
+            ),
+            LogEntry(
+                raw_line='{"level": "error", "message": "second"}',
+                parsed_data={"level": "error", "message": "second"},
+                line_number=2,
+                level=LogLevel.ERROR,
+                message="second",
+            ),
+        ]
+        state = AppState(follow_mode=True)
+        screen = MainScreen(app_state=state)
+        state.parse_result = ParseResult(
+            entries=entries,
+            skipped_lines=[],
+            file_path=Path("/test/logs.jsonl"),
+            format_type="jsonl",
+        )
+
+        screen._disable_auto_follow()
+        screen.handle_new_entries(entries=entries)
+
+        assert screen._log_list.selected_index == 0
 
     def test_action_copy_no_selection(self) -> None:
         """Test copy action with no selection."""
