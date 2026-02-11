@@ -36,11 +36,18 @@ uv run ty check
 
 ### Function Signatures
 
-All methods should enforce keyword-only arguments using the `*` operator:
+All methods must enforce keyword-only arguments using the `*` operator. The `*`
+must appear before any parameters to ensure all arguments are passed by name:
 
 ```python
 def my_function(*, arg1: str, arg2: int) -> None:
     ...
+```
+
+When calling functions, always use keyword arguments:
+
+```python
+my_function(arg1="hello", arg2=42)
 ```
 
 ### Type Annotations

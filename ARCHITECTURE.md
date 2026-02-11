@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document describes the architecture of the JSON Logs Viewer TUI application. The architecture prioritizes simplicity for the MVP with all data stored in memory.
+This document describes the architecture of the JSON Logs Viewer TUI application. The
+architecture prioritizes simplicity for the MVP with all data stored in memory.
 
 ## Design Principles
 
@@ -53,30 +54,56 @@ This document describes the architecture of the JSON Logs Viewer TUI application
 ### LogEntry (Pydantic Model)
 
 ```python
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, model_validator
 from datetime import datetime
 from typing import Any
 
+
+TIMESTAMP_FIELDS = ["Timestamp", "timestamp", "time", "ts", "Time", "@t"]
+LEVEL_FIELDS = ["SeverityText", "severity", "level", "log_level", "Level", "loglevel"]
+MESSAGE_FIELDS = ["message", "msg", "Message", "body", "event", "@m"]
+
+
 class LogEntry(BaseModel):
-    """Represents a single log entry."""
+    """Represents a single log entry with automatic field normalization."""
+
     line_number: int
     raw_line: str
     data: dict[str, Any]
-    
-    # Common fields with aliases for flexibility
-    timestamp: datetime | None = Field(None, alias="time")
-    level: str | None = Field(None, alias="severity")
+
+    timestamp: datetime | None = None
+    level: str | None = None
     message: str | None = None
-    
+
+    @model_validator(mode="after")
+    def extract_normalized_fields(self) -> "LogEntry":
+        self.timestamp = self._find_first(self.data, TIMESTAMP_FIELDS)
+        self.level = self._find_first(self.data, LEVEL_FIELDS)
+        self.message = self._find_first(self.data, MESSAGE_FIELDS)
+        return self
+
+    @staticmethod
+    def _find_first(data: dict[str, Any], candidates: list[str]) -> Any | None:
+        for candidate in candidates:
+            if candidate in data:
+                return data[candidate]
+        return None
+
+    @classmethod
+    def from_line(*, line_number: int, line: str) -> "LogEntry":
+        """Parse a log line into a LogEntry."""
+        ...
+
     class Config:
         extra = "allow"
 ```
 
-We use **Pydantic v2** instead of dataclasses because:
-- Automatic JSON parsing and validation
-- Flexible field aliases (e.g., `time` → `timestamp`)
-- Type coercion (strings to datetime)
-- Better error handling for malformed logs
+**Why custom parsing instead of Pydantic aliases?**
+
+- Flexible field detection: tries multiple common field names in priority order
+- Handles any log format without configuration: `Timestamp`, `timestamp`, `time`, `ts`, etc.
+- Works automatically for diverse log formats (CloudWatch, GCP, custom JSON, etc.)
+- Raw data preserved in `data` dict for full access to original fields
 
 ### AppState
 
@@ -84,6 +111,7 @@ Central reactive state container:
 
 ```python
 from textual.reactive import reactive
+
 
 class AppState:
     """Reactive application state."""
@@ -117,7 +145,7 @@ expression ::= ['NOT'] field ':' value | '(' query ')'
 Simple recursive descent parser that converts queries into filter functions:
 
 ```python
-def parse_filter(query: str) -> Callable[[LogEntry], bool]:
+def parse_filter(*, query: str) -> Callable[[LogEntry], bool]:
     """Parse filter query and return filter function."""
     # Returns: lambda log: log.level == "ERROR" and log.data.get("service") == "api"
 ```
@@ -127,6 +155,7 @@ def parse_filter(query: str) -> Callable[[LogEntry], bool]:
 ### 1. LogViewerApp (Main App)
 
 Entry point and container:
+
 - Holds AppState
 - Manages screens and modals
 - Registers command palette commands
@@ -135,6 +164,7 @@ Entry point and container:
 ### 2. LogList (DataTable Widget)
 
 Main log display:
+
 - Displays filtered_logs from AppState
 - Configurable columns based on AppState.columns
 - Virtual scrolling for performance
@@ -143,6 +173,7 @@ Main log display:
 ### 3. SearchBar (Input Widget)
 
 Filter input with history:
+
 - Text input for filter queries
 - Real-time filtering on type
 - History button opens HistoryModal
@@ -153,28 +184,32 @@ Filter input with history:
 Search history browser using Textual's built-in OptionList:
 
 **Features:**
+
 - Displays past searches from AppState.search_history as selectable options
 - Built-in search/filter capability within the OptionList itself
 - Keyboard navigation with arrow keys
 - Max 100 entries (in-memory only, no persistence between sessions)
 
 **Usage:**
+
 - Opened from SearchBar via history button or keybinding
 - Type to filter history items in real-time
 - Enter to select a query and apply it
 - Esc to close without selection
 
 **Implementation:**
+
 ```python
 from textual.widgets import OptionList
 
+
 class HistoryModal(ModalScreen):
     """Modal displaying search history with OptionList."""
-    
+
     def compose(self) -> ComposeResult:
         yield OptionList(*self.app.state.search_history)
-        
-    def on_option_list_option_selected(self, event) -> None:
+
+    def on_option_list_option_selected(self, *, event: events.Message) -> None:
         """Handle selection from OptionList."""
         selected_query = event.option.prompt
         self.dismiss(selected_query)
@@ -183,6 +218,7 @@ class HistoryModal(ModalScreen):
 ### 5. DetailModal (Modal Screen)
 
 Log detail view:
+
 - Pretty-printed JSON with syntax highlighting
 - Copy buttons (single log, with context)
 - Navigation to next/previous log (j/k)
@@ -191,6 +227,7 @@ Log detail view:
 ### 6. StatusBar
 
 Bottom information bar:
+
 - Current file name
 - Follow mode indicator
 - Filter status
@@ -203,11 +240,11 @@ Simple watchdog-based file monitoring:
 ```python
 class LogWatcher:
     """Watches log file for new entries."""
-    
-    def __init__(self, filepath: str, callback: Callable[[LogEntry], None]):
+
+    def __init__(self, *, filepath: str, callback: Callable[[LogEntry], None]) -> None:
         self.filepath = filepath
         self.callback = callback
-        
+
     def start(self) -> None:
         """Start watching file for changes."""
         # Uses watchdog to monitor file
@@ -221,6 +258,7 @@ class LogWatcher:
 Textual's builtin command palette (`Ctrl+Shift+P`) provides quick access:
 
 **Registered Commands:**
+
 - `:open <file>` - Open log file
 - `:follow` - Toggle follow mode
 - `:columns` - Open column configuration
@@ -241,11 +279,13 @@ Clipboard integration using `pyperclip`:
 ## Memory Management
 
 **Current Approach (MVP):**
+
 - All logs stored in memory as LogEntry objects
 - Suitable for files up to ~100MB
 - No caching or disk offloading
 
 **Future Improvements:**
+
 - LRU cache for memory efficiency
 - SQLite index for large files
 - Streaming with partial loading
@@ -253,12 +293,14 @@ Clipboard integration using `pyperclip`:
 ## Keybindings
 
 ### Global
+
 - `q` - Quit
 - `Ctrl+C` - Quit
 - `/` - Focus search
 - `Ctrl+Shift+P` - Command palette
 
 ### Navigation (LogList)
+
 - `j/↓` - Down
 - `k/↑` - Up
 - `gg` - Top
@@ -267,6 +309,7 @@ Clipboard integration using `pyperclip`:
 - `y` - Copy current log
 
 ### Detail View
+
 - `j` - Next log
 - `k` - Previous log
 - `y` - Copy current log
@@ -274,6 +317,7 @@ Clipboard integration using `pyperclip`:
 - `Esc/q` - Close
 
 ### Search
+
 - `Enter` - Apply filter
 - `↑/↓` - Navigate history
 - `Tab` - Toggle case sensitivity (future)
@@ -281,6 +325,7 @@ Clipboard integration using `pyperclip`:
 ## No Persistence
 
 **Explicitly Out of Scope (MVP):**
+
 - No settings file
 - No search history persistence between sessions
 - No column preference persistence between sessions
@@ -291,17 +336,20 @@ All configuration is in-memory and resets on restart.
 ## Future Improvements (Post-MVP)
 
 **Performance & Scale:**
+
 - LRU cache for memory efficiency
 - SQLite index for large files (>100MB)
 - Streaming with partial loading
 - Background indexing
 
 **Persistence:**
+
 - Settings file for preferences
 - Search history persistence
 - Column layout persistence
 
 **Features:**
+
 - Multiple file tabs
 - Export formats (CSV, HTML)
 - Custom themes
