@@ -68,34 +68,41 @@ class LogEntry(BaseModel):
     """Represents a single log entry with automatic field normalization."""
 
     line_number: int
-    raw_line: str
     data: dict[str, Any]
 
     timestamp: datetime | None = None
     level: str | None = None
     message: str | None = None
 
-    @model_validator(mode="after")
-    def extract_normalized_fields(self) -> "LogEntry":
-        self.timestamp = self._find_first(self.data, TIMESTAMP_FIELDS)
-        self.level = self._find_first(self.data, LEVEL_FIELDS)
-        self.message = self._find_first(self.data, MESSAGE_FIELDS)
-        return self
+    @model_validator(mode="before")
+    @classmethod
+    def extract_normalized_fields(cls, data: Any) -> dict[str, Any]:  # noqa: ANN401
+        if not isinstance(data, dict):
+            return data
+
+        log_data = data.get("data")
+        if not isinstance(log_data, dict):
+            return data
+
+        return {
+            **data,
+            "timestamp": cls._find_first(
+                data=log_data, candidates=TIMESTAMP_FIELDS
+            ),
+            "level": cls._find_first(data=log_data, candidates=LEVEL_FIELDS),
+            "message": cls._find_first(
+                data=log_data, candidates=MESSAGE_FIELDS
+            ),
+        }
 
     @staticmethod
-    def _find_first(data: dict[str, Any], candidates: list[str]) -> Any | None:
+    def _find_first(
+        *, data: dict[str, Any], candidates: list[str]
+    ) -> Any | None:  # noqa: ANN401
         for candidate in candidates:
             if candidate in data:
                 return data[candidate]
         return None
-
-    @classmethod
-    def from_line(*, line_number: int, line: str) -> "LogEntry":
-        """Parse a log line into a LogEntry."""
-        ...
-
-    class Config:
-        extra = "allow"
 ```
 
 **Why custom parsing instead of Pydantic aliases?**
@@ -103,7 +110,13 @@ class LogEntry(BaseModel):
 - Flexible field detection: tries multiple common field names in priority order
 - Handles any log format without configuration: `Timestamp`, `timestamp`, `time`, `ts`, etc.
 - Works automatically for diverse log formats (CloudWatch, GCP, custom JSON, etc.)
-- Raw data preserved in `data` dict for full access to original fields
+- Raw data preserved in `data` field for full access to original fields
+
+**Why `Json` type instead of `dict[str, Any]`?**
+
+- Stores raw JSON string internally, lazy parses on first access
+- Validates JSON is valid on model creation
+- Can access raw string via `model.data.repr_` if needed for export
 
 ### AppState
 

@@ -58,27 +58,26 @@ specific test deliverables that must be completed as part of that phase.
 
 **Goal**: Implement core data structures and reactive state.
 
-- [ ] **LogEntry Model** (`models.py`):
+- [x] **LogEntry Model** (`models.py`):
     - Pydantic BaseModel with fields:
         - `line_number: int`
-        - `raw_line: str`
-        - `data: dict[str, Any]`
-        - `timestamp: datetime | None` (auto-detected from: Timestamp, timestamp, time, ts, Time, @t)
-        - `level: str | None` (auto-detected from: SeverityText, severity, level, log_level, Level, loglevel)
-        - `message: str | None` (auto-detected from: message, msg, Message, body, event, @m)
-    - Class method `from_line(*, line_number: int, line: str) -> LogEntry`
-    - `model_validator` extracts normalized fields using priority-ordered field lists
-    - Extra fields allowed for flexible JSON parsing
+        - `data: dict[str, Any]` (parsed JSON data)
+        - `timestamp: datetime | None` (auto-detected from: Timestamp, timestamp, time,
+          ts, Time, @t)
+        - `level: str | None` (auto-detected from: SeverityText, severity, level,
+          log_level, Level, loglevel)
+        - `message: str | None` (auto-detected from: message, msg, Message, body, event,
+          @m)
+    - `model_validator(mode="before")` extracts normalized fields before validation using priority-ordered field lists
+    - Constructor accepts `line_number` and `data` (dict) directly
+    - Returns normalized dict with extracted fields for Pydantic validation
 
 **Testing**:
 
 - [ ] `tests/unit/test_log_entry.py`
-    - Test valid JSON parsing with all fields
     - Test field auto-detection (timestamp from various names, level from various names)
-    - Test invalid JSON handling
-    - Test extra fields preservation
     - Test edge cases (empty JSON, null values)
-    - Test _find_first helper function
+    - Test `_find_first` helper function with keyword arguments
 - [ ] Ensure 100% coverage for models module
 
 **Deliverable**: Data models with unit tests for LogEntry parsing.
@@ -343,7 +342,8 @@ specific test deliverables that must be completed as part of that phase.
     - Track file position to read only new lines
     - Callback system for new LogEntry
     - Handle file truncation/rotation (optional)
-    - Constructor: `__init__(self, *, filepath: str, callback: Callable[[LogEntry], None])`
+    - Constructor:
+      `__init__(self, *, filepath: str, callback: Callable[[LogEntry], None])`
 
 - [ ] **Follow Mode Integration**:
     - CLI flag `-f` / `--follow`
@@ -415,13 +415,13 @@ specific test deliverables that must be completed as part of that phase.
     - `:export` command
     - Save filtered_logs to new JSONL file
     - File picker or input for filename
-    - Preserve original format (raw_line)
+    - Use `json.dumps()` to serialize `data` field back to JSON
 
 **Testing**:
 
 - [ ] Unit tests for export functionality
     - Test filtered logs export to JSONL
-    - Test export preserves raw_line format
+    - Test export uses json.dumps() on data field
 - [ ] Integration tests for log management
     - Test clear command shows confirmation modal
     - Test clear removes logs from state
