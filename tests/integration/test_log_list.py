@@ -213,3 +213,32 @@ async def test_scroll_highlighted_into_view(
         await pilot.pause()
 
         assert len(scroll_called) > 0
+
+
+@pytest.mark.asyncio
+async def test_horizontal_scroll_hl(sample_jsonl_file: Path) -> None:
+    """Test that h/l keys scroll horizontally."""
+    from textual.containers import ScrollableContainer
+
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        container = app.query_one("#logs-scroll", ScrollableContainer)
+        log_list.focus()
+        await pilot.pause()
+
+        assert log_list.has_focus
+
+        container.scroll_right()
+        await pilot.pause()
+        scroll_x_before = container.scroll_x
+
+        await pilot.press("h")
+        await pilot.pause()
+        assert container.scroll_x < scroll_x_before
+
+        scroll_x_before = container.scroll_x
+
+        await pilot.press("l")
+        await pilot.pause()
+        assert container.scroll_x > scroll_x_before

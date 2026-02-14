@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any, cast
 
+from textual.containers import ScrollableContainer
 from textual.message import Message
 from textual.widgets import ListItem, ListView, Static
 
@@ -22,6 +23,8 @@ class LogList(ListView):
     BINDINGS = ListView.BINDINGS + [
         ("j", "cursor_down", "Down"),
         ("k", "cursor_up", "Up"),
+        ("h", "scroll_left", "Left"),
+        ("l", "scroll_right", "Right"),
         ("g", "scroll_top", "Top"),
         ("G", "scroll_bottom", "Bottom"),
         ("enter", "select_cursor", "View Details"),
@@ -169,3 +172,15 @@ class LogList(ListView):
     def action_scroll_bottom(self) -> None:
         if self._app:
             self._app.selected_index = max(0, len(self._log_entries) - 1)
+
+    def action_scroll_left(self) -> None:
+        """Scroll parent container left horizontally."""
+        if self.parent is not None:
+            container = cast(ScrollableContainer, self.parent)
+            container.scroll_left()
+
+    def action_scroll_right(self) -> None:
+        """Scroll parent container right horizontally."""
+        if self.parent is not None:
+            container = cast(ScrollableContainer, self.parent)
+            container.scroll_right()
