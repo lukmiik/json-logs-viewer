@@ -32,16 +32,16 @@ async def test_navigation_jk(sample_jsonl_file: Path) -> None:
         log_list.focus()
         await pilot.pause()
 
-        assert app.selected_index == 0
-        assert log_list.index == 0
+        assert app.selected_index == 3
+        assert log_list.index == 3
 
         await pilot.press("j")
-        assert app.selected_index == 1
-        assert log_list.index == 1
+        assert app.selected_index == 3
+        assert log_list.index == 3
 
         await pilot.press("k")
-        assert app.selected_index == 0
-        assert log_list.index == 0
+        assert app.selected_index == 2
+        assert log_list.index == 2
 
         await pilot.press("down", "down", "down")
         assert app.selected_index == 3
@@ -99,7 +99,7 @@ async def test_enter_posts_message(
 
         msgs = [m for m in captured if isinstance(m, LogList.LogSelected)]
         assert len(msgs) == 1
-        assert msgs[0].log_entry.line_number == 1
+        assert msgs[0].log_entry.line_number == 4
 
 
 @pytest.mark.asyncio
@@ -191,6 +191,10 @@ async def test_scroll_highlighted_into_view(
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
         log_list.focus()
+        await pilot.pause()
+
+        log_list.index = 0
+        app.selected_index = 0
         await pilot.pause()
 
         scroll_called = []

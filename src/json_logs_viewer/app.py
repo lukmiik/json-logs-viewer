@@ -87,7 +87,7 @@ class LogViewerApp(App):
 
         self.logs = logs
         self.filepath = filepath
-        self.selected_index = 0
+        self.selected_index = max(0, len(logs) - 1)
 
     def action_focus_search(self) -> None:
         self.query_one("#search", SearchBar).focus()
