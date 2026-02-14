@@ -159,17 +159,24 @@ specific test deliverables that must be completed as part of that phase.
 
 ## Phase 5: Filter Engine & Search
 
-**Goal**: Implement query parsing and log filtering.
+**Goal**: Implement a flexible query parser with full-text search, field matching,
+boolean operators, and dual display modes (filter vs highlight).
 
-- [ ] **FilterEngine** (`filter_engine.py`):
-    - Query grammar:
-        - `field:value` - Field matching
-        - `AND` / `OR` - Boolean operators
-        - `NOT` - Negation
-        - `()` - Grouping
+**Detailed Design**: See [PLAN_PHASE_4.md](./PLAN_PHASE_5)
+
+### Core Features
+
+- [ ] **Query Grammar** (`filter_engine.py`):
+    - `plain text` - Full-text search across all fields (level, message, timestamp, data
+      dict values)
+    - `field:` - Field existence check (matches logs that have this field, any value)
+    - `field:value` - Field-specific matching (partial match, substring search)
+    - `AND` / `OR` - Boolean operators (case-insensitive)
+    - `NOT` - Negation
+    - `()` - Grouping for operator precedence
     - Recursive descent parser
-    - `parse_filter(*, query: str) -> Callable[[LogEntry], bool]`
-    - `FilterError` exception for invalid queries
+    - `parse_filter(*, query: str, case_sensitive: bool) -> Callable[[LogEntry], bool]`
+    - `FilterError` exception for invalid queries with toast notification
 
 - [ ] **SearchBar Widget** (`widgets/search_bar.py`):
     - Input widget with placeholder
@@ -178,30 +185,75 @@ specific test deliverables that must be completed as part of that phase.
     - Submit filter to AppState.filter_query
     - Show validation errors
 
-- [ ] **Filter Integration**:
-    - Watch AppState.filter_query changes
-    - Recompute filtered_logs when query changes
-    - Update LogList display
+- [ ] **StatusBar Toggles** (`widgets/status_bar.py`):
+    - **"Aa" button**: Toggle case sensitivity (default: off/case-insensitive)
+    - **"Highlight" button**: Toggle between filter mode and highlight mode (default:
+      filter)
+    - Both toggles stored in AppState as reactive values
+    - In-memory only (no persistence)
+
+- [ ] **Filter Integration** (`app.py`):
+    - New reactive states: `case_sensitive: bool = False`,
+      `highlight_matches: bool = False`
+    - Watch filter_query, case_sensitive, highlight_matches for changes
+    - Filter mode (default): Show only matching logs
+    - Highlight mode: Show all logs, highlight matching text, dim non-matching rows
+    - `apply_filter()` method handles both modes
     - Add successful queries to search_history
 
-- [ ] **Quick Level Filters** (optional):
-    - Keybindings for common filters (e.g., `1` for ERROR, `2` for WARN)
+- [ ] **LogList Highlighting** (`widgets/log_list.py`):
+    - CSS classes for match/no-match states
+    - Text highlighting with color
+    - Opacity reduction for non-matching rows
+    - Update rendering based on highlight mode
 
-**Testing**:
+### Display Modes
+
+**Filter Mode (default):**
+
+- Non-matching logs are hidden from view
+- Shows "Filtered: N/M" count
+
+**Highlight Mode:**
+
+- All logs remain visible
+- Matching text is highlighted in color
+- Non-matching rows have reduced opacity (40%)
+- Useful for seeing context around matches
+
+### Examples
+
+```
+error                    # Full-text: "error" anywhere in log
+level:ERROR              # Field: level contains "ERROR"
+level:                   # Existence: has level field (any value)
+level:ERROR AND svc:api  # Both conditions
+level:ERROR OR level:WARN # Either condition
+NOT level:DEBUG          # Exclude debug logs
+(level:ERR OR level:WARN) AND svc:api  # Grouped
+```
+
+### Testing
 
 - [ ] `tests/unit/test_filter_engine.py`
-    - Test simple field:value matching
+    - Test full-text search across all fields
+    - Test field:value matching (partial, case-insensitive by default)
+    - Test field: existence check
     - Test AND operator
     - Test OR operator
     - Test NOT operator
     - Test grouping with parentheses
+    - Test case sensitivity toggle
     - Test invalid query error handling
 - [ ] `tests/integration/test_search.py`
     - Test search bar input and focus
     - Test real-time filtering updates LogList
+    - Test toggle buttons (case sensitivity, highlight mode)
+    - Test highlight mode visual feedback
     - Test search history updates
 
-**Deliverable**: Can filter logs with field:value syntax and boolean operators.
+**Deliverable**: Can filter/highlight logs with full-text search, field-specific
+queries, boolean operators, and toggle between filter and highlight modes.
 
 ---
 
