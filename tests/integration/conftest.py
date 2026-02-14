@@ -48,3 +48,20 @@ def sample_jsonl_file(tmp_path: Path) -> Path:
 def sample_jsonl_entry_count() -> int:
     """Number of entries in sample_jsonl_file fixture."""
     return 4
+
+
+@pytest.fixture
+def many_logs_file(tmp_path: Path) -> Path:
+    """Create a JSONL file with many log entries for scroll testing."""
+    log_file = tmp_path / "many_logs.jsonl"
+    with log_file.open("w", encoding="utf-8") as f:
+        for i in range(50):
+            entry = {"line": i, "message": f"Log entry {i}"}
+            f.write(json.dumps(entry) + "\n")
+    return log_file
+
+
+@pytest.fixture
+def many_logs_entry_count() -> int:
+    """Number of entries in many_logs_file fixture."""
+    return 50

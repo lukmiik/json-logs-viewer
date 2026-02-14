@@ -168,6 +168,14 @@ class LogList(ListView):
     def action_scroll_top(self) -> None:
         if self._app:
             self._app.selected_index = 0
+            if self.parent is not None:
+                self.call_after_refresh(self._scroll_to_top)
+
+    def _scroll_to_top(self) -> None:
+        """Scroll container to the very top."""
+        if self.parent is not None:
+            container = cast(ScrollableContainer, self.parent)
+            container.scroll_to(y=0, animate=False)
 
     def action_scroll_bottom(self) -> None:
         if self._app:

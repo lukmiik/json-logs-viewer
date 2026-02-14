@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from textual.containers import ScrollableContainer
 from textual.message import Message
 
 from json_logs_viewer.app import LogViewerApp
@@ -242,3 +243,58 @@ async def test_horizontal_scroll_hl(sample_jsonl_file: Path) -> None:
         await pilot.press("l")
         await pilot.pause()
         assert container.scroll_x > scroll_x_before
+
+
+@pytest.mark.asyncio
+async def test_scroll_top_scrolls_to_top(many_logs_file: Path) -> None:
+    """Test that pressing 'g' scrolls the viewport to the very top."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        container = app.query_one("#logs-scroll", ScrollableContainer)
+        log_list.focus()
+        await pilot.pause()
+
+        assert log_list.has_focus
+
+        container.scroll_to(y=100, animate=False)
+        await pilot.pause()
+        assert container.scroll_y > 0
+
+        app.selected_index = 25
+        log_list.index = 25
+        await pilot.pause()
+
+        await pilot.press("g")
+        await pilot.pause()
+
+        assert app.selected_index == 0
+        assert log_list.index == 0
+        assert container.scroll_y == 0
+
+
+@pytest.mark.asyncio
+async def test_scroll_bottom_scrolls_to_bottom(many_logs_file: Path) -> None:
+    """Test that pressing 'G' scrolls the viewport to the very bottom."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        container = app.query_one("#logs-scroll", ScrollableContainer)
+        log_list.focus()
+        await pilot.pause()
+
+        assert log_list.has_focus
+
+        app.selected_index = 0
+        log_list.index = 0
+        await pilot.pause()
+
+        await pilot.press("G")
+        await pilot.pause()
+
+        last_index = len(log_list._log_entries) - 1
+        assert app.selected_index == last_index
+        assert log_list.index == last_index
+
+        max_scroll = container.max_scroll_y
+        assert container.scroll_y == max_scroll
