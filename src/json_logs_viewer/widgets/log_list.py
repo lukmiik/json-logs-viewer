@@ -17,6 +17,8 @@ class LogList(ListView):
 
     can_focus = True
 
+    SCROLLOFF: int = 3
+
     BINDINGS = ListView.BINDINGS + [
         ("j", "cursor_down", "Down"),
         ("k", "cursor_up", "Up"),
@@ -109,6 +111,41 @@ class LogList(ListView):
         if event.item and hasattr(event.item, "log_entry"):
             log_entry = cast(LogEntry, event.item.log_entry)
             self.post_message(self.LogSelected(log_entry))
+
+    def _scroll_highlighted_into_view(self) -> None:
+        """Scroll parent container with scrolloff padding."""
+        if self.index is None or self.index >= len(self.children):
+            return
+        if self.parent is None:
+            return
+        container = self.parent
+        top_idx = max(0, self.index - self.SCROLLOFF)
+        bottom_idx = min(
+            len(self.children) - 1,
+            self.index + self.SCROLLOFF,
+        )
+        self.children[top_idx].scroll_visible(animate=False)
+        self.children[bottom_idx].scroll_visible(animate=False)
+        container.scroll_to_widget(  # type: ignore[union-attr]
+            self.children[top_idx],
+            animate=False,
+        )
+        container.scroll_to_widget(  # type: ignore[union-attr]
+            self.children[bottom_idx],
+            animate=False,
+        )
+
+    def watch_index(
+        self,
+        old_index: int | None,
+        new_index: int | None,
+    ) -> None:
+        """Ensure highlighted item is visible."""
+        super().watch_index(old_index, new_index)
+        if new_index is not None:
+            self.call_after_refresh(
+                self._scroll_highlighted_into_view,
+            )
 
     def action_scroll_top(self) -> None:
         if self._app:
