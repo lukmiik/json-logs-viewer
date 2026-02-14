@@ -61,7 +61,7 @@ class LogList(ListView):
 
     def _on_wrap_log_lines_changed(self, wrap_log_lines: bool) -> None:
         self._update_wrap_class()
-        self._on_filtered_logs_changed(self._log_entries)
+        self._update_min_width()
 
     def _update_wrap_class(self) -> None:
         if self.app and hasattr(self.app, "wrap_log_lines"):
@@ -70,6 +70,21 @@ class LogList(ListView):
                 self.add_class("-wrap")
             else:
                 self.remove_class("-wrap")
+
+    def _update_min_width(self) -> None:
+        if not self._app:
+            return
+        if not self._app.wrap_log_lines:
+            max_len = 0
+            for log in self._log_entries:
+                json_str = json.dumps(log.data, ensure_ascii=False)
+                max_len = max(max_len, len(json_str))
+            if max_len > 0:
+                self.styles.min_width = max_len + 20
+            else:
+                self.styles.min_width = 0
+        else:
+            self.styles.min_width = 0
 
     def _on_filtered_logs_changed(self, filtered_logs: list[LogEntry]) -> None:
         """Rebuild list items when filtered_logs changes."""
