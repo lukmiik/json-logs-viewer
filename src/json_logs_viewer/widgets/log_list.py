@@ -24,6 +24,7 @@ class LogList(ListView):
         ("G", "scroll_bottom", "Bottom"),
         ("enter", "select_cursor", "View Details"),
         ("/", "app.focus_search", "Focus Search"),
+        ("w", "app.toggle_wrap", "Toggle Wrap"),
         ("q", "app.quit", "Quit"),
     ]
 
@@ -51,16 +52,38 @@ class LogList(ListView):
             self.watch(
                 self.app, "selected_index", self._on_selected_index_changed
             )
+            self.watch(
+                self.app, "wrap_log_lines", self._on_wrap_log_lines_changed
+            )
+        self._update_wrap_class()
+
+    def _on_wrap_log_lines_changed(self, wrap_log_lines: bool) -> None:
+        self._update_wrap_class()
+        self._on_filtered_logs_changed(self._log_entries)
+
+    def _update_wrap_class(self) -> None:
+        if self.app and hasattr(self.app, "wrap_log_lines"):
+            app = cast("LogViewerApp", self.app)
+            if app.wrap_log_lines:
+                self.add_class("-wrap")
+            else:
+                self.remove_class("-wrap")
 
     def _on_filtered_logs_changed(self, filtered_logs: list[LogEntry]) -> None:
         """Rebuild list items when filtered_logs changes."""
         self._log_entries = filtered_logs
         self.clear()
+        max_len = 0
         for log in self._log_entries:
             json_str = json.dumps(log.data, ensure_ascii=False)
+            max_len = max(max_len, len(json_str))
             item = ListItem(Static(json_str))
             item.log_entry = log  # type: ignore[attr-defined]
             self.mount(item)
+        if self._app and not self._app.wrap_log_lines and max_len > 0:
+            self.styles.min_width = max_len + 20
+        else:
+            self.styles.min_width = 0
         if self._app:
             idx = self._app.selected_index
             if idx >= len(self._log_entries):

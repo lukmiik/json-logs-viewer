@@ -1,10 +1,13 @@
 import argparse
 import json
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from textual.app import App, ComposeResult
+from textual.app import App, ComposeResult, SystemCommand
+from textual.containers import ScrollableContainer
 from textual.reactive import reactive
+from textual.screen import Screen
 
 from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.log_list import LogList
@@ -15,12 +18,17 @@ from json_logs_viewer.widgets.status_bar import StatusBar
 class LogViewerApp(App):
     CSS_PATH = "styles.tcss"
 
+    BINDINGS = [
+        ("w", "toggle_wrap", "Toggle Wrap"),
+    ]
+
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
     filtered_logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
     filter_query: reactive[str] = reactive("")
     selected_index: reactive[int] = reactive(0)
     search_history: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
     filepath: reactive[str | None] = reactive(None)
+    wrap_log_lines: reactive[bool] = reactive(False)
 
     def __init__(self, *, file: str | None = None, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(**kwargs)
@@ -28,7 +36,8 @@ class LogViewerApp(App):
 
     def compose(self) -> ComposeResult:
         yield SearchBar(id="search")
-        yield LogList(id="logs")
+        with ScrollableContainer(id="logs-scroll"):
+            yield LogList(id="logs")
         yield StatusBar(id="status")
 
     def on_mount(self) -> None:
@@ -82,6 +91,17 @@ class LogViewerApp(App):
 
     def action_focus_search(self) -> None:
         self.query_one("#search", SearchBar).focus()
+
+    def action_toggle_wrap(self) -> None:
+        self.wrap_log_lines = not self.wrap_log_lines
+
+    def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
+        yield from super().get_system_commands(screen)
+        yield SystemCommand(
+            "Toggle line wrap",
+            "Switch between horizontal scroll and soft wrap modes",
+            self.action_toggle_wrap,
+        )
 
     def watch_filtered_logs(self) -> None:
         """Ensure selected_index stays in bounds."""
