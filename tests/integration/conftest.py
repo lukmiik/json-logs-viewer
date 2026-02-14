@@ -1,0 +1,50 @@
+"""Integration test fixtures and utilities."""
+
+import json
+from pathlib import Path
+
+import pytest
+
+
+@pytest.fixture
+def sample_jsonl_file(tmp_path: Path) -> Path:
+    """Create a sample JSONL file with test log entries."""
+    log_file = tmp_path / "sample.jsonl"
+    entries = [
+        {
+            "timestamp": "2024-01-01T12:00:00Z",
+            "level": "INFO",
+            "message": "Started",
+            "service": "api",
+            "user": "alice",
+        },
+        {
+            "timestamp": "2024-01-01T12:01:00Z",
+            "level": "ERROR",
+            "message": "Failed",
+            "service": "db",
+            "user": "bob",
+        },
+        {
+            "timestamp": "2024-01-01T12:02:00Z",
+            "level": "WARN",
+            "message": "Slow query",
+            "service": "api",
+            "latency": "200ms",
+        },
+        {
+            "timestamp": "2024-01-01T12:03:00Z",
+            "level": "DEBUG",
+            "message": "Debug info",
+        },
+    ]
+    with log_file.open("w", encoding="utf-8") as f:
+        for entry in entries:
+            f.write(json.dumps(entry) + "\n")
+    return log_file
+
+
+@pytest.fixture
+def sample_jsonl_entry_count() -> int:
+    """Number of entries in sample_jsonl_file fixture."""
+    return 4

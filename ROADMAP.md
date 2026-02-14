@@ -68,17 +68,18 @@ specific test deliverables that must be completed as part of that phase.
           log_level, Level, loglevel)
         - `message: str | None` (auto-detected from: message, msg, Message, body, event,
           @m)
-    - `model_validator(mode="before")` extracts normalized fields before validation using priority-ordered field lists
+    - `model_validator(mode="before")` extracts normalized fields before validation
+      using priority-ordered field lists
     - Constructor accepts `line_number` and `data` (dict) directly
     - Returns normalized dict with extracted fields for Pydantic validation
 
 **Testing**:
 
-- [ ] `tests/unit/test_log_entry.py`
+- [x] `tests/unit/test_log_entry.py`
     - Test field auto-detection (timestamp from various names, level from various names)
     - Test edge cases (empty JSON, null values)
     - Test `_find_first` helper function with keyword arguments
-- [ ] Ensure 100% coverage for models module
+- [x] Ensure 100% coverage for models module
 
 **Deliverable**: Data models with unit tests for LogEntry parsing.
 
@@ -88,25 +89,23 @@ specific test deliverables that must be completed as part of that phase.
 
 **Goal**: Load log files and display them in a basic table.
 
-- [ ] **LogViewerApp** (`app.py`):
+- [x] **LogViewerApp** (`app.py`):
     - Main Textual App class
     - Initialize AppState
     - Compose method with basic layout
     - Command-line argument parsing (`<file>`, `-f` flag)
     - Method to load file contents into AppState.logs
 
-- [ ] **LogList Widget** (`widgets/log_list.py`):
+- [x] **LogList Widget** (`widgets/log_list.py`):
     - Extend DataTable
     - Display logs from AppState.filtered_logs
-    - Configurable columns based on AppState.columns
-    - React to state changes (logs, columns, filter changes)
-    - Line numbers in first column
+    - React to state changes (logs, filter changes)
 
-- [ ] **Basic CSS**:
+- [x] **Basic CSS**:
     - Minimal styling for DataTable
     - Focus indicators
 
-- [ ] **File Loading**:
+- [x] **File Loading**:
     - Read file line by line
     - Parse each line as LogEntry
     - Handle JSON parse errors gracefully
@@ -114,11 +113,11 @@ specific test deliverables that must be completed as part of that phase.
 
 **Testing**:
 
-- [ ] `tests/integration/test_app.py`
+- [x] `tests/integration/test_app.py`
     - Test app mounts successfully
     - Test quit keybinding
     - Test file loading from CLI
-- [ ] `tests/integration/test_log_list.py`
+- [x] `tests/integration/test_log_list.py`
     - Test logs displayed in DataTable
     - Test column configuration
     - Test reactive updates when logs change
@@ -131,7 +130,7 @@ specific test deliverables that must be completed as part of that phase.
 
 **Goal**: Implement Vim-style navigation for the log list.
 
-- [ ] **LogList Navigation**:
+- [x] **LogList Navigation**:
     - `j` / `↓` - Move down
     - `k` / `↑` - Move up
     - `gg` - Jump to top (first log)
@@ -139,21 +138,15 @@ specific test deliverables that must be completed as part of that phase.
     - `Enter` - Open detail view (placeholder)
     - `q` - Quit application
 
-- [ ] **Global Keybindings**:
-    - `Ctrl+C` - Quit
-    - `/` - Focus search (placeholder, just focus)
-    - `Ctrl+Shift+P` - Command palette
-
-- [ ] **StatusBar Widget** (`widgets/status_bar.py`):
+- [x] **StatusBar Widget** (`widgets/status_bar.py`):
     - Current file name
     - Total log count / filtered count
-    - Current position (line X of Y)
     - Follow mode indicator (placeholder)
     - Help hints
 
 **Testing**:
 
-- [ ] Extend `tests/integration/test_log_list.py`
+- [x] Extend `tests/integration/test_log_list.py`
     - Test `j`/`k` navigation moves cursor
     - Test `gg` jumps to top
     - Test `G` jumps to bottom

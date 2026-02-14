@@ -1,0 +1,28 @@
+Screen {
+    layout: vertical;
+}
+
+#search {
+    height: 3;
+    border: solid $primary;
+}
+
+#logs {
+    height: 1fr;
+    border: solid $primary;
+    padding: 0 0 0 1;
+    scrollbar-size: 1 1;
+}
+
+ListItem {
+    height: auto;
+    padding: 0 1;
+}
+
+ListItem.--highlighted {
+    background: $accent;
+}
+
+#status {
+    height: auto;
+}

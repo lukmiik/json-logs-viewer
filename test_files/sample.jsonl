@@ -1,0 +1,15 @@
+{"level": "INFO", "timestamp": "2024-01-15T10:00:00Z", "message": "Application started", "service": "api"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:01Z", "message": "Loading configuration from /etc/app/config.json", "service": "api"}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:02Z", "message": "Database connection established", "service": "api", "db": "postgres://localhost:5432/app"}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:05Z", "message": "Cache miss for key: user_session_123", "service": "cache"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:10Z", "message": "Failed to connect to external API", "service": "api", "error": "Connection refused", "endpoint": "https://external.example.com/data"}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:15Z", "message": "User logged in", "service": "auth", "user_id": 42, "username": "john_doe"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:20Z", "message": "Request processed in 45ms", "service": "api", "method": "GET", "path": "/api/users"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:25Z", "message": "Invalid JSON payload", "service": "api", "error": "JSONDecodeError", "position": 142}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:30Z", "message": "Rate limit approaching for IP 192.168.1.100", "service": "api", "requests_remaining": 5}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:35Z", "message": "Scheduled task completed", "service": "scheduler", "task": "cleanup_old_sessions"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:40Z", "message": "Memory usage above threshold", "service": "monitor", "usage_percent": 95, "available_mb": 128}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:45Z", "message": "Health check passed", "service": "health", "checks": {"database": "ok", "cache": "ok", "disk": "ok"}}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:50Z", "message": "WebSocket connection established", "service": "websocket", "client_id": "abc123"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:55Z", "message": "File not found", "service": "storage", "path": "/data/uploads/image_999.png", "error": "ENOENT"}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:00Z", "message": "Backup completed successfully", "service": "backup", "size_mb": 2048, "duration_seconds": 45}
