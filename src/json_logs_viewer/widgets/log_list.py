@@ -53,7 +53,7 @@ class LogList(ScrollView):
 
     DEFAULT_CSS = """
     LogList .loglist--cursor {
-        background: $accent;
+        background: $block-cursor-background;
     }
     """
 
