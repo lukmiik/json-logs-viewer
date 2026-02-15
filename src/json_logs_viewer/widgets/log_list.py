@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from rich.console import Console
 from rich.segment import Segment
-from rich.style import Style
 from rich.text import Text
 from textual.cache import LRUCache
 from textual.geometry import Size
@@ -235,7 +234,7 @@ class LogList(ScrollView):
         if is_highlighted:
             style = self.get_component_rich_style("loglist--cursor")
         else:
-            style = Style()
+            style = self.rich_style
 
         display_width = max(self._max_content_width + 2, self.size.width)
         padded = text.ljust(display_width)
@@ -271,7 +270,7 @@ class LogList(ScrollView):
         if is_highlighted:
             style = self.get_component_rich_style("loglist--cursor")
         else:
-            style = Style()
+            style = self.rich_style
 
         padded = line_text.ljust(width)
         segments = [Segment(padded, style)]
