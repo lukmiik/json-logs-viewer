@@ -55,6 +55,10 @@ json-logs-viewer = "json_logs_viewer:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "performance: performance tests (deselected by default, run with -m performance)",
+]
+addopts = "-m 'not performance'"
 
 [build-system]
 requires = ["uv_build>=0.8.22,<0.9.0"]
