@@ -1,9 +1,9 @@
 """Integration tests for LogList widget."""
 
+import json
 from pathlib import Path
 
 import pytest
-from textual.containers import ScrollableContainer
 from textual.message import Message
 
 from json_logs_viewer.app import LogViewerApp
@@ -34,23 +34,23 @@ async def test_navigation_jk(sample_jsonl_file: Path) -> None:
         await pilot.pause()
 
         assert app.selected_index == 3
-        assert log_list.index == 3
+        assert log_list._cursor_index == 3
 
         await pilot.press("j")
         assert app.selected_index == 3
-        assert log_list.index == 3
+        assert log_list._cursor_index == 3
 
         await pilot.press("k")
         assert app.selected_index == 2
-        assert log_list.index == 2
+        assert log_list._cursor_index == 2
 
         await pilot.press("down", "down", "down")
         assert app.selected_index == 3
-        assert log_list.index == 3
+        assert log_list._cursor_index == 3
 
         await pilot.press("up")
         assert app.selected_index == 2
-        assert log_list.index == 2
+        assert log_list._cursor_index == 2
 
 
 @pytest.mark.asyncio
@@ -63,15 +63,17 @@ async def test_gg_and_G(sample_jsonl_file: Path) -> None:
         await pilot.pause()
 
         app.selected_index = 2
-        log_list.index = 2
+        await pilot.pause()
 
-        await pilot.press("g", "g")
+        await pilot.press("g")
+        await pilot.pause()
         assert app.selected_index == 0
-        assert log_list.index == 0
+        assert log_list._cursor_index == 0
 
         await pilot.press("G")
+        await pilot.pause()
         assert app.selected_index == 3
-        assert log_list.index == 3
+        assert log_list._cursor_index == 3
 
 
 @pytest.mark.asyncio
@@ -80,7 +82,7 @@ async def test_enter_posts_message(
 ) -> None:
     """Test that Enter posts LogSelected message with correct log."""
     app = LogViewerApp(file=str(sample_jsonl_file))
-    captured = []
+    captured: list[Message] = []
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
         log_list.focus()
@@ -129,7 +131,7 @@ async def test_toggle_wrap_action(sample_jsonl_file: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_toggle_wrap_key(sample_jsonl_file: Path) -> None:
-    """Test that pressing w toggles wrap in LogList."""
+    """Test that pressing w toggles wrap_log_lines."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
@@ -137,36 +139,19 @@ async def test_toggle_wrap_key(sample_jsonl_file: Path) -> None:
         await pilot.pause()
 
         assert app.wrap_log_lines is False
-        assert not log_list.has_class("-wrap")
 
         await pilot.press("w")
         await pilot.pause()
-
         assert app.wrap_log_lines is True
-        assert log_list.has_class("-wrap")
 
         await pilot.press("w")
         await pilot.pause()
-
         assert app.wrap_log_lines is False
-        assert not log_list.has_class("-wrap")
-
-
-@pytest.mark.asyncio
-async def test_toggle_wrap_class_added_on_start(
-    sample_jsonl_file: Path,
-) -> None:
-    """Test that -wrap class is added when wrap_log_lines starts True."""
-    app = LogViewerApp(file=str(sample_jsonl_file))
-    app.wrap_log_lines = True
-    async with app.run_test():
-        log_list = app.query_one("#logs", LogList)
-        assert log_list.has_class("-wrap")
 
 
 @pytest.mark.asyncio
 async def test_scrolloff_behavior(
-    sample_jsonl_file: Path, monkeypatch: pytest.MonkeyPatch
+    sample_jsonl_file: Path,
 ) -> None:
     """Test that SCROLLOFF is respected when scrolling."""
     app = LogViewerApp(file=str(sample_jsonl_file))
@@ -180,35 +165,32 @@ async def test_scrolloff_behavior(
         await pilot.press("j", "j", "j")
         await pilot.pause()
 
-        assert log_list.index == 3
+        assert log_list._cursor_index == 3
 
 
 @pytest.mark.asyncio
-async def test_scroll_highlighted_into_view(
+async def test_scroll_cursor_into_view_called(
     sample_jsonl_file: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test that _scroll_highlighted_into_view is called on index change."""
+    """Test that _scroll_cursor_into_view is called on cursor movement."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
         log_list.focus()
         await pilot.pause()
 
-        log_list.index = 0
         app.selected_index = 0
         await pilot.pause()
 
-        scroll_called = []
+        scroll_called: list[bool] = []
 
-        original_scroll = log_list._scroll_highlighted_into_view
+        original_scroll = log_list._scroll_cursor_into_view
 
         def mock_scroll() -> None:
             scroll_called.append(True)
             return original_scroll()
 
-        monkeypatch.setattr(
-            log_list, "_scroll_highlighted_into_view", mock_scroll
-        )
+        monkeypatch.setattr(log_list, "_scroll_cursor_into_view", mock_scroll)
 
         await pilot.press("j")
         await pilot.pause()
@@ -218,31 +200,28 @@ async def test_scroll_highlighted_into_view(
 
 @pytest.mark.asyncio
 async def test_horizontal_scroll_hl(sample_jsonl_file: Path) -> None:
-    """Test that h/l keys scroll horizontally."""
-    from textual.containers import ScrollableContainer
-
+    """Test that h/l keys trigger horizontal scrolling."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
-        container = app.query_one("#logs-scroll", ScrollableContainer)
         log_list.focus()
         await pilot.pause()
 
         assert log_list.has_focus
 
-        container.scroll_right()
+        log_list.scroll_right()
         await pilot.pause()
-        scroll_x_before = container.scroll_x
+        scroll_x_before = log_list.scroll_x
 
         await pilot.press("h")
         await pilot.pause()
-        assert container.scroll_x < scroll_x_before
+        assert log_list.scroll_x < scroll_x_before
 
-        scroll_x_before = container.scroll_x
+        scroll_x_before = log_list.scroll_x
 
         await pilot.press("l")
         await pilot.pause()
-        assert container.scroll_x > scroll_x_before
+        assert log_list.scroll_x > scroll_x_before
 
 
 @pytest.mark.asyncio
@@ -251,26 +230,24 @@ async def test_scroll_top_scrolls_to_top(many_logs_file: Path) -> None:
     app = LogViewerApp(file=str(many_logs_file))
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
-        container = app.query_one("#logs-scroll", ScrollableContainer)
         log_list.focus()
         await pilot.pause()
 
         assert log_list.has_focus
 
-        container.scroll_to(y=100, animate=False)
+        log_list.scroll_to(y=30, animate=False)
         await pilot.pause()
-        assert container.scroll_y > 0
+        assert log_list.scroll_y > 0
 
         app.selected_index = 25
-        log_list.index = 25
         await pilot.pause()
 
         await pilot.press("g")
         await pilot.pause()
 
         assert app.selected_index == 0
-        assert log_list.index == 0
-        assert container.scroll_y == 0
+        assert log_list._cursor_index == 0
+        assert log_list.scroll_y == 0
 
 
 @pytest.mark.asyncio
@@ -279,14 +256,12 @@ async def test_scroll_bottom_scrolls_to_bottom(many_logs_file: Path) -> None:
     app = LogViewerApp(file=str(many_logs_file))
     async with app.run_test() as pilot:
         log_list = app.query_one("#logs", LogList)
-        container = app.query_one("#logs-scroll", ScrollableContainer)
         log_list.focus()
         await pilot.pause()
 
         assert log_list.has_focus
 
         app.selected_index = 0
-        log_list.index = 0
         await pilot.pause()
 
         await pilot.press("G")
@@ -294,7 +269,215 @@ async def test_scroll_bottom_scrolls_to_bottom(many_logs_file: Path) -> None:
 
         last_index = len(log_list._log_entries) - 1
         assert app.selected_index == last_index
-        assert log_list.index == last_index
+        assert log_list._cursor_index == last_index
 
-        max_scroll = container.max_scroll_y
-        assert container.scroll_y == max_scroll
+        max_scroll = log_list.max_scroll_y
+        assert log_list.scroll_y == max_scroll
+
+
+@pytest.mark.asyncio
+async def test_virtual_size_matches_log_count(
+    sample_jsonl_file: Path,
+    sample_jsonl_entry_count: int,
+) -> None:
+    """Test that virtual_size height equals number of log entries."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test():
+        log_list = app.query_one("#logs", LogList)
+        assert log_list.virtual_size.height == sample_jsonl_entry_count
+
+
+@pytest.mark.asyncio
+async def test_virtual_size_width_matches_max_content(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that virtual_size width is based on the longest serialized line."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test():
+        log_list = app.query_one("#logs", LogList)
+        max_len = max(
+            len(json.dumps(log.data, ensure_ascii=False))
+            for log in log_list._log_entries
+        )
+        assert log_list._max_content_width == max_len
+        assert log_list.virtual_size.width == max_len + 2
+
+
+@pytest.mark.asyncio
+async def test_render_line_returns_correct_content(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that render_line produces a strip starting with the JSON text."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        # Scroll to top so line 0 is visible at y=0
+        log_list.scroll_to(y=0, animate=False)
+        log_list._cursor_index = 0
+        await pilot.pause()
+
+        strip = log_list.render_line(0)
+        rendered_text = strip.text
+        expected = json.dumps(
+            log_list._log_entries[0].data, ensure_ascii=False
+        )
+        # Strip is cropped to viewport width, so check the
+        # visible portion matches the start of the JSON text
+        visible_len = len(rendered_text.rstrip())
+        assert rendered_text.startswith(expected[:visible_len])
+
+
+@pytest.mark.asyncio
+async def test_render_line_blank_for_out_of_bounds(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test render_line returns blank for out-of-bounds."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        await pilot.pause()
+
+        # Request a line beyond the log entries
+        log_list.scroll_to(y=0, animate=False)
+        await pilot.pause()
+        # y + scroll_y would be far beyond the entries
+        strip = log_list.render_line(len(log_list._log_entries) + 100)
+        assert strip.text.strip() == ""
+
+
+@pytest.mark.asyncio
+async def test_line_cache_is_populated(sample_jsonl_file: Path) -> None:
+    """Test that render_line populates the LRU cache."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        log_list.scroll_to(y=0, animate=False)
+        log_list._cursor_index = 0
+        await pilot.pause()
+
+        # Render first line — should populate cache for index 0
+        log_list.render_line(0)
+        assert 0 in log_list._line_cache
+
+
+@pytest.mark.asyncio
+async def test_set_logs_resets_cache(sample_jsonl_file: Path) -> None:
+    """Test that set_logs clears the line cache."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        await pilot.pause()
+
+        # Populate cache
+        log_list.scroll_to(y=0, animate=False)
+        await pilot.pause()
+        log_list.render_line(0)
+        assert 0 in log_list._line_cache
+
+        # set_logs should reset it
+        log_list.set_logs(logs=log_list._log_entries)
+        assert 0 not in log_list._line_cache
+
+
+@pytest.mark.asyncio
+async def test_cursor_clamps_when_filtered_logs_shrink(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that cursor stays in bounds when filter reduces entries."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        # Cursor starts at last entry (index 3)
+        assert log_list._cursor_index == 3
+
+        # Apply filter that matches only 1 entry
+        search_bar = app.query_one("#search")
+        search_bar.focus()
+        await pilot.press(*list("level:DEBUG"))
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert len(log_list._log_entries) == 1
+        assert log_list._cursor_index == 0
+
+
+@pytest.mark.asyncio
+async def test_enter_on_empty_logs_no_crash() -> None:
+    """Test that pressing Enter with no logs doesn't crash."""
+    app = LogViewerApp()
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        assert len(log_list._log_entries) == 0
+        await pilot.press("enter")
+        await pilot.pause()
+        # No crash is the assertion
+
+
+@pytest.mark.asyncio
+async def test_enter_selects_correct_log_after_navigating(
+    sample_jsonl_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that Enter selects the log at the current cursor position."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    captured: list[Message] = []
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        original_post = log_list.post_message
+
+        def mock_post(msg: Message) -> bool:
+            captured.append(msg)
+            return original_post(msg)
+
+        monkeypatch.setattr(log_list, "post_message", mock_post)
+
+        # Navigate to the first entry
+        await pilot.press("g")
+        await pilot.pause()
+        assert log_list._cursor_index == 0
+
+        await pilot.press("enter")
+        await pilot.pause()
+
+        msgs = [m for m in captured if isinstance(m, LogList.LogSelected)]
+        assert len(msgs) == 1
+        assert msgs[0].log_entry.line_number == 1
+
+
+@pytest.mark.asyncio
+async def test_cursor_starts_at_last_entry(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that cursor starts at the newest (last) log entry on load."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        await pilot.pause()
+
+        last = len(log_list._log_entries) - 1
+        assert log_list._cursor_index == last
+        assert app.selected_index == last
+
+
+@pytest.mark.asyncio
+async def test_virtual_size_empty_logs() -> None:
+    """Test that virtual_size is (2, 0) with no logs."""
+    app = LogViewerApp()
+    async with app.run_test():
+        log_list = app.query_one("#logs", LogList)
+        assert log_list.virtual_size.height == 0
+        assert log_list.virtual_size.width == 2

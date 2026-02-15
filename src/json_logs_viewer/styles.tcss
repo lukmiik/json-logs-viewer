@@ -7,39 +7,11 @@ Screen {
     border: solid $primary;
 }
 
-#logs-scroll {
+#logs {
     height: 1fr;
     border: solid $primary;
     scrollbar-size: 1 1;
-}
-
-#logs {
-    height: auto;
     padding: 0 0 0 1;
-    overflow: hidden hidden;
-}
-
-/* Horizontal scroll mode: single-line logs (default) */
-#logs ListItem Static {
-    text-wrap: nowrap;
-}
-
-/* Soft wrap mode - overrides when -wrap class is present */
-#logs.-wrap {
-    overflow-x: hidden;
-}
-
-#logs.-wrap ListItem Static {
-    text-wrap: wrap;
-}
-
-ListItem {
-    height: auto;
-    padding: 0 1;
-}
-
-ListItem.--highlighted {
-    background: $accent;
 }
 
 #status {
