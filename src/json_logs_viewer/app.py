@@ -10,6 +10,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 
 from json_logs_viewer.filter_engine import FilterError, parse_filter
+from json_logs_viewer.log_reader import read_lines_backward
 from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
@@ -104,21 +105,18 @@ class LogViewerApp(App):
             self.exit(message=f"Not a file: {filepath}")
             return
 
-        logs = []
+        logs: list[LogEntry] = []
         t_read = time.perf_counter()
         try:
-            with path.open("r", encoding="utf-8") as f:
-                for idx, line in enumerate(f, start=1):
-                    line = line.strip()
-                    if not line:
-                        continue
-                    try:
-                        data = json.loads(line)
-                        log = LogEntry(line_number=idx, data=data)
-                        logs.append(log)
-                    except json.JSONDecodeError as e:
-                        self.log.warning(f"Line {idx}: invalid JSON: {e}")
-                        continue
+            for line_num, line_text in read_lines_backward(filepath=path):
+                try:
+                    data = json.loads(line_text)
+                    log = LogEntry(line_number=line_num, data=data)
+                    logs.append(log)
+                except json.JSONDecodeError as e:
+                    self.log.warning(f"Line {line_num}: invalid JSON: {e}")
+                    continue
+            logs.reverse()
         except Exception as e:
             self.exit(message=f"Error reading file: {e}")
             return
