@@ -39,13 +39,12 @@ class LogViewerApp(App):
         self.initial_file = file
 
     def compose(self) -> ComposeResult:
-        yield SearchBar(id="search")
         yield LogList(id="logs")
+        yield SearchBar(id="search")
         yield StatusBar(id="status")
 
     def on_mount(self) -> None:
-        """Load file if provided via CLI and set initial focus."""
-        self.query_one("#logs", LogList).focus()
+        """Load file if provided via CLI."""
         if self.initial_file:
             self.load_file(filepath=self.initial_file)
 

@@ -5,6 +5,7 @@ Screen {
 #search {
     height: 3;
     border: solid $primary;
+    dock: top;
 }
 
 #logs {
@@ -16,4 +17,5 @@ Screen {
 
 #status {
     height: auto;
+    dock: bottom;
 }
