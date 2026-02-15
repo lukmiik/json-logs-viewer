@@ -1,0 +1,122 @@
+{"level": "INFO", "timestamp": "2024-01-15T10:00:00Z", "message": "Application started", "service": "api"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:01Z", "message": "Loading configuration from /etc/app/config.json", "service": "api"}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:02Z", "message": "Database connection established", "service": "api", "db": "postgres://localhost:5432/app"}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:05Z", "message": "Cache miss for key: user_session_123", "service": "cache"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:10Z", "message": "Failed to connect to external API", "service": "api", "error": "Connection refused", "endpoint": "https://external.example.com/data"}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:15Z", "message": "User logged in", "service": "auth", "user_id": 42, "username": "john_doe"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:20Z", "message": "Request processed in 45ms", "service": "api", "method": "GET", "path": "/api/users"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:25Z", "message": "Invalid JSON payload", "service": "api", "error": "JSONDecodeError", "position": 142}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:30Z", "message": "Rate limit approaching for IP 192.168.1.100", "service": "api", "requests_remaining": 5}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:35Z", "message": "Scheduled task completed", "service": "scheduler", "task": "cleanup_old_sessions"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:40Z", "message": "Memory usage above threshold", "service": "monitor", "usage_percent": 95, "available_mb": 128}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:45Z", "message": "Health check passed", "service": "health", "checks": {"database": "ok", "cache": "ok", "disk": "ok"}}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:50Z", "message": "WebSocket connection established", "service": "websocket", "client_id": "abc123"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:55Z", "message": "File not found", "service": "storage", "path": "/data/uploads/image_999.png", "error": "ENOENT"}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:00Z", "message": "Backup completed successfully", "service": "backup", "size_mb": 2048, "duration_seconds": 45}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:05Z", "message": "Service started", "service": "worker"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:10Z", "message": "Worker 1 processing job", "service": "worker", "job_id": 1001}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:15Z", "message": "Job completed", "service": "worker", "job_id": 1001, "duration_ms": 1250}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:20Z", "message": "Disk space low", "service": "monitor", "free_gb": 2}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:25Z", "message": "User logged out", "service": "auth", "user_id": 42}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:30Z", "message": "Session cleaned up", "service": "auth", "session_id": "sess_abc123"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:35Z", "message": "Database query timeout", "service": "database", "query": "SELECT * FROM large_table", "timeout_ms": 30000}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:40Z", "message": "Cache cleared", "service": "cache"}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:45Z", "message": "SSL certificate expires in 7 days", "service": "security", "domain": "api.example.com"}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:50Z", "message": "API key rotated", "service": "security"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:55Z", "message": "Request headers logged", "service": "api", "headers": {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:00Z", "message": "Authentication failed", "service": "auth", "username": "attacker", "ip": "10.0.0.1"}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:05Z", "message": "Email sent", "service": "email", "to": "user@example.com", "subject": "Welcome"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:10Z", "message": "SMTP connection established", "service": "email"}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:15Z", "message": "Cron job started", "service": "cron", "job": "daily_report"}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:20Z", "message": "High CPU usage", "service": "monitor", "cpu_percent": 92}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:25Z", "message": "Cron job completed", "service": "cron", "job": "daily_report", "duration_seconds": 5}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:30Z", "message": "Metrics collected", "service": "monitor", "metrics": {"requests": 1500, "errors": 3}}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:35Z", "message": "Payment processing failed", "service": "payment", "error": "Insufficient funds", "order_id": "ord_12345"}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:40Z", "message": "Refund processed", "service": "payment", "order_id": "ord_12345", "amount": 99.99}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:45Z", "message": "Deprecated API endpoint called", "service": "api", "endpoint": "/api/v1/users", "replacement": "/api/v2/users"}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:50Z", "message": "User registered", "service": "auth", "user_id": 100, "email": "newuser@example.com"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:55Z", "message": "Verification email sent", "service": "email", "to": "newuser@example.com"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:00Z", "message": "File uploaded", "service": "storage", "filename": "document.pdf", "size_mb": 2}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:05Z", "message": "Virus detected", "service": "security", "file": "attachment.exe", "action": "quarantined"}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:10Z", "message": "Suspicious login attempt", "service": "security", "ip": "192.168.1.50", "attempts": 5}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:15Z", "message": "Account locked", "service": "security", "user_id": 55, "reason": "multiple_failed_logins"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:20Z", "message": "Password reset requested", "service": "auth", "email": "user@example.com"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:25Z", "message": "Password reset successful", "service": "auth", "user_id": 55}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:30Z", "message": "Maintenance window starting", "service": "ops"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:35Z", "message": "Database backup started", "service": "backup"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:40Z", "message": "Backup progress: 25%", "service": "backup"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:45Z", "message": "Database backup completed", "service": "backup", "size_gb": 15}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:50Z", "message": "CDN sync failed", "service": "cdn", "error": "timeout"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:55Z", "message": "CDN cache cleared", "service": "cdn"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:00Z", "message": "Memory leak detected", "service": "monitor", "component": "worker_pool", "leak_rate_mb_per_hour": 50}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:05Z", "message": "Worker restarted", "service": "worker", "worker_id": 3}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:10Z", "message": "GC completed", "service": "monitor", "freed_mb": 120}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:15Z", "message": "Third-party API rate limited", "service": "api", "provider": "stripe", "retry_after": 60}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:20Z", "message": "Retry successful", "service": "api", "provider": "stripe"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:25Z", "message": "Slow query detected", "service": "database", "query": "SELECT COUNT(*) FROM events", "duration_ms": 5000}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:30Z", "message": "Index created", "service": "database", "table": "events", "index": "idx_created_at"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:35Z", "message": "Query optimized", "service": "database", "improvement_percent": 80}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:40Z", "message": "Disk write failed", "service": "storage", "error": "No space left", "path": "/var/data/uploads"}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:45Z", "message": "Old logs archived", "service": "logs", "count": 50000, "size_mb": 250}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:50Z", "message": "Log retention policy updated", "service": "logs", "days": 30}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:55Z",Metrics exported "message": "", "service": "monitor", "destination": "prometheus"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:00Z", "message": "Alert rule triggered", "service": "alerts", "rule": "high_error_rate", "threshold": 10}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:05Z", "message": "Alert acknowledged", "service": "alerts", "rule": "high_error_rate", "by": "admin@example.com"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:10Z", "message": "Container crashed", "service": "kubernetes", "container": "api", "restart_count": 5}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:15Z", "message": "Pod memory limit approaching", "service": "kubernetes", "pod": "api-7b9f5d4c8-x2m9p", "usage_percent": 85}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:20Z", "message": "Horizontal pod autoscaler triggered", "service": "kubernetes", "replicas": 3, "reason": "high_cpu"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:25Z", "message": "New pod created", "service": "kubernetes", "pod": "api-7b9f5d4c8-z5k8l"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:30Z", "message": "Liveness probe failed", "service": "kubernetes", "pod": "worker-5d8f7b6c9-q2r4s"}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:35Z", "message": "Pod replaced", "service": "kubernetes", "old_pod": "worker-5d8f7b6c9-q2r4s", "new_pod": "worker-5d8f7b6c9-t9u1v"}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:40Z", "message": "Node pressure detected", "service": "kubernetes", "node": "worker-node-3", "type": "memory"}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:45Z", "message": "Certificate renewed", "service": "security", "domain": "api.example.com", "expires": "2024-02-15T10:05:45Z"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:50Z", "message": "DNS cache refreshed", "service": "network"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:55Z", "message": "Network partition detected", "service": "network", "peers_unreachable": 2}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:00Z", "message": "Network healed", "service": "network"}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:05Z", "message": "Latency spike detected", "service": "monitor", "service": "database", "p99_latency_ms": 2500}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:10Z", "message": "Database connection pool expanded", "service": "database", "min_connections": 5, "max_connections": 20}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:15Z", "message": "Connection borrowed from pool", "service": "database", "pool_id": "pool_1"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:20Z", "message": "Deadlock detected", "service": "database", "tables": ["orders", "inventory"]}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:25Z", "message": "Deadlock resolved", "service": "database", "tables": ["orders", "inventory"]}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:30Z", "message": "Transaction retry", "service": "database", "attempt": 3, "max_attempts": 5}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:35Z", "message": "Transaction committed", "service": "database", "duration_ms": 450}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:40Z", "message": "SQL query logged", "service": "database", "query": "INSERT INTO orders VALUES (...)", "duration_ms": 120}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:45Z", "message": "Constraint violation", "service": "database", "constraint": "unique_email", "table": "users"}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:50Z", "message": "User updated profile", "service": "api", "user_id": 78, "field": "avatar_url"}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:55Z", "message": "Image resize failed", "service": "image", "error": "Invalid format", "file": "photo.jpg"}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:00Z", "message": "Image converted", "service": "image", "original": "photo.tiff", "output": "photo.webp", "size_reduction_percent": 70}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:05Z", "message": "Thumbnail generated", "service": "image", "size": "150x150"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:10Z", "message": "Video encoding failed", "service": "video", "error": "Codec not supported", "file": "video.mov"}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:15Z", "message": "Video transcoded", "service": "video", "input": "video.mov", "output": "video.mp4", "duration_seconds": 120}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:20Z", "message": "CDN cache miss", "service": "cdn", "url": "/static/app.js"}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:25Z", "message": "CDN cache populated", "service": "cdn", "url": "/static/app.js", "pop": "us-east"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:30Z", "message": "Cache invalidation triggered", "service": "cache", "keys": ["user:42", "product:123"]}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:35Z", "message": "Redis connection lost", "service": "cache", "error": "Connection reset by peer"}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:40Z", "message": "Redis reconnected", "service": "cache"}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:45Z", "message": "Memory usage high", "service": "monitor", "usage_percent": 88, "available_mb": 384}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:50Z", "message": "Garbage collection triggered", "service": "monitor", "reason": "manual"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:55Z", "message": "Memory freed", "service": "monitor", "freed_mb": 256}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:00Z", "message": "OutOfMemoryError", "service": "worker", "worker_id": 5, "heap_usage_percent": 98}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:05Z", "message": "Worker killed and restarted", "service": "worker", "worker_id": 5}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:10Z", "message": "OOM recovery initiated", "service": "ops"}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:15Z", "message": "System health check", "service": "health", "status": "healthy", "components": {"api": "ok", "database": "ok", "cache": "ok", "queue": "ok"}}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:20Z", "message": "Metrics aggregated", "service": "monitor", "interval": "1m", "count": 1440}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:25Z", "message": "SLO breach", "service": "monitor", "slo": "api_latency_p99", "target": 500, "actual": 2500}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:30Z", "message": "Incident created", "service": "incidents", "severity": "high", "title": "API latency spike"}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:35Z", "message": "On-call page sent", "service": "incidents", "recipient": "oncall@example.com"}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:40Z", "message": "Incident acknowledged", "service": "incidents", "acknowledged_by": "engineer@example.com"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:45Z", "message": "Investigation started", "service": "incidents", "incident_id": "INC-001"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:50Z", "message": "Root cause identified", "service": "incidents", "cause": "database connection pool exhaustion"}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:55Z", "message": "Mitigation applied", "service": "incidents", "action": "increased_max_connections"}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:00Z", "message": "Monitoring for regression", "service": "incidents"}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:05Z", "message": "Incident resolved", "service": "incidents", "resolution_time_minutes": 35}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:10Z", "message": "Post-mortem scheduled", "service": "incidents", "date": "2024-01-16T14:00:00Z"}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:15Z", "message": "Deployment started", "service": "deploy", "version": "v2.5.0", "environment": "production"}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:20Z", "message": "Deployment step: database migration", "service": "deploy"}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:25Z", "message": "Database migration completed", "service": "deploy", "migrations": ["add_user_preferences", "add_api_keys"]}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:30Z", "message": "Rolling out new version", "service": "deploy", "current": 2, "total": 5}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:35Z", "message": "Health check failed", "service": "deploy", "pod": "api-v2.5.0-3f7h8j9k-l2m3n"}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:40Z", "message": "Rolling back to previous version", "service": "deploy"}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:45Z", "message": "Rollback in progress", "service": "deploy", "target": "v2.4.9"}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:50Z", "message": "Rollback completed", "service": "deploy", "previous_version": "v2.4.9"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:55Z", "message": "Deployment metrics", "service": "deploy", "duration_seconds": 295, "success_rate_percent": 95}

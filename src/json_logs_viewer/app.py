@@ -9,6 +9,7 @@ from textual.containers import ScrollableContainer
 from textual.reactive import reactive
 from textual.screen import Screen
 
+from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
@@ -29,6 +30,8 @@ class LogViewerApp(App):
     search_history: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
     filepath: reactive[str | None] = reactive(None)
     wrap_log_lines: reactive[bool] = reactive(False)
+    case_sensitive: reactive[bool] = reactive(False)
+    highlight_matches: reactive[bool] = reactive(False)
 
     def __init__(self, *, file: str | None = None, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(**kwargs)
@@ -53,9 +56,34 @@ class LogViewerApp(App):
         """Recompute filtered logs when query changes."""
         self.apply_filter()
 
+    def watch_case_sensitive(self) -> None:
+        """Recompute filtered logs when case sensitivity changes."""
+        self.apply_filter()
+
+    def watch_highlight_matches(self) -> None:
+        """Recompute filtered logs when highlight mode changes."""
+        self.apply_filter()
+
     def apply_filter(self) -> None:
-        """Apply current filter to logs. Phase 3 stub: returns all logs."""
-        self.filtered_logs = self.logs
+        """Apply current filter based on mode."""
+        if not self.filter_query:
+            self.filtered_logs = self.logs
+            return
+
+        try:
+            matcher = parse_filter(
+                query=self.filter_query,
+                case_sensitive=self.case_sensitive,
+            )
+
+            if self.highlight_matches:
+                self.filtered_logs = self.logs
+            else:
+                self.filtered_logs = [log for log in self.logs if matcher(log)]
+
+        except FilterError as e:
+            self.notify(str(e), severity="error")
+            self.filtered_logs = self.logs
 
     def load_file(self, *, filepath: str) -> None:
         """Read and parse JSONL file."""

@@ -1,122 +1,1001 @@
-{"level": "INFO", "timestamp": "2024-01-15T10:00:00Z", "message": "Application started", "service": "api"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:00:01Z", "message": "Loading configuration from /etc/app/config.json", "service": "api"}
-{"level": "INFO", "timestamp": "2024-01-15T10:00:02Z", "message": "Database connection established", "service": "api", "db": "postgres://localhost:5432/app"}
-{"level": "WARN", "timestamp": "2024-01-15T10:00:05Z", "message": "Cache miss for key: user_session_123", "service": "cache"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:00:10Z", "message": "Failed to connect to external API", "service": "api", "error": "Connection refused", "endpoint": "https://external.example.com/data"}
-{"level": "INFO", "timestamp": "2024-01-15T10:00:15Z", "message": "User logged in", "service": "auth", "user_id": 42, "username": "john_doe"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:00:20Z", "message": "Request processed in 45ms", "service": "api", "method": "GET", "path": "/api/users"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:00:25Z", "message": "Invalid JSON payload", "service": "api", "error": "JSONDecodeError", "position": 142}
-{"level": "WARN", "timestamp": "2024-01-15T10:00:30Z", "message": "Rate limit approaching for IP 192.168.1.100", "service": "api", "requests_remaining": 5}
-{"level": "INFO", "timestamp": "2024-01-15T10:00:35Z", "message": "Scheduled task completed", "service": "scheduler", "task": "cleanup_old_sessions"}
-{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:40Z", "message": "Memory usage above threshold", "service": "monitor", "usage_percent": 95, "available_mb": 128}
-{"level": "INFO", "timestamp": "2024-01-15T10:00:45Z", "message": "Health check passed", "service": "health", "checks": {"database": "ok", "cache": "ok", "disk": "ok"}}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:00:50Z", "message": "WebSocket connection established", "service": "websocket", "client_id": "abc123"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:00:55Z", "message": "File not found", "service": "storage", "path": "/data/uploads/image_999.png", "error": "ENOENT"}
-{"level": "INFO", "timestamp": "2024-01-15T10:01:00Z", "message": "Backup completed successfully", "service": "backup", "size_mb": 2048, "duration_seconds": 45}
-{"level": "INFO", "timestamp": "2024-01-15T10:01:05Z", "message": "Service started", "service": "worker"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:01:10Z", "message": "Worker 1 processing job", "service": "worker", "job_id": 1001}
-{"level": "INFO", "timestamp": "2024-01-15T10:01:15Z", "message": "Job completed", "service": "worker", "job_id": 1001, "duration_ms": 1250}
-{"level": "WARN", "timestamp": "2024-01-15T10:01:20Z", "message": "Disk space low", "service": "monitor", "free_gb": 2}
-{"level": "INFO", "timestamp": "2024-01-15T10:01:25Z", "message": "User logged out", "service": "auth", "user_id": 42}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:01:30Z", "message": "Session cleaned up", "service": "auth", "session_id": "sess_abc123"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:01:35Z", "message": "Database query timeout", "service": "database", "query": "SELECT * FROM large_table", "timeout_ms": 30000}
-{"level": "INFO", "timestamp": "2024-01-15T10:01:40Z", "message": "Cache cleared", "service": "cache"}
-{"level": "WARN", "timestamp": "2024-01-15T10:01:45Z", "message": "SSL certificate expires in 7 days", "service": "security", "domain": "api.example.com"}
-{"level": "INFO", "timestamp": "2024-01-15T10:01:50Z", "message": "API key rotated", "service": "security"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:01:55Z", "message": "Request headers logged", "service": "api", "headers": {"User-Agent": "Mozilla/5.0", "Accept": "application/json"}}
-{"level": "ERROR", "timestamp": "2024-01-15T10:02:00Z", "message": "Authentication failed", "service": "auth", "username": "attacker", "ip": "10.0.0.1"}
-{"level": "INFO", "timestamp": "2024-01-15T10:02:05Z", "message": "Email sent", "service": "email", "to": "user@example.com", "subject": "Welcome"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:02:10Z", "message": "SMTP connection established", "service": "email"}
-{"level": "INFO", "timestamp": "2024-01-15T10:02:15Z", "message": "Cron job started", "service": "cron", "job": "daily_report"}
-{"level": "WARN", "timestamp": "2024-01-15T10:02:20Z", "message": "High CPU usage", "service": "monitor", "cpu_percent": 92}
-{"level": "INFO", "timestamp": "2024-01-15T10:02:25Z", "message": "Cron job completed", "service": "cron", "job": "daily_report", "duration_seconds": 5}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:02:30Z", "message": "Metrics collected", "service": "monitor", "metrics": {"requests": 1500, "errors": 3}}
-{"level": "ERROR", "timestamp": "2024-01-15T10:02:35Z", "message": "Payment processing failed", "service": "payment", "error": "Insufficient funds", "order_id": "ord_12345"}
-{"level": "INFO", "timestamp": "2024-01-15T10:02:40Z", "message": "Refund processed", "service": "payment", "order_id": "ord_12345", "amount": 99.99}
-{"level": "WARN", "timestamp": "2024-01-15T10:02:45Z", "message": "Deprecated API endpoint called", "service": "api", "endpoint": "/api/v1/users", "replacement": "/api/v2/users"}
-{"level": "INFO", "timestamp": "2024-01-15T10:02:50Z", "message": "User registered", "service": "auth", "user_id": 100, "email": "newuser@example.com"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:02:55Z", "message": "Verification email sent", "service": "email", "to": "newuser@example.com"}
-{"level": "INFO", "timestamp": "2024-01-15T10:03:00Z", "message": "File uploaded", "service": "storage", "filename": "document.pdf", "size_mb": 2}
-{"level": "ERROR", "timestamp": "2024-01-15T10:03:05Z", "message": "Virus detected", "service": "security", "file": "attachment.exe", "action": "quarantined"}
-{"level": "WARN", "timestamp": "2024-01-15T10:03:10Z", "message": "Suspicious login attempt", "service": "security", "ip": "192.168.1.50", "attempts": 5}
-{"level": "INFO", "timestamp": "2024-01-15T10:03:15Z", "message": "Account locked", "service": "security", "user_id": 55, "reason": "multiple_failed_logins"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:03:20Z", "message": "Password reset requested", "service": "auth", "email": "user@example.com"}
-{"level": "INFO", "timestamp": "2024-01-15T10:03:25Z", "message": "Password reset successful", "service": "auth", "user_id": 55}
-{"level": "WARN", "timestamp": "2024-01-15T10:03:30Z", "message": "Maintenance window starting", "service": "ops"}
-{"level": "INFO", "timestamp": "2024-01-15T10:03:35Z", "message": "Database backup started", "service": "backup"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:03:40Z", "message": "Backup progress: 25%", "service": "backup"}
-{"level": "INFO", "timestamp": "2024-01-15T10:03:45Z", "message": "Database backup completed", "service": "backup", "size_gb": 15}
-{"level": "ERROR", "timestamp": "2024-01-15T10:03:50Z", "message": "CDN sync failed", "service": "cdn", "error": "timeout"}
-{"level": "INFO", "timestamp": "2024-01-15T10:03:55Z", "message": "CDN cache cleared", "service": "cdn"}
-{"level": "WARN", "timestamp": "2024-01-15T10:04:00Z", "message": "Memory leak detected", "service": "monitor", "component": "worker_pool", "leak_rate_mb_per_hour": 50}
-{"level": "INFO", "timestamp": "2024-01-15T10:04:05Z", "message": "Worker restarted", "service": "worker", "worker_id": 3}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:04:10Z", "message": "GC completed", "service": "monitor", "freed_mb": 120}
-{"level": "ERROR", "timestamp": "2024-01-15T10:04:15Z", "message": "Third-party API rate limited", "service": "api", "provider": "stripe", "retry_after": 60}
-{"level": "INFO", "timestamp": "2024-01-15T10:04:20Z", "message": "Retry successful", "service": "api", "provider": "stripe"}
-{"level": "WARN", "timestamp": "2024-01-15T10:04:25Z", "message": "Slow query detected", "service": "database", "query": "SELECT COUNT(*) FROM events", "duration_ms": 5000}
-{"level": "INFO", "timestamp": "2024-01-15T10:04:30Z", "message": "Index created", "service": "database", "table": "events", "index": "idx_created_at"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:04:35Z", "message": "Query optimized", "service": "database", "improvement_percent": 80}
-{"level": "ERROR", "timestamp": "2024-01-15T10:04:40Z", "message": "Disk write failed", "service": "storage", "error": "No space left", "path": "/var/data/uploads"}
-{"level": "INFO", "timestamp": "2024-01-15T10:04:45Z", "message": "Old logs archived", "service": "logs", "count": 50000, "size_mb": 250}
-{"level": "WARN", "timestamp": "2024-01-15T10:04:50Z", "message": "Log retention policy updated", "service": "logs", "days": 30}
-{"level": "INFO", "timestamp": "2024-01-15T10:04:55Z",Metrics exported "message": "", "service": "monitor", "destination": "prometheus"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:05:00Z", "message": "Alert rule triggered", "service": "alerts", "rule": "high_error_rate", "threshold": 10}
-{"level": "INFO", "timestamp": "2024-01-15T10:05:05Z", "message": "Alert acknowledged", "service": "alerts", "rule": "high_error_rate", "by": "admin@example.com"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:05:10Z", "message": "Container crashed", "service": "kubernetes", "container": "api", "restart_count": 5}
-{"level": "WARN", "timestamp": "2024-01-15T10:05:15Z", "message": "Pod memory limit approaching", "service": "kubernetes", "pod": "api-7b9f5d4c8-x2m9p", "usage_percent": 85}
-{"level": "INFO", "timestamp": "2024-01-15T10:05:20Z", "message": "Horizontal pod autoscaler triggered", "service": "kubernetes", "replicas": 3, "reason": "high_cpu"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:05:25Z", "message": "New pod created", "service": "kubernetes", "pod": "api-7b9f5d4c8-z5k8l"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:05:30Z", "message": "Liveness probe failed", "service": "kubernetes", "pod": "worker-5d8f7b6c9-q2r4s"}
-{"level": "INFO", "timestamp": "2024-01-15T10:05:35Z", "message": "Pod replaced", "service": "kubernetes", "old_pod": "worker-5d8f7b6c9-q2r4s", "new_pod": "worker-5d8f7b6c9-t9u1v"}
-{"level": "WARN", "timestamp": "2024-01-15T10:05:40Z", "message": "Node pressure detected", "service": "kubernetes", "node": "worker-node-3", "type": "memory"}
-{"level": "INFO", "timestamp": "2024-01-15T10:05:45Z", "message": "Certificate renewed", "service": "security", "domain": "api.example.com", "expires": "2024-02-15T10:05:45Z"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:05:50Z", "message": "DNS cache refreshed", "service": "network"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:05:55Z", "message": "Network partition detected", "service": "network", "peers_unreachable": 2}
-{"level": "INFO", "timestamp": "2024-01-15T10:06:00Z", "message": "Network healed", "service": "network"}
-{"level": "WARN", "timestamp": "2024-01-15T10:06:05Z", "message": "Latency spike detected", "service": "monitor", "service": "database", "p99_latency_ms": 2500}
-{"level": "INFO", "timestamp": "2024-01-15T10:06:10Z", "message": "Database connection pool expanded", "service": "database", "min_connections": 5, "max_connections": 20}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:06:15Z", "message": "Connection borrowed from pool", "service": "database", "pool_id": "pool_1"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:06:20Z", "message": "Deadlock detected", "service": "database", "tables": ["orders", "inventory"]}
-{"level": "INFO", "timestamp": "2024-01-15T10:06:25Z", "message": "Deadlock resolved", "service": "database", "tables": ["orders", "inventory"]}
-{"level": "WARN", "timestamp": "2024-01-15T10:06:30Z", "message": "Transaction retry", "service": "database", "attempt": 3, "max_attempts": 5}
-{"level": "INFO", "timestamp": "2024-01-15T10:06:35Z", "message": "Transaction committed", "service": "database", "duration_ms": 450}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:06:40Z", "message": "SQL query logged", "service": "database", "query": "INSERT INTO orders VALUES (...)", "duration_ms": 120}
-{"level": "ERROR", "timestamp": "2024-01-15T10:06:45Z", "message": "Constraint violation", "service": "database", "constraint": "unique_email", "table": "users"}
-{"level": "INFO", "timestamp": "2024-01-15T10:06:50Z", "message": "User updated profile", "service": "api", "user_id": 78, "field": "avatar_url"}
-{"level": "WARN", "timestamp": "2024-01-15T10:06:55Z", "message": "Image resize failed", "service": "image", "error": "Invalid format", "file": "photo.jpg"}
-{"level": "INFO", "timestamp": "2024-01-15T10:07:00Z", "message": "Image converted", "service": "image", "original": "photo.tiff", "output": "photo.webp", "size_reduction_percent": 70}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:07:05Z", "message": "Thumbnail generated", "service": "image", "size": "150x150"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:07:10Z", "message": "Video encoding failed", "service": "video", "error": "Codec not supported", "file": "video.mov"}
-{"level": "INFO", "timestamp": "2024-01-15T10:07:15Z", "message": "Video transcoded", "service": "video", "input": "video.mov", "output": "video.mp4", "duration_seconds": 120}
-{"level": "WARN", "timestamp": "2024-01-15T10:07:20Z", "message": "CDN cache miss", "service": "cdn", "url": "/static/app.js"}
-{"level": "INFO", "timestamp": "2024-01-15T10:07:25Z", "message": "CDN cache populated", "service": "cdn", "url": "/static/app.js", "pop": "us-east"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:07:30Z", "message": "Cache invalidation triggered", "service": "cache", "keys": ["user:42", "product:123"]}
-{"level": "ERROR", "timestamp": "2024-01-15T10:07:35Z", "message": "Redis connection lost", "service": "cache", "error": "Connection reset by peer"}
-{"level": "INFO", "timestamp": "2024-01-15T10:07:40Z", "message": "Redis reconnected", "service": "cache"}
-{"level": "WARN", "timestamp": "2024-01-15T10:07:45Z", "message": "Memory usage high", "service": "monitor", "usage_percent": 88, "available_mb": 384}
-{"level": "INFO", "timestamp": "2024-01-15T10:07:50Z", "message": "Garbage collection triggered", "service": "monitor", "reason": "manual"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:07:55Z", "message": "Memory freed", "service": "monitor", "freed_mb": 256}
-{"level": "ERROR", "timestamp": "2024-01-15T10:08:00Z", "message": "OutOfMemoryError", "service": "worker", "worker_id": 5, "heap_usage_percent": 98}
-{"level": "INFO", "timestamp": "2024-01-15T10:08:05Z", "message": "Worker killed and restarted", "service": "worker", "worker_id": 5}
-{"level": "WARN", "timestamp": "2024-01-15T10:08:10Z", "message": "OOM recovery initiated", "service": "ops"}
-{"level": "INFO", "timestamp": "2024-01-15T10:08:15Z", "message": "System health check", "service": "health", "status": "healthy", "components": {"api": "ok", "database": "ok", "cache": "ok", "queue": "ok"}}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:08:20Z", "message": "Metrics aggregated", "service": "monitor", "interval": "1m", "count": 1440}
-{"level": "ERROR", "timestamp": "2024-01-15T10:08:25Z", "message": "SLO breach", "service": "monitor", "slo": "api_latency_p99", "target": 500, "actual": 2500}
-{"level": "INFO", "timestamp": "2024-01-15T10:08:30Z", "message": "Incident created", "service": "incidents", "severity": "high", "title": "API latency spike"}
-{"level": "WARN", "timestamp": "2024-01-15T10:08:35Z", "message": "On-call page sent", "service": "incidents", "recipient": "oncall@example.com"}
-{"level": "INFO", "timestamp": "2024-01-15T10:08:40Z", "message": "Incident acknowledged", "service": "incidents", "acknowledged_by": "engineer@example.com"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:08:45Z", "message": "Investigation started", "service": "incidents", "incident_id": "INC-001"}
-{"level": "ERROR", "timestamp": "2024-01-15T10:08:50Z", "message": "Root cause identified", "service": "incidents", "cause": "database connection pool exhaustion"}
-{"level": "INFO", "timestamp": "2024-01-15T10:08:55Z", "message": "Mitigation applied", "service": "incidents", "action": "increased_max_connections"}
-{"level": "WARN", "timestamp": "2024-01-15T10:09:00Z", "message": "Monitoring for regression", "service": "incidents"}
-{"level": "INFO", "timestamp": "2024-01-15T10:09:05Z", "message": "Incident resolved", "service": "incidents", "resolution_time_minutes": 35}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:09:10Z", "message": "Post-mortem scheduled", "service": "incidents", "date": "2024-01-16T14:00:00Z"}
-{"level": "INFO", "timestamp": "2024-01-15T10:09:15Z", "message": "Deployment started", "service": "deploy", "version": "v2.5.0", "environment": "production"}
-{"level": "WARN", "timestamp": "2024-01-15T10:09:20Z", "message": "Deployment step: database migration", "service": "deploy"}
-{"level": "INFO", "timestamp": "2024-01-15T10:09:25Z", "message": "Database migration completed", "service": "deploy", "migrations": ["add_user_preferences", "add_api_keys"]}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:09:30Z", "message": "Rolling out new version", "service": "deploy", "current": 2, "total": 5}
-{"level": "ERROR", "timestamp": "2024-01-15T10:09:35Z", "message": "Health check failed", "service": "deploy", "pod": "api-v2.5.0-3f7h8j9k-l2m3n"}
-{"level": "INFO", "timestamp": "2024-01-15T10:09:40Z", "message": "Rolling back to previous version", "service": "deploy"}
-{"level": "WARN", "timestamp": "2024-01-15T10:09:45Z", "message": "Rollback in progress", "service": "deploy", "target": "v2.4.9"}
-{"level": "INFO", "timestamp": "2024-01-15T10:09:50Z", "message": "Rollback completed", "service": "deploy", "previous_version": "v2.4.9"}
-{"level": "DEBUG", "timestamp": "2024-01-15T10:09:55Z", "message": "Deployment metrics", "service": "deploy", "duration_seconds": 295, "success_rate_percent": 95}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:00Z", "message": "Connection established", "service": "websocket", "request_id": "req_000000", "duration_ms": 494}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:01Z", "message": "Request processed", "service": "monitor", "request_id": "req_000001", "duration_ms": 132, "user_id": 627}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:02Z", "message": "Application started", "service": "auth", "request_id": "req_000002", "duration_ms": 147}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:03Z", "message": "Connection established", "service": "monitor", "request_id": "req_000003", "duration_ms": 286, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:04Z", "message": "API call completed", "service": "auth", "request_id": "req_000004", "duration_ms": 373}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:05Z", "message": "File uploaded", "service": "storage", "request_id": "req_000005", "duration_ms": 160, "user_id": 787}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:06Z", "message": "Request processed", "service": "backup", "request_id": "req_000006", "duration_ms": 282, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:07Z", "message": "Operation completed", "service": "scheduler", "request_id": "req_000007", "duration_ms": 177, "user_id": 933}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:08Z", "message": "Validation passed", "service": "storage", "request_id": "req_000008", "duration_ms": 491}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:09Z", "message": "Database query executed", "service": "api", "request_id": "req_000009", "duration_ms": 429, "user_id": 227}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:10Z", "message": "File uploaded", "service": "database", "request_id": "req_000010", "duration_ms": 489, "user_id": 520}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:11Z", "message": "Connection established", "service": "health", "request_id": "req_000011", "duration_ms": 248}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:12Z", "message": "Request processed", "service": "auth", "request_id": "req_000012", "duration_ms": 388, "user_id": 324}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:13Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000013", "duration_ms": 316}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:14Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000014", "duration_ms": 315}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:15Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000015", "duration_ms": 253}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:16Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000016", "duration_ms": 207}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:17Z", "message": "Application started", "service": "storage", "request_id": "req_000017", "duration_ms": 196}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:18Z", "message": "Application started", "service": "auth", "request_id": "req_000018", "duration_ms": 13, "user_id": 264}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:19Z", "message": "Connection established", "service": "auth", "request_id": "req_000019", "duration_ms": 426, "user_id": 287}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:20Z", "message": "Processing request", "service": "auth", "request_id": "req_000020", "duration_ms": 392}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:21Z", "message": "Cache miss", "service": "health", "request_id": "req_000021", "duration_ms": 182}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:22Z", "message": "Application started", "service": "api", "request_id": "req_000022", "duration_ms": 454, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:23Z", "message": "Database query executed", "service": "api", "request_id": "req_000023", "duration_ms": 239, "error": "Invalid input"}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:24Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000024", "duration_ms": 387}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:25Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000025", "duration_ms": 354}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:26Z", "message": "Processing request", "service": "api", "request_id": "req_000026", "duration_ms": 324, "error": "Connection refused"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:27Z", "message": "User logged in", "service": "auth", "request_id": "req_000027", "duration_ms": 281, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:28Z", "message": "Request processed", "service": "monitor", "request_id": "req_000028", "duration_ms": 79}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:29Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000029", "duration_ms": 48}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:30Z", "message": "Application started", "service": "websocket", "request_id": "req_000030", "duration_ms": 448, "error": "Connection refused"}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:31Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000031", "duration_ms": 342, "user_id": 651}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:32Z", "message": "Connection established", "service": "cache", "request_id": "req_000032", "duration_ms": 493}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:33Z", "message": "Processing request", "service": "auth", "request_id": "req_000033", "duration_ms": 68, "user_id": 659}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:34Z", "message": "Connection established", "service": "health", "request_id": "req_000034", "duration_ms": 424}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:35Z", "message": "API call completed", "service": "cache", "request_id": "req_000035", "duration_ms": 70}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:36Z", "message": "Application started", "service": "scheduler", "request_id": "req_000036", "duration_ms": 278}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:37Z", "message": "Processing request", "service": "health", "request_id": "req_000037", "duration_ms": 435}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:38Z", "message": "Operation completed", "service": "database", "request_id": "req_000038", "duration_ms": 163}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:39Z", "message": "Database query executed", "service": "database", "request_id": "req_000039", "duration_ms": 329, "user_id": 316}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:40Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000040", "duration_ms": 409}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:41Z", "message": "Request processed", "service": "database", "request_id": "req_000041", "duration_ms": 437}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:42Z", "message": "API call completed", "service": "backup", "request_id": "req_000042", "duration_ms": 428, "user_id": 516}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:43Z", "message": "Cache miss", "service": "cache", "request_id": "req_000043", "duration_ms": 169}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:44Z", "message": "Task scheduled", "service": "health", "request_id": "req_000044", "duration_ms": 439, "user_id": 309}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:45Z", "message": "Processing request", "service": "websocket", "request_id": "req_000045", "duration_ms": 124}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:46Z", "message": "Application started", "service": "scheduler", "request_id": "req_000046", "duration_ms": 404, "user_id": 975}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:47Z", "message": "User logged in", "service": "storage", "request_id": "req_000047", "duration_ms": 124}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:48Z", "message": "User logged in", "service": "websocket", "request_id": "req_000048", "duration_ms": 495}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:49Z", "message": "Request processed", "service": "cache", "request_id": "req_000049", "duration_ms": 254, "user_id": 154}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:00:50Z", "message": "Request processed", "service": "auth", "request_id": "req_000050", "duration_ms": 98, "user_id": 549}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:00:51Z", "message": "User logged in", "service": "auth", "request_id": "req_000051", "duration_ms": 336, "user_id": 512}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:52Z", "message": "Processing request", "service": "api", "request_id": "req_000052", "duration_ms": 386}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:53Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000053", "duration_ms": 294}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:54Z", "message": "Validation passed", "service": "backup", "request_id": "req_000054", "duration_ms": 290, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:55Z", "message": "Database query executed", "service": "websocket", "request_id": "req_000055", "duration_ms": 66}
+{"level": "INFO", "timestamp": "2024-01-15T10:00:56Z", "message": "Task scheduled", "service": "api", "request_id": "req_000056", "duration_ms": 94, "user_id": 845}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:57Z", "message": "Operation completed", "service": "scheduler", "request_id": "req_000057", "duration_ms": 202}
+{"level": "ERROR", "timestamp": "2024-01-15T10:00:58Z", "message": "File uploaded", "service": "database", "request_id": "req_000058", "duration_ms": 51, "error": "Invalid input", "user_id": 294}
+{"level": "WARN", "timestamp": "2024-01-15T10:00:59Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000059", "duration_ms": 134, "user_id": 886}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:00Z", "message": "Connection established", "service": "auth", "request_id": "req_000060", "duration_ms": 405}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:01Z", "message": "Request processed", "service": "backup", "request_id": "req_000061", "duration_ms": 136, "user_id": 244}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:02Z", "message": "Cache miss", "service": "health", "request_id": "req_000062", "duration_ms": 403, "user_id": 966}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:03Z", "message": "Request processed", "service": "database", "request_id": "req_000063", "duration_ms": 193}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:04Z", "message": "User logged in", "service": "api", "request_id": "req_000064", "duration_ms": 197}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:05Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000065", "duration_ms": 25, "user_id": 338}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:06Z", "message": "Cache miss", "service": "cache", "request_id": "req_000066", "duration_ms": 66, "user_id": 744}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:07Z", "message": "Task scheduled", "service": "health", "request_id": "req_000067", "duration_ms": 154}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:08Z", "message": "Validation passed", "service": "health", "request_id": "req_000068", "duration_ms": 354, "user_id": 466}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:09Z", "message": "Request processed", "service": "database", "request_id": "req_000069", "duration_ms": 437}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:10Z", "message": "Processing request", "service": "cache", "request_id": "req_000070", "duration_ms": 27}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:11Z", "message": "User logged in", "service": "health", "request_id": "req_000071", "duration_ms": 396, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:12Z", "message": "Operation completed", "service": "backup", "request_id": "req_000072", "duration_ms": 292, "user_id": 263}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:13Z", "message": "Cache miss", "service": "backup", "request_id": "req_000073", "duration_ms": 437}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:14Z", "message": "File uploaded", "service": "database", "request_id": "req_000074", "duration_ms": 10}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:15Z", "message": "Database query executed", "service": "backup", "request_id": "req_000075", "duration_ms": 100, "error": "Invalid input", "user_id": 337}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:16Z", "message": "Database query executed", "service": "auth", "request_id": "req_000076", "duration_ms": 377}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:17Z", "message": "Application started", "service": "health", "request_id": "req_000077", "duration_ms": 143, "user_id": 413}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:18Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000078", "duration_ms": 271, "error": "Timeout", "user_id": 984}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:19Z", "message": "Database query executed", "service": "auth", "request_id": "req_000079", "duration_ms": 382}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:20Z", "message": "API call completed", "service": "scheduler", "request_id": "req_000080", "duration_ms": 481}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:21Z", "message": "Application started", "service": "storage", "request_id": "req_000081", "duration_ms": 306}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:22Z", "message": "Validation passed", "service": "cache", "request_id": "req_000082", "duration_ms": 301, "user_id": 196}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:23Z", "message": "File uploaded", "service": "backup", "request_id": "req_000083", "duration_ms": 223}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:24Z", "message": "Validation passed", "service": "health", "request_id": "req_000084", "duration_ms": 400}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:25Z", "message": "Validation passed", "service": "cache", "request_id": "req_000085", "duration_ms": 226}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:26Z", "message": "User logged in", "service": "api", "request_id": "req_000086", "duration_ms": 310, "user_id": 983}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:27Z", "message": "Application started", "service": "monitor", "request_id": "req_000087", "duration_ms": 261, "user_id": 728}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:28Z", "message": "Processing request", "service": "cache", "request_id": "req_000088", "duration_ms": 235}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:29Z", "message": "Application started", "service": "auth", "request_id": "req_000089", "duration_ms": 181, "user_id": 452}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:30Z", "message": "Processing request", "service": "database", "request_id": "req_000090", "duration_ms": 377, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:31Z", "message": "Database query executed", "service": "health", "request_id": "req_000091", "duration_ms": 437}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:32Z", "message": "Processing request", "service": "auth", "request_id": "req_000092", "duration_ms": 480}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:33Z", "message": "Request processed", "service": "api", "request_id": "req_000093", "duration_ms": 174}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:34Z", "message": "Connection established", "service": "health", "request_id": "req_000094", "duration_ms": 91, "error": "Not found"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:35Z", "message": "API call completed", "service": "cache", "request_id": "req_000095", "duration_ms": 195, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:36Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000096", "duration_ms": 491}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:37Z", "message": "Application started", "service": "api", "request_id": "req_000097", "duration_ms": 335}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:38Z", "message": "Cache miss", "service": "cache", "request_id": "req_000098", "duration_ms": 405, "error": "Invalid input", "user_id": 443}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:39Z", "message": "Connection established", "service": "health", "request_id": "req_000099", "duration_ms": 125, "error": "Timeout"}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:40Z", "message": "Connection established", "service": "websocket", "request_id": "req_000100", "duration_ms": 151}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:41Z", "message": "Application started", "service": "cache", "request_id": "req_000101", "duration_ms": 120, "user_id": 559}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:42Z", "message": "Cache miss", "service": "websocket", "request_id": "req_000102", "duration_ms": 278}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:43Z", "message": "Connection established", "service": "websocket", "request_id": "req_000103", "duration_ms": 175, "user_id": 91}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:01:44Z", "message": "Connection established", "service": "backup", "request_id": "req_000104", "duration_ms": 120}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:45Z", "message": "Request processed", "service": "backup", "request_id": "req_000105", "duration_ms": 44, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:46Z", "message": "Request processed", "service": "websocket", "request_id": "req_000106", "duration_ms": 60, "error": "Timeout", "user_id": 561}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:47Z", "message": "User logged in", "service": "auth", "request_id": "req_000107", "duration_ms": 400, "error": "Invalid input", "user_id": 540}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:48Z", "message": "API call completed", "service": "database", "request_id": "req_000108", "duration_ms": 80}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:49Z", "message": "API call completed", "service": "scheduler", "request_id": "req_000109", "duration_ms": 209, "user_id": 646}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:50Z", "message": "Task scheduled", "service": "database", "request_id": "req_000110", "duration_ms": 69}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:51Z", "message": "Operation completed", "service": "api", "request_id": "req_000111", "duration_ms": 232}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:52Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000112", "duration_ms": 196, "user_id": 934}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:53Z", "message": "Application started", "service": "backup", "request_id": "req_000113", "duration_ms": 127}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:54Z", "message": "Cache miss", "service": "health", "request_id": "req_000114", "duration_ms": 341}
+{"level": "INFO", "timestamp": "2024-01-15T10:01:55Z", "message": "User logged in", "service": "database", "request_id": "req_000115", "duration_ms": 340}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:56Z", "message": "Processing request", "service": "monitor", "request_id": "req_000116", "duration_ms": 247, "user_id": 219}
+{"level": "ERROR", "timestamp": "2024-01-15T10:01:57Z", "message": "Cache miss", "service": "health", "request_id": "req_000117", "duration_ms": 415, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:01:58Z", "message": "Database query executed", "service": "database", "request_id": "req_000118", "duration_ms": 233, "user_id": 681}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:01:59Z", "message": "Validation passed", "service": "api", "request_id": "req_000119", "duration_ms": 295, "user_id": 646}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:00Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000120", "duration_ms": 72, "user_id": 238}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:01Z", "message": "Validation passed", "service": "api", "request_id": "req_000121", "duration_ms": 147, "user_id": 547}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:02Z", "message": "Processing request", "service": "health", "request_id": "req_000122", "duration_ms": 190, "user_id": 723}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:03Z", "message": "Task scheduled", "service": "api", "request_id": "req_000123", "duration_ms": 161, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:04Z", "message": "Database query executed", "service": "backup", "request_id": "req_000124", "duration_ms": 165}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:05Z", "message": "Request processed", "service": "backup", "request_id": "req_000125", "duration_ms": 15, "error": "Connection refused", "user_id": 17}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:06Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000126", "duration_ms": 432, "error": "Invalid input"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:07Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000127", "duration_ms": 12, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:08Z", "message": "Application started", "service": "database", "request_id": "req_000128", "duration_ms": 438}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:09Z", "message": "Cache miss", "service": "health", "request_id": "req_000129", "duration_ms": 60}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:10Z", "message": "Request processed", "service": "health", "request_id": "req_000130", "duration_ms": 271, "user_id": 883}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:11Z", "message": "Connection established", "service": "api", "request_id": "req_000131", "duration_ms": 25}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:12Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000132", "duration_ms": 340}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:13Z", "message": "Connection established", "service": "health", "request_id": "req_000133", "duration_ms": 139, "user_id": 802}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:14Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000134", "duration_ms": 249}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:15Z", "message": "File uploaded", "service": "websocket", "request_id": "req_000135", "duration_ms": 251}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:16Z", "message": "File uploaded", "service": "database", "request_id": "req_000136", "duration_ms": 226, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:17Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000137", "duration_ms": 267}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:18Z", "message": "Request processed", "service": "monitor", "request_id": "req_000138", "duration_ms": 446}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:19Z", "message": "Request processed", "service": "storage", "request_id": "req_000139", "duration_ms": 20}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:20Z", "message": "Processing request", "service": "storage", "request_id": "req_000140", "duration_ms": 100}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:21Z", "message": "Request processed", "service": "websocket", "request_id": "req_000141", "duration_ms": 152}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:22Z", "message": "API call completed", "service": "cache", "request_id": "req_000142", "duration_ms": 313, "user_id": 175}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:23Z", "message": "API call completed", "service": "auth", "request_id": "req_000143", "duration_ms": 380, "error": "Not found"}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:24Z", "message": "Processing request", "service": "auth", "request_id": "req_000144", "duration_ms": 380, "user_id": 67}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:25Z", "message": "Request processed", "service": "monitor", "request_id": "req_000145", "duration_ms": 465}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:26Z", "message": "Database query executed", "service": "websocket", "request_id": "req_000146", "duration_ms": 175}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:27Z", "message": "Operation completed", "service": "storage", "request_id": "req_000147", "duration_ms": 400, "error": "Connection refused", "user_id": 370}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:28Z", "message": "Operation completed", "service": "backup", "request_id": "req_000148", "duration_ms": 130, "user_id": 181}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:29Z", "message": "User logged in", "service": "monitor", "request_id": "req_000149", "duration_ms": 140}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:30Z", "message": "Cache miss", "service": "cache", "request_id": "req_000150", "duration_ms": 56, "user_id": 538}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:31Z", "message": "Connection established", "service": "api", "request_id": "req_000151", "duration_ms": 500}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:32Z", "message": "User logged in", "service": "database", "request_id": "req_000152", "duration_ms": 128}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:33Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000153", "duration_ms": 325, "error": "Invalid input"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:34Z", "message": "File uploaded", "service": "cache", "request_id": "req_000154", "duration_ms": 62, "user_id": 566}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:35Z", "message": "Connection established", "service": "auth", "request_id": "req_000155", "duration_ms": 137, "user_id": 159}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:36Z", "message": "Task scheduled", "service": "health", "request_id": "req_000156", "duration_ms": 100}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:37Z", "message": "Connection established", "service": "websocket", "request_id": "req_000157", "duration_ms": 497}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:38Z", "message": "Operation completed", "service": "auth", "request_id": "req_000158", "duration_ms": 160}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:39Z", "message": "Validation passed", "service": "api", "request_id": "req_000159", "duration_ms": 435, "user_id": 742}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:40Z", "message": "Cache miss", "service": "backup", "request_id": "req_000160", "duration_ms": 43, "user_id": 445}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:41Z", "message": "API call completed", "service": "backup", "request_id": "req_000161", "duration_ms": 81}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:42Z", "message": "User logged in", "service": "storage", "request_id": "req_000162", "duration_ms": 183}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:43Z", "message": "Validation passed", "service": "auth", "request_id": "req_000163", "duration_ms": 209}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:44Z", "message": "Cache miss", "service": "websocket", "request_id": "req_000164", "duration_ms": 180, "error": "Not found", "user_id": 223}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:45Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000165", "duration_ms": 280}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:46Z", "message": "Processing request", "service": "storage", "request_id": "req_000166", "duration_ms": 176}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:47Z", "message": "Database query executed", "service": "backup", "request_id": "req_000167", "duration_ms": 362, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:48Z", "message": "Application started", "service": "monitor", "request_id": "req_000168", "duration_ms": 271}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:49Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000169", "duration_ms": 444, "user_id": 854}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:50Z", "message": "Validation passed", "service": "api", "request_id": "req_000170", "duration_ms": 78}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:51Z", "message": "Connection established", "service": "database", "request_id": "req_000171", "duration_ms": 39}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:02:52Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000172", "duration_ms": 155}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:53Z", "message": "Operation completed", "service": "storage", "request_id": "req_000173", "duration_ms": 402}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:54Z", "message": "Application started", "service": "auth", "request_id": "req_000174", "duration_ms": 231}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:02:55Z", "message": "Request processed", "service": "websocket", "request_id": "req_000175", "duration_ms": 135}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:56Z", "message": "Operation completed", "service": "database", "request_id": "req_000176", "duration_ms": 160, "user_id": 259}
+{"level": "INFO", "timestamp": "2024-01-15T10:02:57Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000177", "duration_ms": 39, "user_id": 328}
+{"level": "ERROR", "timestamp": "2024-01-15T10:02:58Z", "message": "Processing request", "service": "monitor", "request_id": "req_000178", "duration_ms": 360, "error": "Timeout", "user_id": 240}
+{"level": "WARN", "timestamp": "2024-01-15T10:02:59Z", "message": "Request processed", "service": "backup", "request_id": "req_000179", "duration_ms": 191}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:00Z", "message": "File uploaded", "service": "cache", "request_id": "req_000180", "duration_ms": 453}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:01Z", "message": "API call completed", "service": "cache", "request_id": "req_000181", "duration_ms": 420, "user_id": 440}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:02Z", "message": "Processing request", "service": "database", "request_id": "req_000182", "duration_ms": 268, "error": "Connection refused", "user_id": 750}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:03Z", "message": "Connection established", "service": "storage", "request_id": "req_000183", "duration_ms": 211}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:04Z", "message": "Cache miss", "service": "api", "request_id": "req_000184", "duration_ms": 117}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:05Z", "message": "File uploaded", "service": "websocket", "request_id": "req_000185", "duration_ms": 194, "user_id": 160}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:03:06Z", "message": "Application started", "service": "cache", "request_id": "req_000186", "duration_ms": 251}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:07Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000187", "duration_ms": 269, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:03:08Z", "message": "API call completed", "service": "auth", "request_id": "req_000188", "duration_ms": 291, "user_id": 280}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:09Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000189", "duration_ms": 436, "error": "Not found"}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:10Z", "message": "Operation completed", "service": "websocket", "request_id": "req_000190", "duration_ms": 143}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:11Z", "message": "Application started", "service": "cache", "request_id": "req_000191", "duration_ms": 150, "user_id": 108}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:12Z", "message": "Processing request", "service": "storage", "request_id": "req_000192", "duration_ms": 174, "user_id": 748}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:13Z", "message": "Application started", "service": "backup", "request_id": "req_000193", "duration_ms": 318, "error": "Not found", "user_id": 945}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:14Z", "message": "Cache miss", "service": "cache", "request_id": "req_000194", "duration_ms": 326, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:15Z", "message": "Processing request", "service": "api", "request_id": "req_000195", "duration_ms": 326}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:16Z", "message": "Database query executed", "service": "health", "request_id": "req_000196", "duration_ms": 480, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:17Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000197", "duration_ms": 439, "error": "Invalid input"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:18Z", "message": "Validation passed", "service": "auth", "request_id": "req_000198", "duration_ms": 75, "user_id": 849}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:19Z", "message": "Validation passed", "service": "monitor", "request_id": "req_000199", "duration_ms": 495, "user_id": 897}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:20Z", "message": "Application started", "service": "cache", "request_id": "req_000200", "duration_ms": 288, "user_id": 158}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:21Z", "message": "Connection established", "service": "auth", "request_id": "req_000201", "duration_ms": 84, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:03:22Z", "message": "Request processed", "service": "auth", "request_id": "req_000202", "duration_ms": 214}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:23Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000203", "duration_ms": 486}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:24Z", "message": "Connection established", "service": "websocket", "request_id": "req_000204", "duration_ms": 201}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:03:25Z", "message": "API call completed", "service": "monitor", "request_id": "req_000205", "duration_ms": 428}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:26Z", "message": "Validation passed", "service": "backup", "request_id": "req_000206", "duration_ms": 110, "user_id": 66}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:27Z", "message": "User logged in", "service": "cache", "request_id": "req_000207", "duration_ms": 161}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:28Z", "message": "Application started", "service": "database", "request_id": "req_000208", "duration_ms": 64}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:29Z", "message": "File uploaded", "service": "auth", "request_id": "req_000209", "duration_ms": 16, "user_id": 230}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:30Z", "message": "Connection established", "service": "storage", "request_id": "req_000210", "duration_ms": 456}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:31Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000211", "duration_ms": 138}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:32Z", "message": "User logged in", "service": "cache", "request_id": "req_000212", "duration_ms": 334, "error": "Not found"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:33Z", "message": "Request processed", "service": "monitor", "request_id": "req_000213", "duration_ms": 210, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:03:34Z", "message": "Operation completed", "service": "storage", "request_id": "req_000214", "duration_ms": 10, "user_id": 354}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:35Z", "message": "API call completed", "service": "backup", "request_id": "req_000215", "duration_ms": 324}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:36Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000216", "duration_ms": 306}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:37Z", "message": "Cache miss", "service": "cache", "request_id": "req_000217", "duration_ms": 338, "user_id": 564}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:38Z", "message": "Cache miss", "service": "api", "request_id": "req_000218", "duration_ms": 269, "user_id": 908}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:39Z", "message": "File uploaded", "service": "health", "request_id": "req_000219", "duration_ms": 323, "user_id": 856}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:40Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000220", "duration_ms": 30, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:41Z", "message": "User logged in", "service": "health", "request_id": "req_000221", "duration_ms": 117, "error": "Not found", "user_id": 724}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:42Z", "message": "Connection established", "service": "health", "request_id": "req_000222", "duration_ms": 231}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:43Z", "message": "Application started", "service": "api", "request_id": "req_000223", "duration_ms": 441}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:44Z", "message": "User logged in", "service": "monitor", "request_id": "req_000224", "duration_ms": 20, "user_id": 887}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:45Z", "message": "API call completed", "service": "cache", "request_id": "req_000225", "duration_ms": 224, "user_id": 748}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:46Z", "message": "Validation passed", "service": "api", "request_id": "req_000226", "duration_ms": 378, "error": "Invalid input", "user_id": 306}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:47Z", "message": "User logged in", "service": "websocket", "request_id": "req_000227", "duration_ms": 30, "user_id": 483}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:48Z", "message": "User logged in", "service": "websocket", "request_id": "req_000228", "duration_ms": 292}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:49Z", "message": "Validation passed", "service": "storage", "request_id": "req_000229", "duration_ms": 123, "error": "Not found"}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:50Z", "message": "Connection established", "service": "monitor", "request_id": "req_000230", "duration_ms": 59, "user_id": 207}
+{"level": "INFO", "timestamp": "2024-01-15T10:03:51Z", "message": "Request processed", "service": "database", "request_id": "req_000231", "duration_ms": 41}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:52Z", "message": "Cache miss", "service": "health", "request_id": "req_000232", "duration_ms": 358}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:53Z", "message": "Application started", "service": "scheduler", "request_id": "req_000233", "duration_ms": 169, "user_id": 863}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:54Z", "message": "User logged in", "service": "database", "request_id": "req_000234", "duration_ms": 383}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:55Z", "message": "API call completed", "service": "database", "request_id": "req_000235", "duration_ms": 185, "error": "Connection refused"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:56Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000236", "duration_ms": 216, "user_id": 796}
+{"level": "WARN", "timestamp": "2024-01-15T10:03:57Z", "message": "Task scheduled", "service": "api", "request_id": "req_000237", "duration_ms": 21}
+{"level": "ERROR", "timestamp": "2024-01-15T10:03:58Z", "message": "Processing request", "service": "backup", "request_id": "req_000238", "duration_ms": 127, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:03:59Z", "message": "Validation passed", "service": "auth", "request_id": "req_000239", "duration_ms": 457}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:00Z", "message": "Cache miss", "service": "storage", "request_id": "req_000240", "duration_ms": 254, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:01Z", "message": "Operation completed", "service": "health", "request_id": "req_000241", "duration_ms": 466, "user_id": 356}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:02Z", "message": "Validation passed", "service": "health", "request_id": "req_000242", "duration_ms": 454}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:03Z", "message": "Application started", "service": "cache", "request_id": "req_000243", "duration_ms": 127, "user_id": 496}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:04Z", "message": "API call completed", "service": "monitor", "request_id": "req_000244", "duration_ms": 233}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:05Z", "message": "User logged in", "service": "api", "request_id": "req_000245", "duration_ms": 157, "error": "Connection refused", "user_id": 398}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:06Z", "message": "Processing request", "service": "health", "request_id": "req_000246", "duration_ms": 343}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:07Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000247", "duration_ms": 207}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:08Z", "message": "Validation passed", "service": "auth", "request_id": "req_000248", "duration_ms": 36, "error": "Not found"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:09Z", "message": "Task scheduled", "service": "database", "request_id": "req_000249", "duration_ms": 421}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:10Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000250", "duration_ms": 185}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:11Z", "message": "Validation passed", "service": "health", "request_id": "req_000251", "duration_ms": 451, "user_id": 386}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:12Z", "message": "Connection established", "service": "monitor", "request_id": "req_000252", "duration_ms": 231, "error": "Connection refused", "user_id": 58}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:13Z", "message": "Request processed", "service": "cache", "request_id": "req_000253", "duration_ms": 246, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:14Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000254", "duration_ms": 24, "error": "Connection refused", "user_id": 166}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:15Z", "message": "Connection established", "service": "monitor", "request_id": "req_000255", "duration_ms": 126}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:16Z", "message": "Validation passed", "service": "health", "request_id": "req_000256", "duration_ms": 340, "user_id": 1}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:17Z", "message": "Validation passed", "service": "database", "request_id": "req_000257", "duration_ms": 358, "user_id": 765}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:18Z", "message": "Connection established", "service": "websocket", "request_id": "req_000258", "duration_ms": 414, "user_id": 555}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:19Z", "message": "API call completed", "service": "backup", "request_id": "req_000259", "duration_ms": 169}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:20Z", "message": "Application started", "service": "api", "request_id": "req_000260", "duration_ms": 88, "user_id": 91}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:21Z", "message": "Application started", "service": "health", "request_id": "req_000261", "duration_ms": 203}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:22Z", "message": "Processing request", "service": "backup", "request_id": "req_000262", "duration_ms": 335, "error": "Invalid input"}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:23Z", "message": "User logged in", "service": "storage", "request_id": "req_000263", "duration_ms": 30}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:24Z", "message": "Application started", "service": "monitor", "request_id": "req_000264", "duration_ms": 104, "user_id": 547}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:25Z", "message": "Validation passed", "service": "backup", "request_id": "req_000265", "duration_ms": 379, "user_id": 467}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:26Z", "message": "Database query executed", "service": "cache", "request_id": "req_000266", "duration_ms": 348, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:27Z", "message": "Processing request", "service": "health", "request_id": "req_000267", "duration_ms": 138, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:28Z", "message": "Processing request", "service": "auth", "request_id": "req_000268", "duration_ms": 205}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:29Z", "message": "Request processed", "service": "database", "request_id": "req_000269", "duration_ms": 398, "user_id": 310}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:30Z", "message": "Connection established", "service": "monitor", "request_id": "req_000270", "duration_ms": 295, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:31Z", "message": "User logged in", "service": "monitor", "request_id": "req_000271", "duration_ms": 461, "user_id": 618}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:32Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000272", "duration_ms": 108, "error": "Invalid input"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:33Z", "message": "Operation completed", "service": "cache", "request_id": "req_000273", "duration_ms": 155}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:34Z", "message": "Connection established", "service": "health", "request_id": "req_000274", "duration_ms": 403}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:35Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000275", "duration_ms": 34}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:36Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000276", "duration_ms": 336}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:37Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000277", "duration_ms": 138, "user_id": 681}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:38Z", "message": "Application started", "service": "health", "request_id": "req_000278", "duration_ms": 258}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:39Z", "message": "Processing request", "service": "storage", "request_id": "req_000279", "duration_ms": 24, "error": "Invalid input", "user_id": 441}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:40Z", "message": "Processing request", "service": "backup", "request_id": "req_000280", "duration_ms": 234, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:41Z", "message": "Cache miss", "service": "database", "request_id": "req_000281", "duration_ms": 164}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:42Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000282", "duration_ms": 379}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:43Z", "message": "API call completed", "service": "health", "request_id": "req_000283", "duration_ms": 20, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:44Z", "message": "Operation completed", "service": "cache", "request_id": "req_000284", "duration_ms": 34}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:45Z", "message": "Connection established", "service": "database", "request_id": "req_000285", "duration_ms": 196}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:46Z", "message": "Connection established", "service": "storage", "request_id": "req_000286", "duration_ms": 128}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:47Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000287", "duration_ms": 431}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:48Z", "message": "Connection established", "service": "health", "request_id": "req_000288", "duration_ms": 445}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:49Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000289", "duration_ms": 264}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:50Z", "message": "File uploaded", "service": "api", "request_id": "req_000290", "duration_ms": 275, "user_id": 269}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:04:51Z", "message": "Connection established", "service": "database", "request_id": "req_000291", "duration_ms": 68, "user_id": 359}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:52Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000292", "duration_ms": 444, "user_id": 575}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:53Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000293", "duration_ms": 98}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:54Z", "message": "Validation passed", "service": "websocket", "request_id": "req_000294", "duration_ms": 328}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:55Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000295", "duration_ms": 19, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:04:56Z", "message": "API call completed", "service": "cache", "request_id": "req_000296", "duration_ms": 262}
+{"level": "INFO", "timestamp": "2024-01-15T10:04:57Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000297", "duration_ms": 33}
+{"level": "ERROR", "timestamp": "2024-01-15T10:04:58Z", "message": "Database query executed", "service": "health", "request_id": "req_000298", "duration_ms": 15, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:04:59Z", "message": "API call completed", "service": "database", "request_id": "req_000299", "duration_ms": 258}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:00Z", "message": "Cache miss", "service": "storage", "request_id": "req_000300", "duration_ms": 287, "user_id": 812}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:01Z", "message": "Request processed", "service": "auth", "request_id": "req_000301", "duration_ms": 418}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:02Z", "message": "Cache miss", "service": "websocket", "request_id": "req_000302", "duration_ms": 229, "user_id": 216}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:03Z", "message": "Database query executed", "service": "monitor", "request_id": "req_000303", "duration_ms": 337, "error": "Not found", "user_id": 434}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:04Z", "message": "Cache miss", "service": "api", "request_id": "req_000304", "duration_ms": 470, "user_id": 329}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:05Z", "message": "Database query executed", "service": "monitor", "request_id": "req_000305", "duration_ms": 342}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:06Z", "message": "Task scheduled", "service": "health", "request_id": "req_000306", "duration_ms": 31}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:07Z", "message": "File uploaded", "service": "auth", "request_id": "req_000307", "duration_ms": 271}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:08Z", "message": "Request processed", "service": "database", "request_id": "req_000308", "duration_ms": 396}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:09Z", "message": "User logged in", "service": "backup", "request_id": "req_000309", "duration_ms": 82, "user_id": 216}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:10Z", "message": "Validation passed", "service": "database", "request_id": "req_000310", "duration_ms": 1, "user_id": 827}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:11Z", "message": "API call completed", "service": "database", "request_id": "req_000311", "duration_ms": 253, "user_id": 552}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:12Z", "message": "API call completed", "service": "storage", "request_id": "req_000312", "duration_ms": 136, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:13Z", "message": "User logged in", "service": "database", "request_id": "req_000313", "duration_ms": 321}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:14Z", "message": "Processing request", "service": "backup", "request_id": "req_000314", "duration_ms": 45}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:15Z", "message": "API call completed", "service": "monitor", "request_id": "req_000315", "duration_ms": 122}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:16Z", "message": "Request processed", "service": "monitor", "request_id": "req_000316", "duration_ms": 370, "error": "Invalid input"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:17Z", "message": "Validation passed", "service": "storage", "request_id": "req_000317", "duration_ms": 157, "user_id": 44}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:18Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000318", "duration_ms": 389}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:19Z", "message": "Connection established", "service": "storage", "request_id": "req_000319", "duration_ms": 255, "error": "Connection refused", "user_id": 637}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:20Z", "message": "Database query executed", "service": "backup", "request_id": "req_000320", "duration_ms": 108}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:21Z", "message": "Task scheduled", "service": "health", "request_id": "req_000321", "duration_ms": 400}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:22Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000322", "duration_ms": 326, "user_id": 601}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:23Z", "message": "API call completed", "service": "monitor", "request_id": "req_000323", "duration_ms": 137, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:24Z", "message": "Database query executed", "service": "backup", "request_id": "req_000324", "duration_ms": 141, "user_id": 274}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:25Z", "message": "File uploaded", "service": "health", "request_id": "req_000325", "duration_ms": 326}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:26Z", "message": "Application started", "service": "auth", "request_id": "req_000326", "duration_ms": 183}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:27Z", "message": "Request processed", "service": "monitor", "request_id": "req_000327", "duration_ms": 104}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:28Z", "message": "Operation completed", "service": "storage", "request_id": "req_000328", "duration_ms": 176}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:29Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000329", "duration_ms": 125}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:30Z", "message": "Connection established", "service": "monitor", "request_id": "req_000330", "duration_ms": 61}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:31Z", "message": "Connection established", "service": "monitor", "request_id": "req_000331", "duration_ms": 86, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:32Z", "message": "Validation passed", "service": "api", "request_id": "req_000332", "duration_ms": 83}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:33Z", "message": "API call completed", "service": "storage", "request_id": "req_000333", "duration_ms": 437}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:34Z", "message": "Application started", "service": "backup", "request_id": "req_000334", "duration_ms": 270, "user_id": 934}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:35Z", "message": "Validation passed", "service": "cache", "request_id": "req_000335", "duration_ms": 205}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:36Z", "message": "File uploaded", "service": "api", "request_id": "req_000336", "duration_ms": 14}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:37Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000337", "duration_ms": 263}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:38Z", "message": "Validation passed", "service": "storage", "request_id": "req_000338", "duration_ms": 95}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:39Z", "message": "File uploaded", "service": "websocket", "request_id": "req_000339", "duration_ms": 254, "error": "Connection refused"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:40Z", "message": "Connection established", "service": "auth", "request_id": "req_000340", "duration_ms": 473, "error": "Not found", "user_id": 331}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:41Z", "message": "Connection established", "service": "websocket", "request_id": "req_000341", "duration_ms": 154}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:42Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000342", "duration_ms": 55}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:43Z", "message": "API call completed", "service": "health", "request_id": "req_000343", "duration_ms": 408, "error": "Not found", "user_id": 962}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:44Z", "message": "API call completed", "service": "auth", "request_id": "req_000344", "duration_ms": 331}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:45Z", "message": "Database query executed", "service": "health", "request_id": "req_000345", "duration_ms": 76}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:46Z", "message": "Cache miss", "service": "health", "request_id": "req_000346", "duration_ms": 255}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:47Z", "message": "Operation completed", "service": "auth", "request_id": "req_000347", "duration_ms": 359, "user_id": 374}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:48Z", "message": "Task scheduled", "service": "database", "request_id": "req_000348", "duration_ms": 132, "error": "Connection refused"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:49Z", "message": "Processing request", "service": "auth", "request_id": "req_000349", "duration_ms": 246, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:50Z", "message": "Database query executed", "service": "auth", "request_id": "req_000350", "duration_ms": 280}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:51Z", "message": "Operation completed", "service": "storage", "request_id": "req_000351", "duration_ms": 353, "user_id": 279}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:52Z", "message": "Processing request", "service": "backup", "request_id": "req_000352", "duration_ms": 201, "error": "Not found", "user_id": 265}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:53Z", "message": "Task scheduled", "service": "health", "request_id": "req_000353", "duration_ms": 267}
+{"level": "ERROR", "timestamp": "2024-01-15T10:05:54Z", "message": "Database query executed", "service": "storage", "request_id": "req_000354", "duration_ms": 210, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:05:55Z", "message": "Operation completed", "service": "auth", "request_id": "req_000355", "duration_ms": 470}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:56Z", "message": "Operation completed", "service": "scheduler", "request_id": "req_000356", "duration_ms": 123}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:05:57Z", "message": "Cache miss", "service": "database", "request_id": "req_000357", "duration_ms": 176, "user_id": 648}
+{"level": "INFO", "timestamp": "2024-01-15T10:05:58Z", "message": "API call completed", "service": "websocket", "request_id": "req_000358", "duration_ms": 500}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:05:59Z", "message": "API call completed", "service": "monitor", "request_id": "req_000359", "duration_ms": 216}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:00Z", "message": "API call completed", "service": "storage", "request_id": "req_000360", "duration_ms": 72}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:01Z", "message": "Processing request", "service": "database", "request_id": "req_000361", "duration_ms": 258, "user_id": 913}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:02Z", "message": "Validation passed", "service": "scheduler", "request_id": "req_000362", "duration_ms": 492, "user_id": 993}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:03Z", "message": "Database query executed", "service": "health", "request_id": "req_000363", "duration_ms": 57}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:04Z", "message": "Processing request", "service": "storage", "request_id": "req_000364", "duration_ms": 185, "error": "Not found", "user_id": 769}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:05Z", "message": "Operation completed", "service": "storage", "request_id": "req_000365", "duration_ms": 187, "user_id": 361}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:06Z", "message": "Request processed", "service": "cache", "request_id": "req_000366", "duration_ms": 141, "user_id": 569}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:07Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000367", "duration_ms": 74}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:08Z", "message": "Request processed", "service": "backup", "request_id": "req_000368", "duration_ms": 38, "user_id": 488}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:09Z", "message": "Operation completed", "service": "auth", "request_id": "req_000369", "duration_ms": 359}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:10Z", "message": "Cache miss", "service": "websocket", "request_id": "req_000370", "duration_ms": 96}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:11Z", "message": "User logged in", "service": "monitor", "request_id": "req_000371", "duration_ms": 38}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:12Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000372", "duration_ms": 55, "user_id": 957}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:13Z", "message": "File uploaded", "service": "health", "request_id": "req_000373", "duration_ms": 372}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:14Z", "message": "Database query executed", "service": "backup", "request_id": "req_000374", "duration_ms": 291}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:15Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000375", "duration_ms": 155}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:16Z", "message": "File uploaded", "service": "backup", "request_id": "req_000376", "duration_ms": 340}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:17Z", "message": "API call completed", "service": "scheduler", "request_id": "req_000377", "duration_ms": 465, "error": "Not found"}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:18Z", "message": "Database query executed", "service": "monitor", "request_id": "req_000378", "duration_ms": 185, "user_id": 463}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:19Z", "message": "User logged in", "service": "auth", "request_id": "req_000379", "duration_ms": 475}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:20Z", "message": "Cache miss", "service": "auth", "request_id": "req_000380", "duration_ms": 379}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:21Z", "message": "Application started", "service": "monitor", "request_id": "req_000381", "duration_ms": 443}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:22Z", "message": "Request processed", "service": "api", "request_id": "req_000382", "duration_ms": 4}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:23Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000383", "duration_ms": 185}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:24Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000384", "duration_ms": 364}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:25Z", "message": "Application started", "service": "cache", "request_id": "req_000385", "duration_ms": 375}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:26Z", "message": "Cache miss", "service": "storage", "request_id": "req_000386", "duration_ms": 386}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:27Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000387", "duration_ms": 119}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:28Z", "message": "Validation passed", "service": "storage", "request_id": "req_000388", "duration_ms": 343}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:29Z", "message": "Operation completed", "service": "health", "request_id": "req_000389", "duration_ms": 240}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:30Z", "message": "Request processed", "service": "cache", "request_id": "req_000390", "duration_ms": 1, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:31Z", "message": "File uploaded", "service": "backup", "request_id": "req_000391", "duration_ms": 60, "user_id": 481}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:32Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000392", "duration_ms": 303}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:33Z", "message": "Database query executed", "service": "database", "request_id": "req_000393", "duration_ms": 186, "user_id": 572}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:34Z", "message": "Request processed", "service": "backup", "request_id": "req_000394", "duration_ms": 354}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:35Z", "message": "User logged in", "service": "api", "request_id": "req_000395", "duration_ms": 445}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:36Z", "message": "Validation passed", "service": "scheduler", "request_id": "req_000396", "duration_ms": 418, "user_id": 167}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:37Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000397", "duration_ms": 485}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:38Z", "message": "Database query executed", "service": "websocket", "request_id": "req_000398", "duration_ms": 27, "user_id": 865}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:39Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000399", "duration_ms": 309, "error": "Not found"}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:40Z", "message": "Request processed", "service": "auth", "request_id": "req_000400", "duration_ms": 100, "user_id": 733}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:41Z", "message": "User logged in", "service": "health", "request_id": "req_000401", "duration_ms": 33}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:42Z", "message": "Application started", "service": "monitor", "request_id": "req_000402", "duration_ms": 436, "error": "Invalid input", "user_id": 625}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:43Z", "message": "Cache miss", "service": "auth", "request_id": "req_000403", "duration_ms": 40}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:44Z", "message": "Database query executed", "service": "cache", "request_id": "req_000404", "duration_ms": 353}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:45Z", "message": "Operation completed", "service": "monitor", "request_id": "req_000405", "duration_ms": 470}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:46Z", "message": "Request processed", "service": "monitor", "request_id": "req_000406", "duration_ms": 259, "user_id": 199}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:47Z", "message": "Processing request", "service": "monitor", "request_id": "req_000407", "duration_ms": 432, "error": "Invalid input"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:48Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000408", "duration_ms": 69, "user_id": 705}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:49Z", "message": "Application started", "service": "backup", "request_id": "req_000409", "duration_ms": 236}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:50Z", "message": "Processing request", "service": "cache", "request_id": "req_000410", "duration_ms": 170, "error": "Invalid input"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:06:51Z", "message": "Connection established", "service": "auth", "request_id": "req_000411", "duration_ms": 398, "error": "Timeout", "user_id": 86}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:52Z", "message": "Validation passed", "service": "auth", "request_id": "req_000412", "duration_ms": 459, "user_id": 383}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:53Z", "message": "File uploaded", "service": "health", "request_id": "req_000413", "duration_ms": 268}
+{"level": "INFO", "timestamp": "2024-01-15T10:06:54Z", "message": "Validation passed", "service": "health", "request_id": "req_000414", "duration_ms": 95}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:55Z", "message": "Database query executed", "service": "auth", "request_id": "req_000415", "duration_ms": 174, "user_id": 546}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:56Z", "message": "Request processed", "service": "cache", "request_id": "req_000416", "duration_ms": 375}
+{"level": "WARN", "timestamp": "2024-01-15T10:06:57Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000417", "duration_ms": 325, "user_id": 8}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:06:58Z", "message": "Request processed", "service": "websocket", "request_id": "req_000418", "duration_ms": 34}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:06:59Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000419", "duration_ms": 332}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:00Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000420", "duration_ms": 100, "user_id": 13}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:01Z", "message": "Operation completed", "service": "backup", "request_id": "req_000421", "duration_ms": 498}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:02Z", "message": "Processing request", "service": "storage", "request_id": "req_000422", "duration_ms": 498}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:03Z", "message": "Operation completed", "service": "api", "request_id": "req_000423", "duration_ms": 63}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:04Z", "message": "Request processed", "service": "cache", "request_id": "req_000424", "duration_ms": 481}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:05Z", "message": "Cache miss", "service": "api", "request_id": "req_000425", "duration_ms": 141}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:06Z", "message": "Application started", "service": "scheduler", "request_id": "req_000426", "duration_ms": 215}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:07Z", "message": "Cache miss", "service": "cache", "request_id": "req_000427", "duration_ms": 88, "user_id": 624}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:08Z", "message": "Operation completed", "service": "websocket", "request_id": "req_000428", "duration_ms": 96}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:09Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000429", "duration_ms": 202}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:10Z", "message": "Validation passed", "service": "database", "request_id": "req_000430", "duration_ms": 388}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:11Z", "message": "Validation passed", "service": "backup", "request_id": "req_000431", "duration_ms": 367}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:12Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000432", "duration_ms": 221}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:13Z", "message": "User logged in", "service": "backup", "request_id": "req_000433", "duration_ms": 140, "error": "Timeout"}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:14Z", "message": "Database query executed", "service": "auth", "request_id": "req_000434", "duration_ms": 412}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:15Z", "message": "Task scheduled", "service": "database", "request_id": "req_000435", "duration_ms": 437, "user_id": 523}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:16Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000436", "duration_ms": 10, "user_id": 305}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:17Z", "message": "Processing request", "service": "storage", "request_id": "req_000437", "duration_ms": 214}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:18Z", "message": "Request processed", "service": "backup", "request_id": "req_000438", "duration_ms": 320, "user_id": 349}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:19Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000439", "duration_ms": 403}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:20Z", "message": "Operation completed", "service": "api", "request_id": "req_000440", "duration_ms": 161, "user_id": 97}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:21Z", "message": "API call completed", "service": "database", "request_id": "req_000441", "duration_ms": 254}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:22Z", "message": "Processing request", "service": "cache", "request_id": "req_000442", "duration_ms": 283}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:23Z", "message": "File uploaded", "service": "database", "request_id": "req_000443", "duration_ms": 154}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:24Z", "message": "Request processed", "service": "auth", "request_id": "req_000444", "duration_ms": 213}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:25Z", "message": "Database query executed", "service": "cache", "request_id": "req_000445", "duration_ms": 359}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:26Z", "message": "Task scheduled", "service": "health", "request_id": "req_000446", "duration_ms": 499, "user_id": 672}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:27Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000447", "duration_ms": 255, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:28Z", "message": "Connection established", "service": "database", "request_id": "req_000448", "duration_ms": 346, "user_id": 946}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:29Z", "message": "User logged in", "service": "database", "request_id": "req_000449", "duration_ms": 338, "user_id": 735}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:30Z", "message": "Cache miss", "service": "websocket", "request_id": "req_000450", "duration_ms": 372}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:31Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000451", "duration_ms": 45}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:32Z", "message": "Connection established", "service": "storage", "request_id": "req_000452", "duration_ms": 79}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:33Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000453", "duration_ms": 262}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:34Z", "message": "File uploaded", "service": "database", "request_id": "req_000454", "duration_ms": 417}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:35Z", "message": "Connection established", "service": "monitor", "request_id": "req_000455", "duration_ms": 390}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:36Z", "message": "Operation completed", "service": "database", "request_id": "req_000456", "duration_ms": 453, "user_id": 667}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:37Z", "message": "Connection established", "service": "health", "request_id": "req_000457", "duration_ms": 26}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:38Z", "message": "Validation passed", "service": "auth", "request_id": "req_000458", "duration_ms": 184, "error": "Connection refused"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:39Z", "message": "Connection established", "service": "monitor", "request_id": "req_000459", "duration_ms": 432}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:40Z", "message": "Connection established", "service": "cache", "request_id": "req_000460", "duration_ms": 471}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:41Z", "message": "File uploaded", "service": "backup", "request_id": "req_000461", "duration_ms": 137, "error": "Invalid input"}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:42Z", "message": "Processing request", "service": "storage", "request_id": "req_000462", "duration_ms": 488, "user_id": 222}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:43Z", "message": "Processing request", "service": "api", "request_id": "req_000463", "duration_ms": 447}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:44Z", "message": "API call completed", "service": "auth", "request_id": "req_000464", "duration_ms": 355, "user_id": 527}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:45Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000465", "duration_ms": 120, "user_id": 548}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:46Z", "message": "Database query executed", "service": "cache", "request_id": "req_000466", "duration_ms": 103}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:47Z", "message": "Validation passed", "service": "storage", "request_id": "req_000467", "duration_ms": 498}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:48Z", "message": "Processing request", "service": "monitor", "request_id": "req_000468", "duration_ms": 499, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:49Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000469", "duration_ms": 91}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:50Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000470", "duration_ms": 357, "user_id": 603}
+{"level": "WARN", "timestamp": "2024-01-15T10:07:51Z", "message": "User logged in", "service": "database", "request_id": "req_000471", "duration_ms": 370}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:07:52Z", "message": "Application started", "service": "cache", "request_id": "req_000472", "duration_ms": 242}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:53Z", "message": "Cache miss", "service": "health", "request_id": "req_000473", "duration_ms": 138}
+{"level": "ERROR", "timestamp": "2024-01-15T10:07:54Z", "message": "Application started", "service": "database", "request_id": "req_000474", "duration_ms": 214, "error": "Not found", "user_id": 512}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:55Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000475", "duration_ms": 466}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:56Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000476", "duration_ms": 101}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:57Z", "message": "Connection established", "service": "cache", "request_id": "req_000477", "duration_ms": 228, "user_id": 723}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:07:58Z", "message": "Validation passed", "service": "monitor", "request_id": "req_000478", "duration_ms": 111}
+{"level": "INFO", "timestamp": "2024-01-15T10:07:59Z", "message": "Database query executed", "service": "storage", "request_id": "req_000479", "duration_ms": 446}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:00Z", "message": "Processing request", "service": "storage", "request_id": "req_000480", "duration_ms": 254}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:01Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000481", "duration_ms": 366}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:02Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000482", "duration_ms": 166, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:03Z", "message": "Request processed", "service": "websocket", "request_id": "req_000483", "duration_ms": 420, "user_id": 704}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:04Z", "message": "API call completed", "service": "health", "request_id": "req_000484", "duration_ms": 336}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:05Z", "message": "Processing request", "service": "api", "request_id": "req_000485", "duration_ms": 242, "user_id": 587}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:06Z", "message": "Validation passed", "service": "storage", "request_id": "req_000486", "duration_ms": 303, "error": "Connection refused"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:07Z", "message": "Processing request", "service": "scheduler", "request_id": "req_000487", "duration_ms": 285, "user_id": 841}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:08Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000488", "duration_ms": 28}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:09Z", "message": "Operation completed", "service": "backup", "request_id": "req_000489", "duration_ms": 98}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:10Z", "message": "Request processed", "service": "auth", "request_id": "req_000490", "duration_ms": 447}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:11Z", "message": "Application started", "service": "health", "request_id": "req_000491", "duration_ms": 8, "user_id": 758}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:12Z", "message": "Task scheduled", "service": "api", "request_id": "req_000492", "duration_ms": 243, "user_id": 542}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:13Z", "message": "API call completed", "service": "cache", "request_id": "req_000493", "duration_ms": 133, "user_id": 397}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:14Z", "message": "Request processed", "service": "storage", "request_id": "req_000494", "duration_ms": 142, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:15Z", "message": "Database query executed", "service": "api", "request_id": "req_000495", "duration_ms": 94}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:16Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000496", "duration_ms": 446, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:17Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000497", "duration_ms": 460}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:18Z", "message": "User logged in", "service": "health", "request_id": "req_000498", "duration_ms": 29}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:19Z", "message": "Validation passed", "service": "database", "request_id": "req_000499", "duration_ms": 171}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:20Z", "message": "Connection established", "service": "api", "request_id": "req_000500", "duration_ms": 340}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:21Z", "message": "Connection established", "service": "monitor", "request_id": "req_000501", "duration_ms": 399, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:22Z", "message": "Request processed", "service": "websocket", "request_id": "req_000502", "duration_ms": 135}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:23Z", "message": "File uploaded", "service": "storage", "request_id": "req_000503", "duration_ms": 241}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:24Z", "message": "Cache miss", "service": "database", "request_id": "req_000504", "duration_ms": 98}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:25Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000505", "duration_ms": 340}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:26Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000506", "duration_ms": 113, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:27Z", "message": "Processing request", "service": "auth", "request_id": "req_000507", "duration_ms": 401}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:28Z", "message": "Connection established", "service": "auth", "request_id": "req_000508", "duration_ms": 247, "user_id": 512}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:29Z", "message": "Cache miss", "service": "health", "request_id": "req_000509", "duration_ms": 499, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:30Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000510", "duration_ms": 333, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:31Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000511", "duration_ms": 349}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:32Z", "message": "API call completed", "service": "database", "request_id": "req_000512", "duration_ms": 62}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:33Z", "message": "Operation completed", "service": "cache", "request_id": "req_000513", "duration_ms": 364, "user_id": 481}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:34Z", "message": "Database query executed", "service": "storage", "request_id": "req_000514", "duration_ms": 91, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:35Z", "message": "Operation completed", "service": "cache", "request_id": "req_000515", "duration_ms": 284}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:36Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000516", "duration_ms": 398}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:37Z", "message": "User logged in", "service": "database", "request_id": "req_000517", "duration_ms": 342, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:38Z", "message": "API call completed", "service": "websocket", "request_id": "req_000518", "duration_ms": 196}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:39Z", "message": "Connection established", "service": "health", "request_id": "req_000519", "duration_ms": 239}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:40Z", "message": "File uploaded", "service": "cache", "request_id": "req_000520", "duration_ms": 89, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:41Z", "message": "Operation completed", "service": "api", "request_id": "req_000521", "duration_ms": 467}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:42Z", "message": "Request processed", "service": "monitor", "request_id": "req_000522", "duration_ms": 402}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:43Z", "message": "Application started", "service": "backup", "request_id": "req_000523", "duration_ms": 442, "user_id": 242}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:44Z", "message": "API call completed", "service": "backup", "request_id": "req_000524", "duration_ms": 323, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:45Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000525", "duration_ms": 345, "user_id": 186}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:46Z", "message": "Validation passed", "service": "auth", "request_id": "req_000526", "duration_ms": 260, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:47Z", "message": "Processing request", "service": "websocket", "request_id": "req_000527", "duration_ms": 377, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:48Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000528", "duration_ms": 72, "error": "Invalid input", "user_id": 713}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:49Z", "message": "Validation passed", "service": "health", "request_id": "req_000529", "duration_ms": 354}
+{"level": "WARN", "timestamp": "2024-01-15T10:08:50Z", "message": "Validation passed", "service": "backup", "request_id": "req_000530", "duration_ms": 3, "user_id": 601}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:51Z", "message": "File uploaded", "service": "backup", "request_id": "req_000531", "duration_ms": 25, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:52Z", "message": "Connection established", "service": "backup", "request_id": "req_000532", "duration_ms": 458, "user_id": 907}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:53Z", "message": "API call completed", "service": "backup", "request_id": "req_000533", "duration_ms": 150}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:54Z", "message": "Cache miss", "service": "auth", "request_id": "req_000534", "duration_ms": 198}
+{"level": "INFO", "timestamp": "2024-01-15T10:08:55Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000535", "duration_ms": 196}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:08:56Z", "message": "Database query executed", "service": "health", "request_id": "req_000536", "duration_ms": 330, "user_id": 40}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:57Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000537", "duration_ms": 112}
+{"level": "ERROR", "timestamp": "2024-01-15T10:08:58Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000538", "duration_ms": 348, "error": "Not found", "user_id": 259}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:08:59Z", "message": "Cache miss", "service": "api", "request_id": "req_000539", "duration_ms": 167}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:00Z", "message": "File uploaded", "service": "backup", "request_id": "req_000540", "duration_ms": 139, "user_id": 798}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:01Z", "message": "Database query executed", "service": "health", "request_id": "req_000541", "duration_ms": 123, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:02Z", "message": "Processing request", "service": "websocket", "request_id": "req_000542", "duration_ms": 432, "user_id": 654}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:03Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000543", "duration_ms": 155, "user_id": 712}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:04Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000544", "duration_ms": 375}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:05Z", "message": "Cache miss", "service": "backup", "request_id": "req_000545", "duration_ms": 475, "user_id": 48}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:06Z", "message": "Operation completed", "service": "health", "request_id": "req_000546", "duration_ms": 187}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:07Z", "message": "Application started", "service": "health", "request_id": "req_000547", "duration_ms": 171, "user_id": 473}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:08Z", "message": "Operation completed", "service": "health", "request_id": "req_000548", "duration_ms": 458, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:09Z", "message": "API call completed", "service": "websocket", "request_id": "req_000549", "duration_ms": 380, "error": "Timeout", "user_id": 779}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:10Z", "message": "File uploaded", "service": "health", "request_id": "req_000550", "duration_ms": 36}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:11Z", "message": "Processing request", "service": "backup", "request_id": "req_000551", "duration_ms": 214}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:12Z", "message": "User logged in", "service": "websocket", "request_id": "req_000552", "duration_ms": 51}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:13Z", "message": "Operation completed", "service": "health", "request_id": "req_000553", "duration_ms": 459}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:14Z", "message": "Request processed", "service": "monitor", "request_id": "req_000554", "duration_ms": 209, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:15Z", "message": "Cache miss", "service": "auth", "request_id": "req_000555", "duration_ms": 212}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:16Z", "message": "Application started", "service": "monitor", "request_id": "req_000556", "duration_ms": 164, "error": "Not found", "user_id": 534}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:17Z", "message": "Database query executed", "service": "cache", "request_id": "req_000557", "duration_ms": 12, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:18Z", "message": "Application started", "service": "scheduler", "request_id": "req_000558", "duration_ms": 29}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:19Z", "message": "Request processed", "service": "backup", "request_id": "req_000559", "duration_ms": 110}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:20Z", "message": "File uploaded", "service": "auth", "request_id": "req_000560", "duration_ms": 196, "error": "Connection refused", "user_id": 231}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:21Z", "message": "Request processed", "service": "cache", "request_id": "req_000561", "duration_ms": 208, "error": "Timeout", "user_id": 978}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:22Z", "message": "User logged in", "service": "storage", "request_id": "req_000562", "duration_ms": 223, "error": "Invalid input", "user_id": 30}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:23Z", "message": "Connection established", "service": "backup", "request_id": "req_000563", "duration_ms": 44}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:24Z", "message": "Validation passed", "service": "cache", "request_id": "req_000564", "duration_ms": 282, "user_id": 689}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:25Z", "message": "File uploaded", "service": "backup", "request_id": "req_000565", "duration_ms": 320, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:26Z", "message": "Request processed", "service": "storage", "request_id": "req_000566", "duration_ms": 451}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:27Z", "message": "User logged in", "service": "database", "request_id": "req_000567", "duration_ms": 225}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:28Z", "message": "User logged in", "service": "storage", "request_id": "req_000568", "duration_ms": 57}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:29Z", "message": "Validation passed", "service": "scheduler", "request_id": "req_000569", "duration_ms": 255}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:30Z", "message": "User logged in", "service": "monitor", "request_id": "req_000570", "duration_ms": 339}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:31Z", "message": "Application started", "service": "monitor", "request_id": "req_000571", "duration_ms": 470}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:32Z", "message": "Database query executed", "service": "cache", "request_id": "req_000572", "duration_ms": 341}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:33Z", "message": "Request processed", "service": "api", "request_id": "req_000573", "duration_ms": 338}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:34Z", "message": "User logged in", "service": "monitor", "request_id": "req_000574", "duration_ms": 343, "user_id": 801}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:35Z", "message": "User logged in", "service": "auth", "request_id": "req_000575", "duration_ms": 77, "error": "Connection refused", "user_id": 179}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:36Z", "message": "Operation completed", "service": "database", "request_id": "req_000576", "duration_ms": 356, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:37Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000577", "duration_ms": 112}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:38Z", "message": "Validation passed", "service": "monitor", "request_id": "req_000578", "duration_ms": 295}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:39Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000579", "duration_ms": 478, "user_id": 119}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:40Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000580", "duration_ms": 211, "user_id": 264}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:41Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000581", "duration_ms": 265}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:42Z", "message": "Task scheduled", "service": "health", "request_id": "req_000582", "duration_ms": 213}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:43Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000583", "duration_ms": 44}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:44Z", "message": "Connection established", "service": "health", "request_id": "req_000584", "duration_ms": 403}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:45Z", "message": "Connection established", "service": "auth", "request_id": "req_000585", "duration_ms": 51}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:46Z", "message": "Application started", "service": "monitor", "request_id": "req_000586", "duration_ms": 479}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:47Z", "message": "File uploaded", "service": "cache", "request_id": "req_000587", "duration_ms": 366}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:48Z", "message": "Task scheduled", "service": "database", "request_id": "req_000588", "duration_ms": 8}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:49Z", "message": "Task scheduled", "service": "health", "request_id": "req_000589", "duration_ms": 311}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:50Z", "message": "User logged in", "service": "health", "request_id": "req_000590", "duration_ms": 219}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:51Z", "message": "User logged in", "service": "backup", "request_id": "req_000591", "duration_ms": 116, "error": "Connection refused", "user_id": 17}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:09:52Z", "message": "Task scheduled", "service": "database", "request_id": "req_000592", "duration_ms": 476}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:53Z", "message": "Request processed", "service": "backup", "request_id": "req_000593", "duration_ms": 220, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:54Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000594", "duration_ms": 200}
+{"level": "WARN", "timestamp": "2024-01-15T10:09:55Z", "message": "API call completed", "service": "health", "request_id": "req_000595", "duration_ms": 373, "user_id": 32}
+{"level": "INFO", "timestamp": "2024-01-15T10:09:56Z", "message": "Cache miss", "service": "backup", "request_id": "req_000596", "duration_ms": 496}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:57Z", "message": "Cache miss", "service": "cache", "request_id": "req_000597", "duration_ms": 85, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:09:58Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000598", "duration_ms": 178}
+{"level": "ERROR", "timestamp": "2024-01-15T10:09:59Z", "message": "Connection established", "service": "websocket", "request_id": "req_000599", "duration_ms": 159, "error": "Invalid input"}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:00Z", "message": "API call completed", "service": "api", "request_id": "req_000600", "duration_ms": 336, "user_id": 685}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:01Z", "message": "Processing request", "service": "health", "request_id": "req_000601", "duration_ms": 395, "user_id": 371}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:02Z", "message": "Validation passed", "service": "health", "request_id": "req_000602", "duration_ms": 368}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:03Z", "message": "API call completed", "service": "database", "request_id": "req_000603", "duration_ms": 417}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:04Z", "message": "Validation passed", "service": "cache", "request_id": "req_000604", "duration_ms": 497}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:05Z", "message": "Cache miss", "service": "backup", "request_id": "req_000605", "duration_ms": 154}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:06Z", "message": "Application started", "service": "websocket", "request_id": "req_000606", "duration_ms": 279}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:07Z", "message": "Cache miss", "service": "backup", "request_id": "req_000607", "duration_ms": 110, "user_id": 963}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:08Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000608", "duration_ms": 123}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:09Z", "message": "Request processed", "service": "auth", "request_id": "req_000609", "duration_ms": 171, "error": "Timeout", "user_id": 985}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:10Z", "message": "Operation completed", "service": "database", "request_id": "req_000610", "duration_ms": 321, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:11Z", "message": "Processing request", "service": "database", "request_id": "req_000611", "duration_ms": 259, "user_id": 812}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:12Z", "message": "Cache miss", "service": "api", "request_id": "req_000612", "duration_ms": 307, "error": "Invalid input"}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:13Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000613", "duration_ms": 217}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:14Z", "message": "File uploaded", "service": "api", "request_id": "req_000614", "duration_ms": 461, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:15Z", "message": "Processing request", "service": "database", "request_id": "req_000615", "duration_ms": 63}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:16Z", "message": "Database query executed", "service": "auth", "request_id": "req_000616", "duration_ms": 60, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:17Z", "message": "Database query executed", "service": "websocket", "request_id": "req_000617", "duration_ms": 200}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:18Z", "message": "Processing request", "service": "monitor", "request_id": "req_000618", "duration_ms": 282, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:19Z", "message": "Application started", "service": "storage", "request_id": "req_000619", "duration_ms": 208}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:20Z", "message": "Application started", "service": "storage", "request_id": "req_000620", "duration_ms": 125, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:21Z", "message": "Application started", "service": "health", "request_id": "req_000621", "duration_ms": 119}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:22Z", "message": "Application started", "service": "api", "request_id": "req_000622", "duration_ms": 459}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:23Z", "message": "Processing request", "service": "api", "request_id": "req_000623", "duration_ms": 111, "user_id": 693}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:24Z", "message": "Connection established", "service": "api", "request_id": "req_000624", "duration_ms": 80}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:25Z", "message": "Application started", "service": "cache", "request_id": "req_000625", "duration_ms": 283}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:26Z", "message": "Cache miss", "service": "health", "request_id": "req_000626", "duration_ms": 216, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:27Z", "message": "API call completed", "service": "monitor", "request_id": "req_000627", "duration_ms": 196}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:28Z", "message": "Connection established", "service": "api", "request_id": "req_000628", "duration_ms": 21}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:29Z", "message": "User logged in", "service": "websocket", "request_id": "req_000629", "duration_ms": 174}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:30Z", "message": "Database query executed", "service": "api", "request_id": "req_000630", "duration_ms": 99}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:31Z", "message": "Processing request", "service": "database", "request_id": "req_000631", "duration_ms": 108}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:32Z", "message": "Validation passed", "service": "backup", "request_id": "req_000632", "duration_ms": 253}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:33Z", "message": "Application started", "service": "scheduler", "request_id": "req_000633", "duration_ms": 333, "user_id": 375}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:34Z", "message": "Database query executed", "service": "api", "request_id": "req_000634", "duration_ms": 185}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:35Z", "message": "Operation completed", "service": "websocket", "request_id": "req_000635", "duration_ms": 386, "user_id": 53}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:36Z", "message": "Validation passed", "service": "health", "request_id": "req_000636", "duration_ms": 197, "user_id": 11}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:37Z", "message": "Connection established", "service": "api", "request_id": "req_000637", "duration_ms": 192}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:38Z", "message": "Request processed", "service": "websocket", "request_id": "req_000638", "duration_ms": 30, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:39Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000639", "duration_ms": 308}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:40Z", "message": "Validation passed", "service": "scheduler", "request_id": "req_000640", "duration_ms": 130, "user_id": 689}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:41Z", "message": "Cache miss", "service": "cache", "request_id": "req_000641", "duration_ms": 428, "user_id": 778}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:42Z", "message": "Application started", "service": "monitor", "request_id": "req_000642", "duration_ms": 63}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:43Z", "message": "Processing request", "service": "auth", "request_id": "req_000643", "duration_ms": 63, "user_id": 189}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:44Z", "message": "User logged in", "service": "database", "request_id": "req_000644", "duration_ms": 405, "user_id": 878}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:45Z", "message": "Cache miss", "service": "health", "request_id": "req_000645", "duration_ms": 349, "user_id": 201}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:46Z", "message": "Database query executed", "service": "backup", "request_id": "req_000646", "duration_ms": 274}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:47Z", "message": "Application started", "service": "scheduler", "request_id": "req_000647", "duration_ms": 177}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:48Z", "message": "Database query executed", "service": "health", "request_id": "req_000648", "duration_ms": 341, "user_id": 707}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:49Z", "message": "Processing request", "service": "backup", "request_id": "req_000649", "duration_ms": 184, "user_id": 348}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:50Z", "message": "API call completed", "service": "monitor", "request_id": "req_000650", "duration_ms": 179, "user_id": 488}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:10:51Z", "message": "Processing request", "service": "websocket", "request_id": "req_000651", "duration_ms": 199}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:52Z", "message": "Cache miss", "service": "api", "request_id": "req_000652", "duration_ms": 455, "error": "Invalid input", "user_id": 266}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:10:53Z", "message": "Request processed", "service": "storage", "request_id": "req_000653", "duration_ms": 30}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:54Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000654", "duration_ms": 274}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:55Z", "message": "Request processed", "service": "database", "request_id": "req_000655", "duration_ms": 284}
+{"level": "WARN", "timestamp": "2024-01-15T10:10:56Z", "message": "File uploaded", "service": "storage", "request_id": "req_000656", "duration_ms": 328}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:57Z", "message": "Application started", "service": "database", "request_id": "req_000657", "duration_ms": 192}
+{"level": "INFO", "timestamp": "2024-01-15T10:10:58Z", "message": "Processing request", "service": "cache", "request_id": "req_000658", "duration_ms": 423}
+{"level": "ERROR", "timestamp": "2024-01-15T10:10:59Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000659", "duration_ms": 395, "error": "Not found"}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:00Z", "message": "API call completed", "service": "api", "request_id": "req_000660", "duration_ms": 334}
+{"level": "ERROR", "timestamp": "2024-01-15T10:11:01Z", "message": "Task scheduled", "service": "cache", "request_id": "req_000661", "duration_ms": 458, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:02Z", "message": "User logged in", "service": "storage", "request_id": "req_000662", "duration_ms": 281}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:03Z", "message": "Operation completed", "service": "database", "request_id": "req_000663", "duration_ms": 404}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:04Z", "message": "Operation completed", "service": "api", "request_id": "req_000664", "duration_ms": 230}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:05Z", "message": "Request processed", "service": "cache", "request_id": "req_000665", "duration_ms": 356}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:06Z", "message": "Processing request", "service": "storage", "request_id": "req_000666", "duration_ms": 208}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:07Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000667", "duration_ms": 453, "user_id": 333}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:08Z", "message": "Cache miss", "service": "backup", "request_id": "req_000668", "duration_ms": 404, "user_id": 326}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:09Z", "message": "Database query executed", "service": "api", "request_id": "req_000669", "duration_ms": 146}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:10Z", "message": "Processing request", "service": "cache", "request_id": "req_000670", "duration_ms": 208}
+{"level": "ERROR", "timestamp": "2024-01-15T10:11:11Z", "message": "Connection established", "service": "auth", "request_id": "req_000671", "duration_ms": 460, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:12Z", "message": "User logged in", "service": "cache", "request_id": "req_000672", "duration_ms": 171}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:13Z", "message": "Validation passed", "service": "scheduler", "request_id": "req_000673", "duration_ms": 60, "user_id": 271}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:14Z", "message": "Validation passed", "service": "database", "request_id": "req_000674", "duration_ms": 322}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:15Z", "message": "Request processed", "service": "database", "request_id": "req_000675", "duration_ms": 198, "user_id": 654}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:16Z", "message": "Processing request", "service": "scheduler", "request_id": "req_000676", "duration_ms": 444}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:17Z", "message": "Processing request", "service": "api", "request_id": "req_000677", "duration_ms": 44, "user_id": 560}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:18Z", "message": "Connection established", "service": "websocket", "request_id": "req_000678", "duration_ms": 212, "user_id": 702}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:19Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000679", "duration_ms": 160}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:20Z", "message": "Operation completed", "service": "health", "request_id": "req_000680", "duration_ms": 331}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:21Z", "message": "Operation completed", "service": "websocket", "request_id": "req_000681", "duration_ms": 125, "user_id": 117}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:22Z", "message": "Task scheduled", "service": "api", "request_id": "req_000682", "duration_ms": 466, "user_id": 97}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:23Z", "message": "Validation passed", "service": "health", "request_id": "req_000683", "duration_ms": 2, "user_id": 643}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:24Z", "message": "Database query executed", "service": "backup", "request_id": "req_000684", "duration_ms": 424}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:25Z", "message": "User logged in", "service": "api", "request_id": "req_000685", "duration_ms": 10}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:26Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000686", "duration_ms": 436}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:27Z", "message": "Processing request", "service": "api", "request_id": "req_000687", "duration_ms": 213, "user_id": 740}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:28Z", "message": "API call completed", "service": "scheduler", "request_id": "req_000688", "duration_ms": 431, "user_id": 57}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:29Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000689", "duration_ms": 10}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:30Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000690", "duration_ms": 479}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:31Z", "message": "Cache miss", "service": "database", "request_id": "req_000691", "duration_ms": 319}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:32Z", "message": "Operation completed", "service": "health", "request_id": "req_000692", "duration_ms": 145}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:33Z", "message": "Cache miss", "service": "api", "request_id": "req_000693", "duration_ms": 173}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:34Z", "message": "Cache miss", "service": "auth", "request_id": "req_000694", "duration_ms": 140, "user_id": 307}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:35Z", "message": "API call completed", "service": "backup", "request_id": "req_000695", "duration_ms": 283}
+{"level": "ERROR", "timestamp": "2024-01-15T10:11:36Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000696", "duration_ms": 357, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:37Z", "message": "Request processed", "service": "monitor", "request_id": "req_000697", "duration_ms": 443}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:38Z", "message": "Database query executed", "service": "database", "request_id": "req_000698", "duration_ms": 25}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:39Z", "message": "File uploaded", "service": "auth", "request_id": "req_000699", "duration_ms": 10}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:40Z", "message": "Processing request", "service": "backup", "request_id": "req_000700", "duration_ms": 149}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:41Z", "message": "Connection established", "service": "database", "request_id": "req_000701", "duration_ms": 339}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:42Z", "message": "Connection established", "service": "auth", "request_id": "req_000702", "duration_ms": 13}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:43Z", "message": "Processing request", "service": "health", "request_id": "req_000703", "duration_ms": 65, "user_id": 332}
+{"level": "ERROR", "timestamp": "2024-01-15T10:11:44Z", "message": "User logged in", "service": "api", "request_id": "req_000704", "duration_ms": 372, "error": "Not found"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:45Z", "message": "Connection established", "service": "monitor", "request_id": "req_000705", "duration_ms": 117}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:46Z", "message": "Database query executed", "service": "health", "request_id": "req_000706", "duration_ms": 26, "user_id": 715}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:47Z", "message": "File uploaded", "service": "backup", "request_id": "req_000707", "duration_ms": 345}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:48Z", "message": "Application started", "service": "health", "request_id": "req_000708", "duration_ms": 421}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:49Z", "message": "Operation completed", "service": "monitor", "request_id": "req_000709", "duration_ms": 411}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:50Z", "message": "Database query executed", "service": "storage", "request_id": "req_000710", "duration_ms": 224}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:11:51Z", "message": "Connection established", "service": "database", "request_id": "req_000711", "duration_ms": 89}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:52Z", "message": "Operation completed", "service": "storage", "request_id": "req_000712", "duration_ms": 217, "user_id": 594}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:53Z", "message": "API call completed", "service": "cache", "request_id": "req_000713", "duration_ms": 490, "user_id": 862}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:54Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000714", "duration_ms": 118}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:55Z", "message": "Request processed", "service": "database", "request_id": "req_000715", "duration_ms": 234, "user_id": 636}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:56Z", "message": "Validation passed", "service": "api", "request_id": "req_000716", "duration_ms": 32}
+{"level": "WARN", "timestamp": "2024-01-15T10:11:57Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000717", "duration_ms": 264}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:11:58Z", "message": "Connection established", "service": "backup", "request_id": "req_000718", "duration_ms": 188}
+{"level": "INFO", "timestamp": "2024-01-15T10:11:59Z", "message": "Request processed", "service": "health", "request_id": "req_000719", "duration_ms": 432}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:00Z", "message": "Processing request", "service": "backup", "request_id": "req_000720", "duration_ms": 3}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:01Z", "message": "Application started", "service": "backup", "request_id": "req_000721", "duration_ms": 306}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:02Z", "message": "Application started", "service": "websocket", "request_id": "req_000722", "duration_ms": 202}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:03Z", "message": "Request processed", "service": "websocket", "request_id": "req_000723", "duration_ms": 466, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:04Z", "message": "User logged in", "service": "monitor", "request_id": "req_000724", "duration_ms": 12, "user_id": 542}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:05Z", "message": "Request processed", "service": "cache", "request_id": "req_000725", "duration_ms": 207}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:06Z", "message": "Processing request", "service": "backup", "request_id": "req_000726", "duration_ms": 165}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:07Z", "message": "Request processed", "service": "auth", "request_id": "req_000727", "duration_ms": 17, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:08Z", "message": "Processing request", "service": "database", "request_id": "req_000728", "duration_ms": 446, "error": "Invalid input"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:09Z", "message": "Application started", "service": "health", "request_id": "req_000729", "duration_ms": 237}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:10Z", "message": "Request processed", "service": "auth", "request_id": "req_000730", "duration_ms": 92}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:11Z", "message": "Processing request", "service": "scheduler", "request_id": "req_000731", "duration_ms": 62, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:12Z", "message": "Application started", "service": "storage", "request_id": "req_000732", "duration_ms": 125, "user_id": 301}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:13Z", "message": "Connection established", "service": "websocket", "request_id": "req_000733", "duration_ms": 195, "user_id": 859}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:14Z", "message": "Operation completed", "service": "health", "request_id": "req_000734", "duration_ms": 262}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:15Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000735", "duration_ms": 46, "user_id": 30}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:16Z", "message": "Application started", "service": "cache", "request_id": "req_000736", "duration_ms": 477, "error": "Invalid input", "user_id": 776}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:17Z", "message": "Database query executed", "service": "monitor", "request_id": "req_000737", "duration_ms": 247}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:18Z", "message": "Connection established", "service": "cache", "request_id": "req_000738", "duration_ms": 179}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:19Z", "message": "Application started", "service": "database", "request_id": "req_000739", "duration_ms": 279, "user_id": 391}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:20Z", "message": "Task scheduled", "service": "database", "request_id": "req_000740", "duration_ms": 252}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:21Z", "message": "Request processed", "service": "database", "request_id": "req_000741", "duration_ms": 315}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:22Z", "message": "Cache miss", "service": "auth", "request_id": "req_000742", "duration_ms": 367}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:23Z", "message": "Request processed", "service": "storage", "request_id": "req_000743", "duration_ms": 412}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:24Z", "message": "Validation passed", "service": "cache", "request_id": "req_000744", "duration_ms": 103, "error": "Invalid input", "user_id": 750}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:25Z", "message": "User logged in", "service": "health", "request_id": "req_000745", "duration_ms": 285}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:26Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000746", "duration_ms": 227}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:27Z", "message": "Processing request", "service": "storage", "request_id": "req_000747", "duration_ms": 66, "user_id": 83}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:28Z", "message": "API call completed", "service": "monitor", "request_id": "req_000748", "duration_ms": 149}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:29Z", "message": "Database query executed", "service": "monitor", "request_id": "req_000749", "duration_ms": 59, "user_id": 70}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:30Z", "message": "Request processed", "service": "monitor", "request_id": "req_000750", "duration_ms": 14, "user_id": 208}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:31Z", "message": "API call completed", "service": "health", "request_id": "req_000751", "duration_ms": 228}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:32Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000752", "duration_ms": 481, "user_id": 500}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:33Z", "message": "Operation completed", "service": "health", "request_id": "req_000753", "duration_ms": 369}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:34Z", "message": "API call completed", "service": "storage", "request_id": "req_000754", "duration_ms": 381}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:35Z", "message": "Request processed", "service": "cache", "request_id": "req_000755", "duration_ms": 329}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:36Z", "message": "Request processed", "service": "websocket", "request_id": "req_000756", "duration_ms": 236}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:37Z", "message": "API call completed", "service": "auth", "request_id": "req_000757", "duration_ms": 6}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:38Z", "message": "Cache miss", "service": "api", "request_id": "req_000758", "duration_ms": 349, "error": "Timeout"}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:39Z", "message": "Cache miss", "service": "api", "request_id": "req_000759", "duration_ms": 80}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:40Z", "message": "File uploaded", "service": "health", "request_id": "req_000760", "duration_ms": 435, "error": "Invalid input", "user_id": 250}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:41Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000761", "duration_ms": 372}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:42Z", "message": "Operation completed", "service": "api", "request_id": "req_000762", "duration_ms": 66, "error": "Connection refused"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:43Z", "message": "Database query executed", "service": "websocket", "request_id": "req_000763", "duration_ms": 307, "user_id": 863}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:44Z", "message": "User logged in", "service": "websocket", "request_id": "req_000764", "duration_ms": 231, "user_id": 999}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:45Z", "message": "Processing request", "service": "websocket", "request_id": "req_000765", "duration_ms": 167}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:46Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000766", "duration_ms": 437}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:47Z", "message": "File uploaded", "service": "health", "request_id": "req_000767", "duration_ms": 130}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:48Z", "message": "Database query executed", "service": "auth", "request_id": "req_000768", "duration_ms": 72}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:49Z", "message": "Validation passed", "service": "api", "request_id": "req_000769", "duration_ms": 281}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:50Z", "message": "Connection established", "service": "api", "request_id": "req_000770", "duration_ms": 249, "error": "Connection refused"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:51Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000771", "duration_ms": 357}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:12:52Z", "message": "File uploaded", "service": "websocket", "request_id": "req_000772", "duration_ms": 441}
+{"level": "WARN", "timestamp": "2024-01-15T10:12:53Z", "message": "Connection established", "service": "storage", "request_id": "req_000773", "duration_ms": 311}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:54Z", "message": "User logged in", "service": "auth", "request_id": "req_000774", "duration_ms": 384}
+{"level": "INFO", "timestamp": "2024-01-15T10:12:55Z", "message": "Request processed", "service": "monitor", "request_id": "req_000775", "duration_ms": 333}
+{"level": "ERROR", "timestamp": "2024-01-15T10:12:56Z", "message": "Connection established", "service": "monitor", "request_id": "req_000776", "duration_ms": 157, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:57Z", "message": "Application started", "service": "cache", "request_id": "req_000777", "duration_ms": 331, "user_id": 524}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:58Z", "message": "Application started", "service": "health", "request_id": "req_000778", "duration_ms": 153}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:12:59Z", "message": "User logged in", "service": "auth", "request_id": "req_000779", "duration_ms": 368, "user_id": 22}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:00Z", "message": "Validation passed", "service": "monitor", "request_id": "req_000780", "duration_ms": 268, "user_id": 206}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:01Z", "message": "Validation passed", "service": "api", "request_id": "req_000781", "duration_ms": 293}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:02Z", "message": "Operation completed", "service": "storage", "request_id": "req_000782", "duration_ms": 467}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:03Z", "message": "API call completed", "service": "storage", "request_id": "req_000783", "duration_ms": 192}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:04Z", "message": "Operation completed", "service": "storage", "request_id": "req_000784", "duration_ms": 191, "user_id": 534}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:05Z", "message": "Operation completed", "service": "database", "request_id": "req_000785", "duration_ms": 16, "user_id": 888}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:06Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000786", "duration_ms": 46, "user_id": 206}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:07Z", "message": "Cache miss", "service": "database", "request_id": "req_000787", "duration_ms": 131}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:08Z", "message": "Cache miss", "service": "auth", "request_id": "req_000788", "duration_ms": 305, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:09Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000789", "duration_ms": 300}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:10Z", "message": "Validation passed", "service": "health", "request_id": "req_000790", "duration_ms": 33}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:11Z", "message": "Application started", "service": "storage", "request_id": "req_000791", "duration_ms": 331}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:12Z", "message": "User logged in", "service": "database", "request_id": "req_000792", "duration_ms": 421, "user_id": 414}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:13Z", "message": "Task scheduled", "service": "api", "request_id": "req_000793", "duration_ms": 270}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:14Z", "message": "User logged in", "service": "api", "request_id": "req_000794", "duration_ms": 50}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:15Z", "message": "Database query executed", "service": "backup", "request_id": "req_000795", "duration_ms": 268}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:16Z", "message": "File uploaded", "service": "backup", "request_id": "req_000796", "duration_ms": 12, "error": "Not found", "user_id": 786}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:17Z", "message": "User logged in", "service": "cache", "request_id": "req_000797", "duration_ms": 395}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:18Z", "message": "Cache miss", "service": "scheduler", "request_id": "req_000798", "duration_ms": 288, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:19Z", "message": "Database query executed", "service": "api", "request_id": "req_000799", "duration_ms": 311, "user_id": 666}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:20Z", "message": "Cache miss", "service": "auth", "request_id": "req_000800", "duration_ms": 126}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:21Z", "message": "Application started", "service": "websocket", "request_id": "req_000801", "duration_ms": 199, "error": "Not found", "user_id": 812}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:22Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000802", "duration_ms": 31, "user_id": 507}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:23Z", "message": "Cache miss", "service": "websocket", "request_id": "req_000803", "duration_ms": 493, "user_id": 302}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:24Z", "message": "Connection established", "service": "cache", "request_id": "req_000804", "duration_ms": 40, "user_id": 457}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:25Z", "message": "API call completed", "service": "health", "request_id": "req_000805", "duration_ms": 166}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:26Z", "message": "User logged in", "service": "websocket", "request_id": "req_000806", "duration_ms": 228, "user_id": 946}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:27Z", "message": "Connection established", "service": "database", "request_id": "req_000807", "duration_ms": 372}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:28Z", "message": "Validation passed", "service": "websocket", "request_id": "req_000808", "duration_ms": 235, "user_id": 402}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:29Z", "message": "Database query executed", "service": "api", "request_id": "req_000809", "duration_ms": 117, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:30Z", "message": "Request processed", "service": "cache", "request_id": "req_000810", "duration_ms": 225}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:31Z", "message": "Application started", "service": "monitor", "request_id": "req_000811", "duration_ms": 313}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:32Z", "message": "Application started", "service": "backup", "request_id": "req_000812", "duration_ms": 90}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:33Z", "message": "Cache miss", "service": "auth", "request_id": "req_000813", "duration_ms": 308, "user_id": 563}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:34Z", "message": "Task scheduled", "service": "health", "request_id": "req_000814", "duration_ms": 87}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:35Z", "message": "File uploaded", "service": "api", "request_id": "req_000815", "duration_ms": 458}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:36Z", "message": "Application started", "service": "database", "request_id": "req_000816", "duration_ms": 335, "error": "Timeout"}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:37Z", "message": "Operation completed", "service": "api", "request_id": "req_000817", "duration_ms": 178, "user_id": 360}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:38Z", "message": "User logged in", "service": "storage", "request_id": "req_000818", "duration_ms": 397, "user_id": 12}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:39Z", "message": "File uploaded", "service": "websocket", "request_id": "req_000819", "duration_ms": 16}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:40Z", "message": "Request processed", "service": "api", "request_id": "req_000820", "duration_ms": 243}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:41Z", "message": "Database query executed", "service": "backup", "request_id": "req_000821", "duration_ms": 172}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:42Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000822", "duration_ms": 348}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:43Z", "message": "Application started", "service": "scheduler", "request_id": "req_000823", "duration_ms": 187}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:44Z", "message": "Cache miss", "service": "backup", "request_id": "req_000824", "duration_ms": 437}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:45Z", "message": "File uploaded", "service": "backup", "request_id": "req_000825", "duration_ms": 203, "user_id": 385}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:46Z", "message": "API call completed", "service": "backup", "request_id": "req_000826", "duration_ms": 361, "error": "Invalid input", "user_id": 781}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:47Z", "message": "Application started", "service": "storage", "request_id": "req_000827", "duration_ms": 61, "error": "Connection refused", "user_id": 780}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:48Z", "message": "Validation passed", "service": "auth", "request_id": "req_000828", "duration_ms": 217}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:49Z", "message": "Validation passed", "service": "auth", "request_id": "req_000829", "duration_ms": 55, "error": "Timeout"}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:50Z", "message": "Connection established", "service": "health", "request_id": "req_000830", "duration_ms": 481}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:51Z", "message": "Validation passed", "service": "backup", "request_id": "req_000831", "duration_ms": 449}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:52Z", "message": "Database query executed", "service": "cache", "request_id": "req_000832", "duration_ms": 363, "error": "Not found"}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:53Z", "message": "Database query executed", "service": "health", "request_id": "req_000833", "duration_ms": 483, "user_id": 271}
+{"level": "WARN", "timestamp": "2024-01-15T10:13:54Z", "message": "Operation completed", "service": "storage", "request_id": "req_000834", "duration_ms": 79}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:55Z", "message": "User logged in", "service": "auth", "request_id": "req_000835", "duration_ms": 232}
+{"level": "ERROR", "timestamp": "2024-01-15T10:13:56Z", "message": "User logged in", "service": "backup", "request_id": "req_000836", "duration_ms": 182, "error": "Invalid input"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:13:57Z", "message": "Task scheduled", "service": "database", "request_id": "req_000837", "duration_ms": 21, "user_id": 854}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:13:58Z", "message": "Processing request", "service": "storage", "request_id": "req_000838", "duration_ms": 304}
+{"level": "INFO", "timestamp": "2024-01-15T10:13:59Z", "message": "User logged in", "service": "storage", "request_id": "req_000839", "duration_ms": 355, "user_id": 535}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:00Z", "message": "Validation passed", "service": "monitor", "request_id": "req_000840", "duration_ms": 267}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:01Z", "message": "Validation passed", "service": "api", "request_id": "req_000841", "duration_ms": 295}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:02Z", "message": "Cache miss", "service": "auth", "request_id": "req_000842", "duration_ms": 480, "user_id": 768}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:03Z", "message": "Application started", "service": "database", "request_id": "req_000843", "duration_ms": 40, "user_id": 74}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:04Z", "message": "User logged in", "service": "backup", "request_id": "req_000844", "duration_ms": 151, "user_id": 770}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:05Z", "message": "Request processed", "service": "cache", "request_id": "req_000845", "duration_ms": 143}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:06Z", "message": "Request processed", "service": "auth", "request_id": "req_000846", "duration_ms": 457}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:07Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000847", "duration_ms": 72}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:08Z", "message": "Operation completed", "service": "backup", "request_id": "req_000848", "duration_ms": 193}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:09Z", "message": "Application started", "service": "backup", "request_id": "req_000849", "duration_ms": 292}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:10Z", "message": "API call completed", "service": "cache", "request_id": "req_000850", "duration_ms": 220}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:11Z", "message": "Processing request", "service": "monitor", "request_id": "req_000851", "duration_ms": 394}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:12Z", "message": "Request processed", "service": "health", "request_id": "req_000852", "duration_ms": 248}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:13Z", "message": "File uploaded", "service": "auth", "request_id": "req_000853", "duration_ms": 486}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:14Z", "message": "Processing request", "service": "backup", "request_id": "req_000854", "duration_ms": 463, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:15Z", "message": "API call completed", "service": "cache", "request_id": "req_000855", "duration_ms": 179}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:16Z", "message": "Request processed", "service": "monitor", "request_id": "req_000856", "duration_ms": 72}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:17Z", "message": "Connection established", "service": "backup", "request_id": "req_000857", "duration_ms": 41}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:18Z", "message": "Application started", "service": "storage", "request_id": "req_000858", "duration_ms": 142, "user_id": 747}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:19Z", "message": "User logged in", "service": "auth", "request_id": "req_000859", "duration_ms": 463, "error": "Not found", "user_id": 969}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:20Z", "message": "API call completed", "service": "scheduler", "request_id": "req_000860", "duration_ms": 477}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:21Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000861", "duration_ms": 466, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:22Z", "message": "Request processed", "service": "storage", "request_id": "req_000862", "duration_ms": 151}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:23Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000863", "duration_ms": 160}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:24Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000864", "duration_ms": 13}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:25Z", "message": "Request processed", "service": "websocket", "request_id": "req_000865", "duration_ms": 479}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:26Z", "message": "Application started", "service": "backup", "request_id": "req_000866", "duration_ms": 273}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:27Z", "message": "Database query executed", "service": "backup", "request_id": "req_000867", "duration_ms": 414}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:28Z", "message": "Task scheduled", "service": "backup", "request_id": "req_000868", "duration_ms": 114, "error": "Timeout", "user_id": 403}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:29Z", "message": "Operation completed", "service": "monitor", "request_id": "req_000869", "duration_ms": 127}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:30Z", "message": "Processing request", "service": "health", "request_id": "req_000870", "duration_ms": 20, "user_id": 700}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:31Z", "message": "Processing request", "service": "backup", "request_id": "req_000871", "duration_ms": 27, "error": "Connection refused", "user_id": 58}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:32Z", "message": "Operation completed", "service": "storage", "request_id": "req_000872", "duration_ms": 409, "error": "Timeout", "user_id": 833}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:33Z", "message": "Request processed", "service": "backup", "request_id": "req_000873", "duration_ms": 93}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:34Z", "message": "Operation completed", "service": "scheduler", "request_id": "req_000874", "duration_ms": 441}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:35Z", "message": "Cache miss", "service": "health", "request_id": "req_000875", "duration_ms": 435}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:36Z", "message": "Database query executed", "service": "auth", "request_id": "req_000876", "duration_ms": 495, "user_id": 829}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:37Z", "message": "Processing request", "service": "scheduler", "request_id": "req_000877", "duration_ms": 258}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:38Z", "message": "Task scheduled", "service": "database", "request_id": "req_000878", "duration_ms": 329, "user_id": 140}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:39Z", "message": "Connection established", "service": "monitor", "request_id": "req_000879", "duration_ms": 451}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:40Z", "message": "File uploaded", "service": "database", "request_id": "req_000880", "duration_ms": 437, "user_id": 665}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:41Z", "message": "File uploaded", "service": "database", "request_id": "req_000881", "duration_ms": 149, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:42Z", "message": "Task scheduled", "service": "health", "request_id": "req_000882", "duration_ms": 39}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:43Z", "message": "Connection established", "service": "websocket", "request_id": "req_000883", "duration_ms": 394}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:44Z", "message": "Operation completed", "service": "api", "request_id": "req_000884", "duration_ms": 45, "user_id": 130}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:45Z", "message": "File uploaded", "service": "backup", "request_id": "req_000885", "duration_ms": 196, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:46Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000886", "duration_ms": 251}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:47Z", "message": "Processing request", "service": "auth", "request_id": "req_000887", "duration_ms": 344}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:48Z", "message": "User logged in", "service": "storage", "request_id": "req_000888", "duration_ms": 166, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:49Z", "message": "Processing request", "service": "cache", "request_id": "req_000889", "duration_ms": 405}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:50Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000890", "duration_ms": 461, "error": "Connection refused"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:14:51Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000891", "duration_ms": 160, "error": "Connection refused", "user_id": 82}
+{"level": "INFO", "timestamp": "2024-01-15T10:14:52Z", "message": "Operation completed", "service": "backup", "request_id": "req_000892", "duration_ms": 143, "user_id": 862}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:53Z", "message": "File uploaded", "service": "health", "request_id": "req_000893", "duration_ms": 13}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:54Z", "message": "Task scheduled", "service": "monitor", "request_id": "req_000894", "duration_ms": 84}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:55Z", "message": "Operation completed", "service": "database", "request_id": "req_000895", "duration_ms": 147}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:14:56Z", "message": "Processing request", "service": "websocket", "request_id": "req_000896", "duration_ms": 50, "user_id": 384}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:57Z", "message": "API call completed", "service": "websocket", "request_id": "req_000897", "duration_ms": 440}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:14:58Z", "message": "Task scheduled", "service": "auth", "request_id": "req_000898", "duration_ms": 420}
+{"level": "WARN", "timestamp": "2024-01-15T10:14:59Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000899", "duration_ms": 86, "user_id": 769}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:00Z", "message": "Task scheduled", "service": "health", "request_id": "req_000900", "duration_ms": 109}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:01Z", "message": "Processing request", "service": "backup", "request_id": "req_000901", "duration_ms": 353}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:02Z", "message": "Processing request", "service": "database", "request_id": "req_000902", "duration_ms": 210}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:03Z", "message": "Validation passed", "service": "storage", "request_id": "req_000903", "duration_ms": 491, "error": "Not found", "user_id": 708}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:04Z", "message": "Operation completed", "service": "monitor", "request_id": "req_000904", "duration_ms": 59}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:05Z", "message": "Processing request", "service": "api", "request_id": "req_000905", "duration_ms": 104}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:06Z", "message": "API call completed", "service": "health", "request_id": "req_000906", "duration_ms": 281, "user_id": 697}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:07Z", "message": "Operation completed", "service": "backup", "request_id": "req_000907", "duration_ms": 20}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:08Z", "message": "Connection established", "service": "database", "request_id": "req_000908", "duration_ms": 193}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:09Z", "message": "Database query executed", "service": "websocket", "request_id": "req_000909", "duration_ms": 23, "error": "Connection refused"}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:10Z", "message": "Cache miss", "service": "api", "request_id": "req_000910", "duration_ms": 118, "user_id": 412}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:11Z", "message": "Request processed", "service": "cache", "request_id": "req_000911", "duration_ms": 270, "error": "Not found", "user_id": 425}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:12Z", "message": "User logged in", "service": "health", "request_id": "req_000912", "duration_ms": 38}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:13Z", "message": "Task scheduled", "service": "api", "request_id": "req_000913", "duration_ms": 13, "user_id": 955}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:14Z", "message": "Connection established", "service": "api", "request_id": "req_000914", "duration_ms": 141, "error": "Timeout", "user_id": 508}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:15Z", "message": "API call completed", "service": "database", "request_id": "req_000915", "duration_ms": 273, "user_id": 134}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:16Z", "message": "Processing request", "service": "storage", "request_id": "req_000916", "duration_ms": 466}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:17Z", "message": "Operation completed", "service": "api", "request_id": "req_000917", "duration_ms": 72}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:18Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000918", "duration_ms": 274}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:19Z", "message": "Operation completed", "service": "monitor", "request_id": "req_000919", "duration_ms": 421, "user_id": 548}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:20Z", "message": "Validation passed", "service": "scheduler", "request_id": "req_000920", "duration_ms": 120}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:21Z", "message": "API call completed", "service": "monitor", "request_id": "req_000921", "duration_ms": 242, "user_id": 621}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:22Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000922", "duration_ms": 402, "user_id": 807}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:23Z", "message": "File uploaded", "service": "monitor", "request_id": "req_000923", "duration_ms": 310, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:24Z", "message": "Task scheduled", "service": "websocket", "request_id": "req_000924", "duration_ms": 423, "user_id": 159}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:25Z", "message": "API call completed", "service": "monitor", "request_id": "req_000925", "duration_ms": 472}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:26Z", "message": "Operation completed", "service": "websocket", "request_id": "req_000926", "duration_ms": 115}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:27Z", "message": "File uploaded", "service": "health", "request_id": "req_000927", "duration_ms": 494}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:28Z", "message": "Operation completed", "service": "api", "request_id": "req_000928", "duration_ms": 193, "user_id": 784}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:29Z", "message": "Processing request", "service": "backup", "request_id": "req_000929", "duration_ms": 483}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:30Z", "message": "File uploaded", "service": "cache", "request_id": "req_000930", "duration_ms": 309, "user_id": 296}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:31Z", "message": "File uploaded", "service": "database", "request_id": "req_000931", "duration_ms": 13, "user_id": 496}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:32Z", "message": "Operation completed", "service": "auth", "request_id": "req_000932", "duration_ms": 144}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:33Z", "message": "Connection established", "service": "scheduler", "request_id": "req_000933", "duration_ms": 195}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:34Z", "message": "Operation completed", "service": "auth", "request_id": "req_000934", "duration_ms": 87}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:35Z", "message": "Application started", "service": "database", "request_id": "req_000935", "duration_ms": 475}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:36Z", "message": "User logged in", "service": "storage", "request_id": "req_000936", "duration_ms": 72, "error": "Timeout"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:37Z", "message": "Operation completed", "service": "scheduler", "request_id": "req_000937", "duration_ms": 102, "error": "Connection refused"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:38Z", "message": "Application started", "service": "scheduler", "request_id": "req_000938", "duration_ms": 341, "error": "Not found"}
+{"level": "ERROR", "timestamp": "2024-01-15T10:15:39Z", "message": "Application started", "service": "monitor", "request_id": "req_000939", "duration_ms": 462, "error": "Invalid input"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:40Z", "message": "Processing request", "service": "scheduler", "request_id": "req_000940", "duration_ms": 35}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:41Z", "message": "File uploaded", "service": "storage", "request_id": "req_000941", "duration_ms": 278}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:42Z", "message": "Processing request", "service": "storage", "request_id": "req_000942", "duration_ms": 460, "user_id": 932}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:43Z", "message": "Application started", "service": "monitor", "request_id": "req_000943", "duration_ms": 196}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:44Z", "message": "User logged in", "service": "cache", "request_id": "req_000944", "duration_ms": 34}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:45Z", "message": "Application started", "service": "websocket", "request_id": "req_000945", "duration_ms": 64, "user_id": 302}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:46Z", "message": "Database query executed", "service": "storage", "request_id": "req_000946", "duration_ms": 179, "user_id": 532}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:47Z", "message": "Operation completed", "service": "api", "request_id": "req_000947", "duration_ms": 326, "user_id": 7}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:48Z", "message": "Validation passed", "service": "backup", "request_id": "req_000948", "duration_ms": 350}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:49Z", "message": "API call completed", "service": "websocket", "request_id": "req_000949", "duration_ms": 79, "user_id": 248}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:50Z", "message": "Database query executed", "service": "scheduler", "request_id": "req_000950", "duration_ms": 378}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:51Z", "message": "Request processed", "service": "storage", "request_id": "req_000951", "duration_ms": 270, "user_id": 979}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:52Z", "message": "Task scheduled", "service": "database", "request_id": "req_000952", "duration_ms": 15}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:53Z", "message": "Application started", "service": "cache", "request_id": "req_000953", "duration_ms": 113}
+{"level": "INFO", "timestamp": "2024-01-15T10:15:54Z", "message": "Database query executed", "service": "monitor", "request_id": "req_000954", "duration_ms": 114, "user_id": 119}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:15:55Z", "message": "API call completed", "service": "backup", "request_id": "req_000955", "duration_ms": 163, "user_id": 729}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:56Z", "message": "Database query executed", "service": "backup", "request_id": "req_000956", "duration_ms": 450}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:15:57Z", "message": "Processing request", "service": "database", "request_id": "req_000957", "duration_ms": 460, "user_id": 100}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:58Z", "message": "Processing request", "service": "health", "request_id": "req_000958", "duration_ms": 295, "user_id": 139}
+{"level": "WARN", "timestamp": "2024-01-15T10:15:59Z", "message": "User logged in", "service": "backup", "request_id": "req_000959", "duration_ms": 466}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:00Z", "message": "Request processed", "service": "scheduler", "request_id": "req_000960", "duration_ms": 198}
+{"level": "INFO", "timestamp": "2024-01-15T10:16:01Z", "message": "Task scheduled", "service": "storage", "request_id": "req_000961", "duration_ms": 285}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:02Z", "message": "Cache miss", "service": "backup", "request_id": "req_000962", "duration_ms": 441, "error": "Timeout"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:16:03Z", "message": "Processing request", "service": "health", "request_id": "req_000963", "duration_ms": 320, "user_id": 937}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:04Z", "message": "Database query executed", "service": "api", "request_id": "req_000964", "duration_ms": 44, "user_id": 795}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:05Z", "message": "File uploaded", "service": "websocket", "request_id": "req_000965", "duration_ms": 250}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:06Z", "message": "User logged in", "service": "auth", "request_id": "req_000966", "duration_ms": 421, "error": "Timeout", "user_id": 324}
+{"level": "INFO", "timestamp": "2024-01-15T10:16:07Z", "message": "Processing request", "service": "health", "request_id": "req_000967", "duration_ms": 127, "user_id": 329}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:08Z", "message": "API call completed", "service": "websocket", "request_id": "req_000968", "duration_ms": 210}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:09Z", "message": "Application started", "service": "scheduler", "request_id": "req_000969", "duration_ms": 287}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:10Z", "message": "API call completed", "service": "storage", "request_id": "req_000970", "duration_ms": 401}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:11Z", "message": "User logged in", "service": "database", "request_id": "req_000971", "duration_ms": 184, "user_id": 905}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:12Z", "message": "User logged in", "service": "scheduler", "request_id": "req_000972", "duration_ms": 112, "user_id": 474}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:13Z", "message": "Processing request", "service": "websocket", "request_id": "req_000973", "duration_ms": 5, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:14Z", "message": "Task scheduled", "service": "scheduler", "request_id": "req_000974", "duration_ms": 227, "user_id": 67}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:15Z", "message": "Cache miss", "service": "api", "request_id": "req_000975", "duration_ms": 497}
+{"level": "INFO", "timestamp": "2024-01-15T10:16:16Z", "message": "Operation completed", "service": "database", "request_id": "req_000976", "duration_ms": 490}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:17Z", "message": "User logged in", "service": "database", "request_id": "req_000977", "duration_ms": 344}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:18Z", "message": "User logged in", "service": "monitor", "request_id": "req_000978", "duration_ms": 497}
+{"level": "INFO", "timestamp": "2024-01-15T10:16:19Z", "message": "Request processed", "service": "auth", "request_id": "req_000979", "duration_ms": 2}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:20Z", "message": "User logged in", "service": "cache", "request_id": "req_000980", "duration_ms": 373, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:16:21Z", "message": "Processing request", "service": "scheduler", "request_id": "req_000981", "duration_ms": 207}
+{"level": "INFO", "timestamp": "2024-01-15T10:16:22Z", "message": "Validation passed", "service": "backup", "request_id": "req_000982", "duration_ms": 395, "user_id": 293}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:23Z", "message": "User logged in", "service": "backup", "request_id": "req_000983", "duration_ms": 487}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:24Z", "message": "API call completed", "service": "scheduler", "request_id": "req_000984", "duration_ms": 300}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:16:25Z", "message": "User logged in", "service": "health", "request_id": "req_000985", "duration_ms": 339, "user_id": 409}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:26Z", "message": "Operation completed", "service": "cache", "request_id": "req_000986", "duration_ms": 169, "error": "Connection refused", "user_id": 201}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:27Z", "message": "Connection established", "service": "auth", "request_id": "req_000987", "duration_ms": 396, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:28Z", "message": "Connection established", "service": "websocket", "request_id": "req_000988", "duration_ms": 274}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:29Z", "message": "Operation completed", "service": "monitor", "request_id": "req_000989", "duration_ms": 454, "error": "Not found"}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:16:30Z", "message": "Application started", "service": "database", "request_id": "req_000990", "duration_ms": 299}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:31Z", "message": "Application started", "service": "websocket", "request_id": "req_000991", "duration_ms": 183}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:32Z", "message": "Operation completed", "service": "auth", "request_id": "req_000992", "duration_ms": 18, "user_id": 720}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:33Z", "message": "API call completed", "service": "health", "request_id": "req_000993", "duration_ms": 261}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:34Z", "message": "Connection established", "service": "websocket", "request_id": "req_000994", "duration_ms": 316}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:35Z", "message": "File uploaded", "service": "scheduler", "request_id": "req_000995", "duration_ms": 43}
+{"level": "WARN", "timestamp": "2024-01-15T10:16:36Z", "message": "Task scheduled", "service": "health", "request_id": "req_000996", "duration_ms": 419, "user_id": 235}
+{"level": "ERROR", "timestamp": "2024-01-15T10:16:37Z", "message": "Request processed", "service": "cache", "request_id": "req_000997", "duration_ms": 343, "error": "Timeout"}
+{"level": "CRITICAL", "timestamp": "2024-01-15T10:16:38Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000998", "duration_ms": 490}
+{"level": "INFO", "timestamp": "2024-01-15T10:16:39Z", "message": "Cache miss", "service": "monitor", "request_id": "req_000999", "duration_ms": 230}
+{"level": "DEBUG", "timestamp": "2024-01-15T10:16:40Z", "message": "Task scheduled", "service": "api", "request_id": "req_001000", "duration_ms": 38, "user_id": 510}
