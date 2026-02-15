@@ -481,3 +481,187 @@ async def test_virtual_size_empty_logs() -> None:
         log_list = app.query_one("#logs", LogList)
         assert log_list.virtual_size.height == 0
         assert log_list.virtual_size.width == 2
+
+
+class TestWrapMode:
+    """Tests for wrap mode functionality."""
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_toggle_populates_wrapped_lines(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that enabling wrap mode populates _wrapped_lines mapping."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            assert log_list._wrap_mode is False
+            assert len(log_list._wrapped_lines) == 0
+
+            await pilot.press("w")
+            await pilot.pause()
+
+            assert log_list._wrap_mode is True
+            assert len(log_list._wrapped_lines) > 0
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_toggle_clears_wrapped_lines(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that disabling wrap mode clears _wrapped_lines."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.pause()
+            assert len(log_list._wrapped_lines) > 0
+
+            await pilot.press("w")
+            await pilot.pause()
+            assert log_list._wrap_mode is False
+            assert len(log_list._wrapped_lines) == 0
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_entry_start_rows_populated(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that _entry_start_rows is populated in wrap mode."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.pause()
+
+            assert len(log_list._entry_start_rows) == len(
+                log_list._log_entries
+            )
+            assert 0 in log_list._entry_start_rows
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_navigation_jumps_between_entries(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test j/k in wrap mode jumps between entries, not wrapped lines."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("g")
+            await pilot.press("w")
+            await pilot.pause()
+
+            start_cursor = log_list._cursor_index
+            await pilot.press("j")
+            await pilot.pause()
+            assert log_list._cursor_index > start_cursor
+
+            await pilot.press("k")
+            await pilot.pause()
+            assert log_list._cursor_index == start_cursor
+
+    @pytest.mark.asyncio
+    async def test_get_cursor_row_in_wrap_mode(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that _get_cursor_row returns correct row in wrap mode."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.press("g")
+            await pilot.pause()
+
+            cursor_row = log_list._get_cursor_row()
+            assert cursor_row == log_list._entry_start_rows.get(0, 0)
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_virtual_size_uses_wrapped_lines_count(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test virtual_size.height equals wrapped lines count in wrap mode."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.pause()
+
+            wrap_height = log_list.virtual_size.height
+            assert wrap_height == len(log_list._wrapped_lines)
+
+    @pytest.mark.asyncio
+    async def test_horizontal_scroll_disabled_in_wrap_mode(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that h/l keys don't scroll horizontally in wrap mode."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.pause()
+
+            await pilot.press("h")
+            await pilot.pause()
+            assert log_list.scroll_x == 0
+
+            await pilot.press("l")
+            await pilot.pause()
+            assert log_list.scroll_x == 0
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_scroll_bottom_uses_wrapped_lines(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that G scrolls to last wrapped line in wrap mode."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.press("g")
+            await pilot.pause()
+
+            await pilot.press("G")
+            await pilot.pause()
+
+            expected_max_scroll = (
+                len(log_list._wrapped_lines) - log_list.size.height
+            )
+            expected_max_scroll = max(0, expected_max_scroll)
+            assert log_list.scroll_y >= expected_max_scroll
+
+    @pytest.mark.asyncio
+    async def test_wrap_mode_with_empty_logs(self) -> None:
+        """Test wrap mode with no logs doesn't crash."""
+        app = LogViewerApp()
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            await pilot.press("w")
+            await pilot.pause()
+
+            assert log_list._wrap_mode is True
+            assert len(log_list._wrapped_lines) == 0
+            assert len(log_list._entry_start_rows) == 0

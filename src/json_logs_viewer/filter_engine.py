@@ -110,6 +110,7 @@ class Tokenizer:
             while (
                 self.pos < len(self.query)
                 and not self.query[self.pos].isspace()
+                and self.query[self.pos] not in ("(", ")")
             ):
                 self.pos += 1
             value = self.query[start : self.pos]
