@@ -411,6 +411,46 @@ async def test_cursor_clamps_when_filtered_logs_shrink(
 
 
 @pytest.mark.asyncio
+async def test_highlight_mode_keeps_all_logs_and_marks_matches(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test highlight mode shows all logs and tracks matching entries."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        app.highlight_matches = True
+        app.filter_query = "level:ERROR"
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        assert len(log_list._log_entries) == 4
+        assert log_list._match_flags == [False, True, False, False]
+
+
+@pytest.mark.asyncio
+async def test_disabling_highlight_mode_clears_match_marking(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test disabling highlight mode restores neutral row styling state."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        app.highlight_matches = True
+        app.filter_query = "level:ERROR"
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        assert log_list._match_flags == [False, True, False, False]
+
+        app.highlight_matches = False
+        await pilot.pause()
+        assert len(log_list._log_entries) == 1
+        assert log_list._match_flags == [True]
+
+
+@pytest.mark.asyncio
 async def test_enter_on_empty_logs_no_crash() -> None:
     """Test that pressing Enter with no logs doesn't crash."""
     app = LogViewerApp()

@@ -13,6 +13,7 @@ from textual.message import Message
 from textual.scroll_view import ScrollView
 from textual.strip import Strip
 
+from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.models import LogEntry
 
 if TYPE_CHECKING:
@@ -63,9 +64,9 @@ class LogList(ScrollView):
         ("l", "scroll_right", "Right"),
         ("g", "scroll_top", "Top"),
         ("G", "scroll_bottom", "Bottom"),
-        ("enter", "select_cursor", "View Details"),
-        ("/", "app.focus_search", "Focus Search"),
-        ("w", "app.toggle_wrap", "Toggle Wrap"),
+        ("enter", "select_cursor", "Details"),
+        ("/", "app.focus_search", "Search"),
+        ("w", "app.toggle_wrap", "Wrap"),
         ("q", "app.quit", "Quit"),
     ]
 
@@ -90,6 +91,9 @@ class LogList(ScrollView):
         self._wrap_mode: bool = False
         self._wrapped_lines: list[tuple[int, int]] = []
         self._entry_start_rows: dict[int, int] = {}
+        self._match_flags: list[bool] = []
+        self._highlight_mode: bool = False
+        self._active_query: str = ""
 
     def on_mount(self) -> None:
         """Set up watchers for app state changes."""
@@ -101,6 +105,18 @@ class LogList(ScrollView):
                 self.app, "selected_index", self._on_selected_index_changed
             )
             self.watch(self.app, "wrap_log_lines", self._on_wrap_mode_changed)
+            self.watch(
+                self.app, "filter_query", self._on_filter_settings_changed
+            )
+            self.watch(
+                self.app, "case_sensitive", self._on_filter_settings_changed
+            )
+            self.watch(
+                self.app,
+                "highlight_matches",
+                self._on_filter_settings_changed,
+            )
+            self._recompute_match_flags()
 
     def on_resize(self) -> None:
         """Apply pending scroll when the widget gets its size."""
@@ -173,6 +189,7 @@ class LogList(ScrollView):
         """Update the log entries and recalculate virtual size."""
         self._log_entries = logs
         self._line_cache = LRUCache(maxsize=2000)
+        self._recompute_match_flags()
 
         max_len = 0
         for log in logs:
@@ -189,6 +206,50 @@ class LogList(ScrollView):
             self._cursor_index = max(0, len(logs) - 1)
 
         self.refresh()
+
+    def _on_filter_settings_changed(self, *_: object) -> None:
+        self._recompute_match_flags()
+        self.refresh()
+
+    def _recompute_match_flags(self) -> None:
+        if not self.app:
+            self._match_flags = [True] * len(self._log_entries)
+            self._highlight_mode = False
+            self._active_query = ""
+            return
+
+        app = self._app
+        self._highlight_mode = app.highlight_matches
+        self._active_query = app.filter_query.strip()
+
+        if not self._highlight_mode or not self._active_query:
+            self._match_flags = [True] * len(self._log_entries)
+            return
+
+        try:
+            matcher = parse_filter(
+                query=self._active_query,
+                case_sensitive=app.case_sensitive,
+            )
+        except FilterError:
+            self._match_flags = [False] * len(self._log_entries)
+            return
+
+        self._match_flags = [
+            matcher(log_entry) for log_entry in self._log_entries
+        ]
+
+    def _style_for_entry(self, *, entry_idx: int, base: Style) -> Style:
+        if not self._highlight_mode or not self._active_query:
+            return base
+
+        if entry_idx >= len(self._match_flags):
+            return base
+
+        if self._match_flags[entry_idx]:
+            return base + Style(bold=True)
+
+        return base + Style(dim=True)
 
     def _update_virtual_size(self) -> None:
         """Set virtual_size based on number of log entries."""
@@ -234,7 +295,9 @@ class LogList(ScrollView):
         if is_highlighted:
             style = self.get_component_rich_style("loglist--cursor")
         else:
-            style = self.rich_style or Style()
+            style = self._style_for_entry(
+                entry_idx=line_index, base=self.rich_style or Style()
+            )
 
         display_width = max(self._max_content_width + 2, self.size.width)
         padded = text.ljust(display_width)
@@ -270,7 +333,9 @@ class LogList(ScrollView):
         if is_highlighted:
             style = self.get_component_rich_style("loglist--cursor")
         else:
-            style = self.rich_style or Style()
+            style = self._style_for_entry(
+                entry_idx=entry_idx, base=self.rich_style or Style()
+            )
 
         padded = line_text.ljust(width)
         segments = [Segment(padded, style)]

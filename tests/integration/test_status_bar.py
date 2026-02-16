@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from textual.widgets import Label
+from textual.widgets import Button, Label
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.widgets.status_bar import StatusBar, StatusInfo
@@ -67,3 +67,89 @@ async def test_status_bar_composes_children() -> None:
 
         status_bar = app.query_one("#status", StatusBar)
         assert len(status_bar.query(StatusInfo)) == 1
+
+
+@pytest.mark.asyncio
+async def test_status_bar_toggle_buttons_present() -> None:
+    """Test that status bar exposes both filter toggle buttons."""
+    app = LogViewerApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        info = app.query_one(StatusInfo)
+        case_button = info.query_one("#status-case-sensitive", Button)
+        highlight_button = info.query_one("#status-highlight-matches", Button)
+        assert case_button.label == "Aa"
+        assert highlight_button.label == "Highlight"
+
+
+@pytest.mark.asyncio
+async def test_status_bar_toggle_buttons_update_app_state() -> None:
+    """Test that clicking toggles updates app reactives."""
+    app = LogViewerApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        info = app.query_one(StatusInfo)
+        case_button = info.query_one("#status-case-sensitive", Button)
+        highlight_button = info.query_one("#status-highlight-matches", Button)
+
+        assert app.case_sensitive is False
+        assert app.highlight_matches is False
+
+        await pilot.click(case_button)
+        await pilot.pause()
+        assert app.case_sensitive is True
+
+        await pilot.click(highlight_button)
+        await pilot.pause()
+        assert app.highlight_matches is True
+
+
+@pytest.mark.asyncio
+async def test_status_bar_toggle_buttons_follow_app_state() -> None:
+    """Test that button active style follows app reactive changes."""
+    app = LogViewerApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        info = app.query_one(StatusInfo)
+        case_button = info.query_one("#status-case-sensitive", Button)
+        highlight_button = info.query_one("#status-highlight-matches", Button)
+
+        assert "-active-toggle" not in case_button.classes
+        assert "-active-toggle" not in highlight_button.classes
+
+        app.case_sensitive = True
+        app.highlight_matches = True
+        await pilot.pause()
+
+        assert "-active-toggle" in case_button.classes
+        assert "-active-toggle" in highlight_button.classes
+
+
+@pytest.mark.asyncio
+async def test_status_bar_toggle_keybinds_update_state_and_buttons() -> None:
+    """Test keybinds toggle app state and update button active style."""
+    app = LogViewerApp()
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        info = app.query_one(StatusInfo)
+        case_button = info.query_one("#status-case-sensitive", Button)
+        highlight_button = info.query_one("#status-highlight-matches", Button)
+
+        assert app.case_sensitive is False
+        assert app.highlight_matches is False
+        assert "-active-toggle" not in case_button.classes
+        assert "-active-toggle" not in highlight_button.classes
+
+        await pilot.press("c")
+        await pilot.pause()
+        assert app.case_sensitive is True
+        assert "-active-toggle" in case_button.classes
+
+        await pilot.press("m")
+        await pilot.pause()
+        assert app.highlight_matches is True
+        assert "-active-toggle" in highlight_button.classes

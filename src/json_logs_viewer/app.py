@@ -21,6 +21,8 @@ class LogViewerApp(App):
 
     BINDINGS = [
         ("w", "toggle_wrap", "Toggle Wrap"),
+        ("c", "toggle_case_sensitive", "Toggle Case"),
+        ("m", "toggle_highlight_matches", "Toggle Highlight"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -118,12 +120,28 @@ class LogViewerApp(App):
     def action_toggle_wrap(self) -> None:
         self.wrap_log_lines = not self.wrap_log_lines
 
+    def action_toggle_case_sensitive(self) -> None:
+        self.case_sensitive = not self.case_sensitive
+
+    def action_toggle_highlight_matches(self) -> None:
+        self.highlight_matches = not self.highlight_matches
+
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)
         yield SystemCommand(
             "Toggle line wrap",
             "Switch between horizontal scroll and soft wrap modes",
             self.action_toggle_wrap,
+        )
+        yield SystemCommand(
+            "Toggle case-sensitive filtering",
+            "Switch case-sensitive matching on or off",
+            self.action_toggle_case_sensitive,
+        )
+        yield SystemCommand(
+            "Toggle highlight mode",
+            "Switch between filter mode and highlight mode",
+            self.action_toggle_highlight_matches,
         )
 
     def watch_filtered_logs(self) -> None:
