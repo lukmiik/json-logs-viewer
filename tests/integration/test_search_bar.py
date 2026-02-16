@@ -15,8 +15,7 @@ async def test_submit_sets_filter_query(sample_jsonl_file: Path) -> None:
     """Test that submitting a query sets app.filter_query."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
-        search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
 
         await pilot.press(*list("error"))
@@ -27,12 +26,66 @@ async def test_submit_sets_filter_query(sample_jsonl_file: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_search_bar_hidden_by_default_without_query(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that search bar starts hidden when there is no active query."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        search_bar = app.query_one("#search", SearchBar)
+        assert search_bar.display is False
+
+
+@pytest.mark.asyncio
+async def test_slash_shows_search_bar_and_focuses_it(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that '/' reveals hidden search bar and focuses it."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        await pilot.press("/")
+        await pilot.pause()
+
+        search_bar = app.query_one("#search", SearchBar)
+        assert search_bar.display is True
+        assert search_bar.has_focus
+
+
+@pytest.mark.asyncio
+async def test_focusing_log_list_hides_empty_search_bar(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that empty search bar hides after focus leaves it."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        app.action_focus_search()
+        await pilot.pause()
+
+        search_bar = app.query_one("#search", SearchBar)
+        assert search_bar.display is True
+        assert search_bar.has_focus
+
+        search_bar.action_focus_log_list()
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        assert log_list.has_focus
+        assert search_bar.display is False
+
+
+@pytest.mark.asyncio
 async def test_submit_keeps_input(sample_jsonl_file: Path) -> None:
     """Test that input is preserved after submit so the user can refine it."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
 
         await pilot.press(*list("query"))
@@ -48,7 +101,7 @@ async def test_submit_adds_to_search_history(sample_jsonl_file: Path) -> None:
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
 
         await pilot.press(*list("first"))
@@ -56,7 +109,7 @@ async def test_submit_adds_to_search_history(sample_jsonl_file: Path) -> None:
         await pilot.pause()
 
         search_bar.value = "second"
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
         await pilot.press("enter")
         await pilot.pause()
@@ -71,8 +124,7 @@ async def test_submit_deduplicates_consecutive_history(
     """Test that duplicate consecutive queries are not added to history."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
-        search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
 
         await pilot.press(*list("same"))
@@ -91,12 +143,12 @@ async def test_search_history_limit_15(sample_jsonl_file: Path) -> None:
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
 
         for i in range(SEARCH_HISTORY_LIMIT + 5):
             search_bar.value = f"query{i}"
-            search_bar.focus()
+            app.action_focus_search()
             await pilot.pause()
             await pilot.press("enter")
             await pilot.pause()
@@ -110,7 +162,7 @@ async def test_empty_submit_clears_filter(sample_jsonl_file: Path) -> None:
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
 
         await pilot.press(*list("error"))
@@ -119,13 +171,14 @@ async def test_empty_submit_clears_filter(sample_jsonl_file: Path) -> None:
         assert app.filter_query == "error"
 
         search_bar.value = ""
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
         await pilot.press("enter")
         await pilot.pause()
 
         assert app.filter_query == ""
         assert app.search_history == ["error"]
+        assert search_bar.display is False
 
 
 @pytest.mark.asyncio
@@ -134,7 +187,7 @@ async def test_enter_focuses_log_list(sample_jsonl_file: Path) -> None:
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
         assert search_bar.has_focus
 
@@ -152,7 +205,7 @@ async def test_escape_focuses_log_list(sample_jsonl_file: Path) -> None:
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.pause()
         assert search_bar.has_focus
 

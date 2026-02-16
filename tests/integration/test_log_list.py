@@ -400,8 +400,7 @@ async def test_cursor_clamps_when_filtered_logs_shrink(
         assert log_list._cursor_index == 3
 
         # Apply filter that matches only 1 entry
-        search_bar = app.query_one("#search")
-        search_bar.focus()
+        app.action_focus_search()
         await pilot.press(*list("level:DEBUG"))
         await pilot.press("enter")
         await pilot.pause()

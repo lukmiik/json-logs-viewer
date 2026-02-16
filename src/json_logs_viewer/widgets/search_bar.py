@@ -39,3 +39,12 @@ class SearchBar(Input):
     def action_focus_log_list(self) -> None:
         """Focus the log list."""
         self.app.query_one("#logs", LogList).focus()
+
+    def on_blur(self) -> None:
+        """Hide search bar when leaving it with no active query."""
+        if not self.app:
+            return
+
+        app = cast("LogViewerApp", self.app)
+        if not self.value.strip() and not app.filter_query.strip():
+            self.display = False

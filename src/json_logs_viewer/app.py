@@ -48,6 +48,7 @@ class LogViewerApp(App):
 
     def on_mount(self) -> None:
         """Load file if provided via CLI."""
+        self._update_search_bar_visibility()
         if self.initial_file:
             self.load_file(filepath=self.initial_file)
 
@@ -57,6 +58,7 @@ class LogViewerApp(App):
     def watch_filter_query(self) -> None:
         """Recompute filtered logs when query changes."""
         self.apply_filter()
+        self._update_search_bar_visibility()
 
     def watch_case_sensitive(self) -> None:
         """Recompute filtered logs when case sensitivity changes."""
@@ -164,7 +166,15 @@ class LogViewerApp(App):
         self.filepath = filepath
         self.selected_index = max(0, len(logs) - 1)
 
+    def _update_search_bar_visibility(
+        self, *, force_visible: bool = False
+    ) -> None:
+        """Show search bar when query is active or explicitly requested."""
+        search_bar = self.query_one("#search", SearchBar)
+        search_bar.display = force_visible or bool(self.filter_query.strip())
+
     def action_focus_search(self) -> None:
+        self._update_search_bar_visibility(force_visible=True)
         self.query_one("#search", SearchBar).focus()
 
     def action_toggle_wrap(self) -> None:
