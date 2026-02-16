@@ -21,8 +21,8 @@ class LogViewerApp(App):
 
     BINDINGS = [
         ("w", "toggle_wrap", "Toggle Wrap"),
-        ("c", "toggle_case_sensitive", "Toggle Case"),
-        ("m", "toggle_highlight_matches", "Toggle Highlight"),
+        ("c", "toggle_case_sensitive", "Case Sensitivity"),
+        ("m", "toggle_highlight_matches", "Search Highlight"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -66,8 +66,11 @@ class LogViewerApp(App):
 
     def apply_filter(self) -> None:
         """Apply current filter based on mode."""
+        selected_log_entry = self._get_selected_log_entry()
+
         if not self.filter_query:
             self.filtered_logs = self.logs
+            self._restore_selected_log_entry(log_entry=selected_log_entry)
             return
 
         try:
@@ -77,13 +80,58 @@ class LogViewerApp(App):
             )
 
             if self.highlight_matches:
-                self.filtered_logs = self.logs
+                next_filtered_logs = self.logs
             else:
-                self.filtered_logs = [log for log in self.logs if matcher(log)]
+                next_filtered_logs = [log for log in self.logs if matcher(log)]
 
+            self.filtered_logs = next_filtered_logs
+            self._restore_selected_log_entry(log_entry=selected_log_entry)
         except FilterError as e:
             self.notify(str(e), severity="error")
             self.filtered_logs = self.logs
+            self._restore_selected_log_entry(log_entry=selected_log_entry)
+
+    def _get_selected_log_entry(self) -> LogEntry | None:
+        if 0 <= self.selected_index < len(self.filtered_logs):
+            return self.filtered_logs[self.selected_index]
+        return None
+
+    def _restore_selected_log_entry(
+        self, *, log_entry: LogEntry | None
+    ) -> None:
+        if log_entry is None:
+            return
+
+        logs_index_by_id = {
+            id(candidate): index for index, candidate in enumerate(self.logs)
+        }
+
+        for index, candidate in enumerate(self.filtered_logs):
+            if candidate is log_entry:
+                self.selected_index = index
+                return
+
+        if not self.filtered_logs:
+            return
+
+        selected_log_index = logs_index_by_id.get(id(log_entry))
+        if selected_log_index is None:
+            return
+
+        def filtered_distance(*, filtered_index: int) -> int:
+            filtered_entry = self.filtered_logs[filtered_index]
+            filtered_log_index = logs_index_by_id.get(
+                id(filtered_entry), selected_log_index
+            )
+            return abs(filtered_log_index - selected_log_index)
+
+        closest_filtered_index = min(
+            range(len(self.filtered_logs)),
+            key=lambda filtered_index: filtered_distance(
+                filtered_index=filtered_index
+            ),
+        )
+        self.selected_index = closest_filtered_index
 
     def load_file(self, *, filepath: str) -> None:
         """Read and parse JSONL file."""

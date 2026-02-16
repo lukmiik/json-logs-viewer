@@ -451,6 +451,67 @@ async def test_disabling_highlight_mode_clears_match_marking(
 
 
 @pytest.mark.asyncio
+async def test_toggle_highlight_preserves_selected_log_entry(
+    many_logs_file: Path,
+) -> None:
+    """Test highlight toggle keeps the same selected log entry."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        app.filter_query = "line:4"
+        await pilot.pause()
+
+        app.selected_index = len(app.filtered_logs) - 1
+        await pilot.pause()
+        selected_before = app.filtered_logs[app.selected_index]
+
+        app.action_toggle_highlight_matches()
+        await pilot.pause()
+
+        assert app.highlight_matches is True
+        assert len(app.filtered_logs) == 50
+        assert (
+            app.filtered_logs[app.selected_index].data["line"]
+            == selected_before.data["line"]
+        )
+
+        app.action_toggle_highlight_matches()
+        await pilot.pause()
+
+        assert app.highlight_matches is False
+        assert (
+            app.filtered_logs[app.selected_index].data["line"]
+            == selected_before.data["line"]
+        )
+
+
+@pytest.mark.asyncio
+async def test_toggle_highlight_off_selects_closest_filtered_log(
+    many_logs_file: Path,
+) -> None:
+    """Test leaving highlight mode picks closest matching entry if needed."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        app.filter_query = "line:4"
+        app.highlight_matches = True
+        await pilot.pause()
+
+        app.selected_index = 27
+        await pilot.pause()
+        selected_before = app.filtered_logs[app.selected_index]
+        assert selected_before.data["line"] == 27
+
+        app.action_toggle_highlight_matches()
+        await pilot.pause()
+
+        assert app.highlight_matches is False
+        assert app.filtered_logs[app.selected_index].data["line"] == 24
+
+
+@pytest.mark.asyncio
 async def test_enter_on_empty_logs_no_crash() -> None:
     """Test that pressing Enter with no logs doesn't crash."""
     app = LogViewerApp()
