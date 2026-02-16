@@ -39,7 +39,7 @@ class LogViewerApp(App):
 
     def compose(self) -> ComposeResult:
         yield LogList(id="logs")
-        yield SearchBar(id="search")
+        yield SearchBar(id="search", select_on_focus=False)
         yield StatusBar(id="status")
 
     def on_mount(self) -> None:
