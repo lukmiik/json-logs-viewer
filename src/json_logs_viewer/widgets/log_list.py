@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import time
 from typing import TYPE_CHECKING, Any, cast
 
 from rich.console import Console
@@ -171,7 +170,6 @@ class LogList(ScrollView):
 
     def set_logs(self, *, logs: list[LogEntry]) -> None:
         """Update the log entries and recalculate virtual size."""
-        t_start = time.perf_counter()
         self._log_entries = logs
         self._line_cache = LRUCache(maxsize=2000)
 
@@ -190,10 +188,6 @@ class LogList(ScrollView):
             self._cursor_index = max(0, len(logs) - 1)
 
         self.refresh()
-        self.log.info(
-            f"[PERF] set_logs ({len(logs)} entries): "
-            f"{time.perf_counter() - t_start:.3f}s"
-        )
 
     def _update_virtual_size(self) -> None:
         """Set virtual_size based on number of log entries."""

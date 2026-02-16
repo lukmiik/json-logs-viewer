@@ -1,6 +1,5 @@
 import argparse
 import json
-import time
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -65,13 +64,8 @@ class LogViewerApp(App):
 
     def apply_filter(self) -> None:
         """Apply current filter based on mode."""
-        t_start = time.perf_counter()
         if not self.filter_query:
             self.filtered_logs = self.logs
-            self.log.info(
-                f"[PERF] apply_filter (no query, passthrough): "
-                f"{time.perf_counter() - t_start:.3f}s"
-            )
             return
 
         try:
@@ -88,14 +82,9 @@ class LogViewerApp(App):
         except FilterError as e:
             self.notify(str(e), severity="error")
             self.filtered_logs = self.logs
-        self.log.info(
-            f"[PERF] apply_filter: {time.perf_counter() - t_start:.3f}s "
-            f"({len(self.filtered_logs)} results)"
-        )
 
     def load_file(self, *, filepath: str) -> None:
         """Read and parse JSONL file."""
-        t_total = time.perf_counter()
         path = Path(filepath)
         if not path.exists():
             self.exit(message=f"File not found: {filepath}")
@@ -105,7 +94,6 @@ class LogViewerApp(App):
             return
 
         logs: list[LogEntry] = []
-        t_read = time.perf_counter()
         try:
             for line_num, line_text in read_lines_backward(filepath=path):
                 try:
@@ -119,29 +107,10 @@ class LogViewerApp(App):
         except Exception as e:
             self.exit(message=f"Error reading file: {e}")
             return
-        self.log.info(
-            f"[PERF] File read + parse: {time.perf_counter() - t_read:.3f}s "
-            f"({len(logs)} entries)"
-        )
-
-        t_assign = time.perf_counter()
         self.logs = logs
-        self.log.info(
-            f"[PERF] logs assignment (triggers watch_logs → apply_filter → "
-            f"watch_filtered_logs → LogList rebuild): "
-            f"{time.perf_counter() - t_assign:.3f}s"
-        )
 
         self.filepath = filepath
-        t_select = time.perf_counter()
         self.selected_index = max(0, len(logs) - 1)
-        self.log.info(
-            f"[PERF] selected_index set to {self.selected_index}: "
-            f"{time.perf_counter() - t_select:.3f}s"
-        )
-        self.log.info(
-            f"[PERF] load_file total: {time.perf_counter() - t_total:.3f}s"
-        )
 
     def action_focus_search(self) -> None:
         self.query_one("#search", SearchBar).focus()
