@@ -15,7 +15,7 @@ keywords = [
 authors = [
     { name = "lukmiik", email = "lukaszmlukaszewski@gmail.com" }
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.12.5",
     "pyperclip>=1.11.0",
