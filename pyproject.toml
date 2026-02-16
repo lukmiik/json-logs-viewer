@@ -1,8 +1,17 @@
 [project]
 name = "json-logs-viewer"
 version = "0.1.0"
-description = "Add your description here"
+description = "Interactive terminal JSONL log viewer with filter queries and keyboard-first navigation."
 readme = "README.md"
+license = { file = "LICENSE" }
+keywords = [
+    "json",
+    "jsonl",
+    "logs",
+    "log-viewer",
+    "terminal-ui",
+    "textual",
+]
 authors = [
     { name = "lukmiik", email = "lukaszmlukaszewski@gmail.com" }
 ]

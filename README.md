@@ -1,6 +1,19 @@
 # JSON Logs Viewer
 
-A terminal-based JSON log viewer built with [Textual](https://textual.textualize.io/).
+An interactive terminal JSONL log viewer built with
+[Textual](https://textual.textualize.io/).
+
+## Features
+
+- Fast keyboard-first navigation (`j`/`k`, `g`/`G`, `h`/`l`).
+- Structured filtering with field queries and boolean logic:
+  `level:error AND (service:api OR service:web) NOT debug`.
+- Case-sensitive filtering toggle.
+- Highlight mode to dim non-matching entries instead of hiding them.
+- Optional soft-wrap mode for long JSON lines.
+- Status bar with file name, total logs, filtered count, and quick toggles.
+- Search/query history tracking.
+- Built-in help modal (`?`) with available features.
 
 ## Usage
 
