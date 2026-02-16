@@ -56,6 +56,8 @@ async def test_submit_adds_to_search_history(sample_jsonl_file: Path) -> None:
         await pilot.pause()
 
         search_bar.value = "second"
+        search_bar.focus()
+        await pilot.pause()
         await pilot.press("enter")
         await pilot.pause()
 
@@ -94,6 +96,8 @@ async def test_search_history_limit_15(sample_jsonl_file: Path) -> None:
 
         for i in range(SEARCH_HISTORY_LIMIT + 5):
             search_bar.value = f"query{i}"
+            search_bar.focus()
+            await pilot.pause()
             await pilot.press("enter")
             await pilot.pause()
 
@@ -115,11 +119,31 @@ async def test_empty_submit_clears_filter(sample_jsonl_file: Path) -> None:
         assert app.filter_query == "error"
 
         search_bar.value = ""
+        search_bar.focus()
+        await pilot.pause()
         await pilot.press("enter")
         await pilot.pause()
 
         assert app.filter_query == ""
         assert app.search_history == ["error"]
+
+
+@pytest.mark.asyncio
+async def test_enter_focuses_log_list(sample_jsonl_file: Path) -> None:
+    """Test that pressing Enter in search bar focuses the log list."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        search_bar = app.query_one("#search", SearchBar)
+        search_bar.focus()
+        await pilot.pause()
+        assert search_bar.has_focus
+
+        await pilot.press(*list("error"))
+        await pilot.press("enter")
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        assert log_list.has_focus
 
 
 @pytest.mark.asyncio

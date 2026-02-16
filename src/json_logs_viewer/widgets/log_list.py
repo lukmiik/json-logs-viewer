@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from rich.console import Console
 from rich.segment import Segment
+from rich.style import Style
 from rich.text import Text
 from textual.cache import LRUCache
 from textual.geometry import Size
@@ -205,6 +206,11 @@ class LogList(ScrollView):
             self.styles.overflow_x = "auto"
         self.virtual_size = Size(width, height)
 
+    def _blank_strip(self) -> Strip:
+        """Return a blank strip with an explicit style."""
+        width = max(0, self.size.width)
+        return Strip([Segment(" " * width, Style())], width)
+
     def render_line(self, y: int) -> Strip:
         """Render a single line — only called for visible lines."""
         scroll_x, scroll_y = self.scroll_offset
@@ -215,7 +221,7 @@ class LogList(ScrollView):
         line_index = y + scroll_y
 
         if line_index < 0 or line_index >= len(self._log_entries):
-            return Strip.blank(self.size.width)
+            return self._blank_strip()
 
         if line_index not in self._line_cache:
             log = self._log_entries[line_index]
@@ -228,7 +234,7 @@ class LogList(ScrollView):
         if is_highlighted:
             style = self.get_component_rich_style("loglist--cursor")
         else:
-            style = self.rich_style
+            style = self.rich_style or Style()
 
         display_width = max(self._max_content_width + 2, self.size.width)
         padded = text.ljust(display_width)
@@ -243,7 +249,7 @@ class LogList(ScrollView):
         row_index = y + scroll_y
 
         if row_index < 0 or row_index >= len(self._wrapped_lines):
-            return Strip.blank(self.size.width)
+            return self._blank_strip()
 
         entry_idx, sub_line = self._wrapped_lines[row_index]
         width = self._get_content_width()
@@ -257,14 +263,14 @@ class LogList(ScrollView):
 
         wrapped = _wrap_text(text=text, width=width)
         if sub_line >= len(wrapped):
-            return Strip.blank(self.size.width)
+            return self._blank_strip()
 
         line_text = wrapped[sub_line]
         is_highlighted = entry_idx == self._cursor_index
         if is_highlighted:
             style = self.get_component_rich_style("loglist--cursor")
         else:
-            style = self.rich_style
+            style = self.rich_style or Style()
 
         padded = line_text.ljust(width)
         segments = [Segment(padded, style)]

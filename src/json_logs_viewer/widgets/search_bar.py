@@ -34,6 +34,8 @@ class SearchBar(Input):
                 if len(history) > SEARCH_HISTORY_LIMIT:
                     history.pop(0)
 
+        self.action_focus_log_list()
+
     def action_focus_log_list(self) -> None:
         """Focus the log list."""
         self.app.query_one("#logs", LogList).focus()
