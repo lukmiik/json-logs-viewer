@@ -11,6 +11,7 @@ from textual.screen import Screen
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import read_lines_backward
 from json_logs_viewer.models import LogEntry
+from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
@@ -23,6 +24,7 @@ class LogViewerApp(App):
         ("w", "toggle_wrap", "Toggle Wrap"),
         ("c", "toggle_case_sensitive", "Case Sensitivity"),
         ("m", "toggle_highlight_matches", "Search Highlight"),
+        ("question_mark", "show_feature_summary", "Help"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -174,6 +176,11 @@ class LogViewerApp(App):
     def action_toggle_highlight_matches(self) -> None:
         self.highlight_matches = not self.highlight_matches
 
+    def action_show_feature_summary(self) -> None:
+        if isinstance(self.screen, FeatureSummaryModal):
+            return
+        self.push_screen(FeatureSummaryModal())
+
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)
         yield SystemCommand(
@@ -190,6 +197,11 @@ class LogViewerApp(App):
             "Toggle highlight mode",
             "Switch between filter mode and highlight mode",
             self.action_toggle_highlight_matches,
+        )
+        yield SystemCommand(
+            "Show help",
+            "Open a modal with a summary of app features",
+            self.action_show_feature_summary,
         )
 
     def watch_filtered_logs(self) -> None:
