@@ -65,6 +65,8 @@ class LogList(ScrollView):
         ("l", "scroll_right", "Right"),
         Binding("ctrl+u", "page_up", "Page Up", show=False),
         Binding("ctrl+d", "page_down", "Page Down", show=False),
+        Binding("n", "next_match", "Next Match", show=False),
+        Binding("N", "prev_match", "Prev Match", show=False),
         ("g", "scroll_top", "Top"),
         ("G", "scroll_bottom", "Bottom"),
         ("enter", "select_cursor", "Details"),
@@ -483,6 +485,31 @@ class LogList(ScrollView):
         if 0 <= self._cursor_index < len(self._log_entries):
             log = self._log_entries[self._cursor_index]
             self.post_message(self.LogSelected(log_entry=log))
+
+    def _jump_to_match(self, *, forward: bool) -> None:
+        """Jump to the next/prev matching entry in highlight mode."""
+        if not self._highlight_mode or not self._active_query:
+            return
+        if not self._log_entries:
+            return
+
+        count = len(self._log_entries)
+        step = 1 if forward else -1
+        for i in range(1, count):
+            idx = (self._cursor_index + i * step) % count
+            if idx < len(self._match_flags) and self._match_flags[idx]:
+                self._cursor_index = idx
+                if self._app:
+                    self._app.selected_index = idx
+                self._scroll_cursor_into_view()
+                self.refresh()
+                return
+
+    def action_next_match(self) -> None:
+        self._jump_to_match(forward=True)
+
+    def action_prev_match(self) -> None:
+        self._jump_to_match(forward=False)
 
     def action_scroll_left(self) -> None:
         if not self._wrap_mode:

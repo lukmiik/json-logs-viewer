@@ -939,3 +939,201 @@ class TestWrapMode:
             assert log_list._wrap_mode is True
             assert len(log_list._wrapped_lines) == 0
             assert len(log_list._entry_start_rows) == 0
+
+
+class TestMatchJump:
+    """Tests for n/N match jumping in highlight mode."""
+
+    @pytest.mark.asyncio
+    async def test_next_match_jumps_to_matching_entry(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test n jumps forward to the next matching entry."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.highlight_matches = True
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            # Matching entry is at index 1
+            await pilot.press("g")
+            await pilot.pause()
+            assert log_list._cursor_index == 0
+
+            await pilot.press("n")
+            await pilot.pause()
+            assert log_list._cursor_index == 1
+            assert app.selected_index == 1
+
+    @pytest.mark.asyncio
+    async def test_prev_match_jumps_to_matching_entry(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test N jumps backward to the previous matching entry."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.highlight_matches = True
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            # Start at index 3, N should go back to 1
+            await pilot.press("G")
+            await pilot.pause()
+            assert log_list._cursor_index == 3
+
+            await pilot.press("N")
+            await pilot.pause()
+            assert log_list._cursor_index == 1
+            assert app.selected_index == 1
+
+    @pytest.mark.asyncio
+    async def test_next_match_wraps_around(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test n wraps from end to beginning."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.highlight_matches = True
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            # Move cursor past the match at index 1
+            app.selected_index = 2
+            await pilot.pause()
+
+            await pilot.press("n")
+            await pilot.pause()
+            # Should wrap around to index 1
+            assert log_list._cursor_index == 1
+
+    @pytest.mark.asyncio
+    async def test_prev_match_wraps_around(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test N wraps from beginning to end."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.highlight_matches = True
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            # Start at index 0, N should wrap to 1
+            await pilot.press("g")
+            await pilot.pause()
+            assert log_list._cursor_index == 0
+
+            await pilot.press("N")
+            await pilot.pause()
+            assert log_list._cursor_index == 1
+
+    @pytest.mark.asyncio
+    async def test_match_jump_noop_without_highlight_mode(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test n/N do nothing when highlight mode is off."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            pos = log_list._cursor_index
+
+            await pilot.press("n")
+            await pilot.pause()
+            assert log_list._cursor_index == pos
+
+            await pilot.press("N")
+            await pilot.pause()
+            assert log_list._cursor_index == pos
+
+    @pytest.mark.asyncio
+    async def test_match_jump_noop_without_query(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test n/N do nothing when filter query is empty."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.highlight_matches = True
+            await pilot.pause()
+
+            pos = log_list._cursor_index
+
+            await pilot.press("n")
+            await pilot.pause()
+            assert log_list._cursor_index == pos
+
+    @pytest.mark.asyncio
+    async def test_match_jump_noop_on_empty_logs(self) -> None:
+        """Test n/N do nothing with no logs loaded."""
+        app = LogViewerApp()
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            app.highlight_matches = True
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            await pilot.press("n")
+            await pilot.pause()
+            assert log_list._cursor_index == 0
+
+    @pytest.mark.asyncio
+    async def test_match_jump_multiple_matches(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test n cycles through multiple matches in order."""
+        app = LogViewerApp(file=str(sample_jsonl_file))
+        async with app.run_test() as pilot:
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.pause()
+
+            # INFO at 0 and api at 0,2
+            app.highlight_matches = True
+            app.filter_query = "service:api"
+            await pilot.pause()
+            assert log_list._match_flags == [
+                True,
+                False,
+                True,
+                False,
+            ]
+
+            await pilot.press("g")
+            await pilot.pause()
+            assert log_list._cursor_index == 0
+
+            await pilot.press("n")
+            await pilot.pause()
+            assert log_list._cursor_index == 2
+
+            await pilot.press("n")
+            await pilot.pause()
+            # Wraps back to 0
+            assert log_list._cursor_index == 0
