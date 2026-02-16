@@ -191,6 +191,9 @@ class LogViewerApp(App):
     def action_focus_search(self) -> None:
         self._update_search_bar_visibility(force_visible=True)
         self.query_one("#search", SearchBar).focus()
+        self.call_after_refresh(
+            self.query_one("#logs", LogList)._scroll_cursor_into_view
+        )
 
     def action_toggle_wrap(self) -> None:
         self.wrap_log_lines = not self.wrap_log_lines
