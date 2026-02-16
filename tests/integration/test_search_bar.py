@@ -200,6 +200,32 @@ async def test_enter_focuses_log_list(sample_jsonl_file: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_submit_shows_toast_when_query_has_no_matches(
+    sample_jsonl_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test submitting an unmatched query shows a warning toast."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    captured_notifications: list[tuple[str, str | None]] = []
+
+    def mock_notify(
+        message: str, *, severity: str | None = None, **_: object
+    ) -> None:
+        captured_notifications.append((message, severity))
+
+    monkeypatch.setattr(app, "notify", mock_notify)
+
+    async with app.run_test() as pilot:
+        app.action_focus_search()
+        await pilot.pause()
+
+        await pilot.press(*list("message:does-not-exist"))
+        await pilot.press("enter")
+        await pilot.pause()
+
+    assert ("No logs match the query", "warning") in captured_notifications
+
+
+@pytest.mark.asyncio
 async def test_escape_focuses_log_list(sample_jsonl_file: Path) -> None:
     """Test that pressing Escape in search bar focuses the log list."""
     app = LogViewerApp(file=str(sample_jsonl_file))

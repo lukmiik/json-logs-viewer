@@ -59,6 +59,12 @@ class LogViewerApp(App):
     def watch_filter_query(self) -> None:
         """Recompute filtered logs when query changes."""
         self.apply_filter()
+        if (
+            self.filter_query.strip()
+            and not self.highlight_matches
+            and not self.filtered_logs
+        ):
+            self.notify("No logs match the query", severity="warning")
         self._update_search_bar_visibility()
 
     def watch_case_sensitive(self) -> None:
