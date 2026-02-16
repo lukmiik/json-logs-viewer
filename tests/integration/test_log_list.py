@@ -54,6 +54,112 @@ async def test_navigation_jk(sample_jsonl_file: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_page_down_ctrl_d(many_logs_file: Path) -> None:
+    """Test that Ctrl+D moves cursor half a page down."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test(size=(80, 20)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        half_page = log_list.size.height // 2
+
+        await pilot.press("g")
+        await pilot.pause()
+        assert log_list._cursor_index == 0
+
+        await pilot.press("ctrl+d")
+        await pilot.pause()
+        assert log_list._cursor_index == half_page
+        assert app.selected_index == half_page
+
+        await pilot.press("ctrl+d")
+        await pilot.pause()
+        assert log_list._cursor_index == half_page * 2
+        assert app.selected_index == half_page * 2
+
+
+@pytest.mark.asyncio
+async def test_page_up_ctrl_u(many_logs_file: Path) -> None:
+    """Test that Ctrl+U moves cursor half a page up."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test(size=(80, 20)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        half_page = log_list.size.height // 2
+
+        app.selected_index = 30
+        await pilot.pause()
+        assert log_list._cursor_index == 30
+
+        await pilot.press("ctrl+u")
+        await pilot.pause()
+        assert log_list._cursor_index == 30 - half_page
+        assert app.selected_index == 30 - half_page
+
+        await pilot.press("ctrl+u")
+        await pilot.pause()
+        assert log_list._cursor_index == 30 - half_page * 2
+        assert app.selected_index == 30 - half_page * 2
+
+
+@pytest.mark.asyncio
+async def test_page_down_clamps_to_last(many_logs_file: Path) -> None:
+    """Test that Ctrl+D clamps to the last entry."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test(size=(80, 20)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        app.selected_index = 45
+        await pilot.pause()
+
+        await pilot.press("ctrl+d")
+        await pilot.pause()
+        assert log_list._cursor_index == 49
+        assert app.selected_index == 49
+
+
+@pytest.mark.asyncio
+async def test_page_up_clamps_to_first(many_logs_file: Path) -> None:
+    """Test that Ctrl+U clamps to the first entry."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test(size=(80, 20)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        app.selected_index = 3
+        await pilot.pause()
+
+        await pilot.press("ctrl+u")
+        await pilot.pause()
+        assert log_list._cursor_index == 0
+        assert app.selected_index == 0
+
+
+@pytest.mark.asyncio
+async def test_page_up_down_noop_on_empty() -> None:
+    """Test that Ctrl+U/Ctrl+D do nothing with no logs."""
+    app = LogViewerApp()
+    async with app.run_test() as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        await pilot.press("ctrl+d")
+        await pilot.pause()
+        assert log_list._cursor_index == 0
+
+        await pilot.press("ctrl+u")
+        await pilot.pause()
+        assert log_list._cursor_index == 0
+
+
+@pytest.mark.asyncio
 async def test_gg_and_G(sample_jsonl_file: Path) -> None:
     """Test g jumps to top and G jumps to bottom."""
     app = LogViewerApp(file=str(sample_jsonl_file))

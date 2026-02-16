@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.segment import Segment
 from rich.style import Style
 from rich.text import Text
+from textual.binding import Binding
 from textual.cache import LRUCache
 from textual.geometry import Size
 from textual.message import Message
@@ -62,6 +63,8 @@ class LogList(ScrollView):
         ("k, up", "cursor_up", "Up"),
         ("h", "scroll_left", "Left"),
         ("l", "scroll_right", "Right"),
+        Binding("ctrl+u", "page_up", "Page Up", show=False),
+        Binding("ctrl+d", "page_down", "Page Down", show=False),
         ("g", "scroll_top", "Top"),
         ("G", "scroll_bottom", "Bottom"),
         ("enter", "select_cursor", "Details"),
@@ -430,6 +433,29 @@ class LogList(ScrollView):
             if self._cursor_index > 0:
                 self._cursor_index -= 1
 
+        if self._app:
+            self._app.selected_index = self._cursor_index
+        self._scroll_cursor_into_view()
+        self.refresh()
+
+    def action_page_up(self) -> None:
+        """Move cursor half a page up."""
+        if not self._log_entries:
+            return
+        half_page = max(1, self.size.height // 2)
+        self._cursor_index = max(0, self._cursor_index - half_page)
+        if self._app:
+            self._app.selected_index = self._cursor_index
+        self._scroll_cursor_into_view()
+        self.refresh()
+
+    def action_page_down(self) -> None:
+        """Move cursor half a page down."""
+        if not self._log_entries:
+            return
+        half_page = max(1, self.size.height // 2)
+        last = len(self._log_entries) - 1
+        self._cursor_index = min(last, self._cursor_index + half_page)
         if self._app:
             self._app.selected_index = self._cursor_index
         self._scroll_cursor_into_view()
