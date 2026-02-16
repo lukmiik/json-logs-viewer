@@ -40,6 +40,7 @@ class LogViewerApp(App):
     def __init__(self, *, file: str | None = None, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(**kwargs)
         self.initial_file = file
+        self._last_selected_log_entry: LogEntry | None = None
 
     def compose(self) -> ComposeResult:
         yield LogList(id="logs")
@@ -70,7 +71,9 @@ class LogViewerApp(App):
 
     def apply_filter(self) -> None:
         """Apply current filter based on mode."""
-        selected_log_entry = self._get_selected_log_entry()
+        selected_log_entry = (
+            self._get_selected_log_entry() or self._last_selected_log_entry
+        )
 
         if not self.filter_query:
             self.filtered_logs = self.logs
@@ -99,6 +102,11 @@ class LogViewerApp(App):
         if 0 <= self.selected_index < len(self.filtered_logs):
             return self.filtered_logs[self.selected_index]
         return None
+
+    def watch_selected_index(self) -> None:
+        selected_log_entry = self._get_selected_log_entry()
+        if selected_log_entry is not None:
+            self._last_selected_log_entry = selected_log_entry
 
     def _restore_selected_log_entry(
         self, *, log_entry: LogEntry | None
@@ -161,6 +169,7 @@ class LogViewerApp(App):
         except Exception as e:
             self.exit(message=f"Error reading file: {e}")
             return
+        self._last_selected_log_entry = None
         self.logs = logs
 
         self.filepath = filepath

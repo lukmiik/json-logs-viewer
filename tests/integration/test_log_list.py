@@ -486,6 +486,74 @@ async def test_toggle_highlight_preserves_selected_log_entry(
 
 
 @pytest.mark.asyncio
+async def test_case_toggle_restores_selection_after_empty_results(
+    many_logs_file: Path,
+) -> None:
+    """Case toggle keeps selected entry when intermediate results are empty."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        app.filter_query = "message:log"
+        await pilot.pause()
+
+        app.selected_index = len(app.filtered_logs) - 1
+        await pilot.pause()
+        selected_before = app.filtered_logs[app.selected_index]
+        assert selected_before.data["line"] == 49
+
+        app.action_toggle_case_sensitive()
+        await pilot.pause()
+
+        assert app.case_sensitive is True
+        assert app.filtered_logs == []
+        assert app.selected_index == 0
+
+        app.action_toggle_case_sensitive()
+        await pilot.pause()
+
+        assert app.case_sensitive is False
+        assert len(app.filtered_logs) == 50
+        assert app.filtered_logs[app.selected_index] is selected_before
+
+
+@pytest.mark.asyncio
+async def test_case_toggle_restores_scroll_after_empty_results(
+    many_logs_file: Path,
+) -> None:
+    """Case toggle keeps cursor visible after temporary empty result set."""
+    app = LogViewerApp(file=str(many_logs_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        app.filter_query = "message:log"
+        await pilot.pause()
+
+        app.selected_index = len(app.filtered_logs) - 1
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        assert log_list._cursor_index == 49
+        assert log_list.scroll_y > 0
+
+        app.action_toggle_case_sensitive()
+        await pilot.pause()
+
+        assert app.filtered_logs == []
+
+        app.action_toggle_case_sensitive()
+        await pilot.pause()
+
+        assert app.filtered_logs[app.selected_index].data["line"] == 49
+        assert log_list._cursor_index == 49
+
+        cursor_row = log_list._get_cursor_row()
+        visible_top = log_list.scroll_y
+        visible_bottom = visible_top + log_list.size.height - 1
+        assert visible_top <= cursor_row <= visible_bottom
+
+
+@pytest.mark.asyncio
 async def test_toggle_highlight_off_selects_closest_filtered_log(
     many_logs_file: Path,
 ) -> None:

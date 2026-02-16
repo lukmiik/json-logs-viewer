@@ -120,9 +120,7 @@ class LogList(ScrollView):
 
     def on_resize(self) -> None:
         """Apply pending scroll when the widget gets its size."""
-        if self._pending_scroll:
-            self._pending_scroll = False
-            self._scroll_cursor_into_view()
+        self._apply_pending_scroll()
         if self._wrap_mode:
             self._recalculate_wrap()
 
@@ -356,6 +354,12 @@ class LogList(ScrollView):
                 self._cursor_index = idx
             self._pending_scroll = True
             self.refresh()
+            self.call_after_refresh(self._apply_pending_scroll)
+
+    def _apply_pending_scroll(self) -> None:
+        if self._pending_scroll:
+            self._pending_scroll = False
+            self._scroll_cursor_into_view()
 
     def _on_selected_index_changed(self, selected_index: int) -> None:
         """Move cursor to match app.selected_index."""
