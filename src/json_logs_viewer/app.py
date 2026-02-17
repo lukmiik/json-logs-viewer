@@ -11,6 +11,7 @@ from textual.screen import Screen
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import read_lines_backward
 from json_logs_viewer.modals.detail_modal import DetailModal
+from json_logs_viewer.modals.history_modal import HistoryModal
 from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
 from json_logs_viewer.widgets.log_list import LogList
@@ -26,6 +27,7 @@ class LogViewerApp(App):
         ("c", "toggle_case_sensitive", "Case Sensitivity"),
         ("m", "toggle_highlight_matches", "Search Highlight"),
         ("question_mark", "show_feature_summary", "Help"),
+        ("H", "show_history", "History"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -209,6 +211,20 @@ class LogViewerApp(App):
         if isinstance(self.screen, FeatureSummaryModal):
             return
         self.push_screen(FeatureSummaryModal())
+
+    def action_show_history(self) -> None:
+        if isinstance(self.screen, HistoryModal):
+            return
+        self.push_screen(HistoryModal(), callback=self._on_history_selected)
+
+    def _on_history_selected(self, query: str | None) -> None:
+        if query is None:
+            return
+        search_bar = self.query_one("#search", SearchBar)
+        search_bar.value = query
+        self.filter_query = query
+        self._update_search_bar_visibility()
+        self.query_one("#logs", LogList).focus()
 
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)

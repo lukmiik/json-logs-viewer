@@ -63,6 +63,7 @@ class StatusInfo(Horizontal):
         with Horizontal(id="status-right"):
             yield Button("Aa", id="status-case-sensitive")
             yield Button("Highlight", id="status-highlight-matches")
+            yield Button("History", id="status-history")
 
     def _update_labels(self) -> None:
         filename_label = self.query_one("#status-filename", Label)
@@ -119,6 +120,8 @@ class StatusInfo(Horizontal):
             app.case_sensitive = not app.case_sensitive
         elif event.button.id == "status-highlight-matches":
             app.highlight_matches = not app.highlight_matches
+        elif event.button.id == "status-history":
+            app.action_show_history()
 
 
 class StatusBar(Widget):

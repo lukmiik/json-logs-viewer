@@ -291,22 +291,23 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 **Goal**: Browse and reuse previous searches.
 
-- [ ] **HistoryModal** (`modals/history_modal.py`):
+- [x] **HistoryModal** (`modals/history_modal.py`):
     - Extend ModalScreen
     - OptionList displaying AppState.search_history
     - Built-in filtering/search within the list
+    - vim inspired keybinding should open the modal
     - Max 100 entries (in-memory only)
     - Select with Enter, dismiss with selected query
     - Cancel with Escape
 
-- [ ] **Integration**:
-    - History button in SearchBar opens modal
+- [x] **Integration**:
+    - History button in status info bar opens modal
     - Selected query populates SearchBar and applies filter
     - Add query to history only when filter is applied successfully
 
 **Testing**:
 
-- [ ] `tests/integration/test_history_modal.py`
+- [x] `tests/integration/test_history_modal.py`
     - Test history button opens modal
     - Test OptionList displays search history
     - Test selecting query applies filter
