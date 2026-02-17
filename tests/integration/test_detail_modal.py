@@ -92,6 +92,108 @@ async def test_k_navigates_to_previous_log(sample_jsonl_file: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_down_arrow_navigates_to_next_log(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that down arrow navigates to next log in modal."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        app.selected_index = 0
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        modal = app.screen
+        assert isinstance(modal, DetailModal)
+        assert modal.current_index == 0
+
+        await pilot.press("down")
+        await pilot.pause()
+
+        assert modal.current_index == 1
+        assert modal.log_entry.data["level"] == "ERROR"
+
+
+@pytest.mark.asyncio
+async def test_up_arrow_navigates_to_previous_log(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that up arrow navigates to previous log in modal."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        app.selected_index = 2
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        modal = app.screen
+        assert isinstance(modal, DetailModal)
+        assert modal.current_index == 2
+
+        await pilot.press("up")
+        await pilot.pause()
+
+        assert modal.current_index == 1
+        assert modal.log_entry.data["level"] == "ERROR"
+
+
+@pytest.mark.asyncio
+async def test_arrow_navigation_does_not_go_past_end(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that down arrow does not navigate past the last log."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        app.selected_index = 3
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        modal = app.screen
+        assert isinstance(modal, DetailModal)
+        assert modal.current_index == 3
+
+        await pilot.press("down")
+        await pilot.pause()
+
+        assert modal.current_index == 3
+
+
+@pytest.mark.asyncio
+async def test_arrow_navigation_does_not_go_before_start(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that up arrow does not navigate before the first log."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        app.selected_index = 0
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        modal = app.screen
+        assert isinstance(modal, DetailModal)
+        assert modal.current_index == 0
+
+        await pilot.press("up")
+        await pilot.pause()
+
+        assert modal.current_index == 0
+
+
+@pytest.mark.asyncio
 async def test_escape_closes_modal(sample_jsonl_file: Path) -> None:
     """Test that Escape closes the modal."""
     app = LogViewerApp(file=str(sample_jsonl_file))

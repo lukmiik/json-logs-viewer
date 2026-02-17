@@ -220,3 +220,99 @@ async def test_jk_navigates_option_list(
         await pilot.press("k")
         await pilot.pause()
         assert option_list.highlighted == 1
+
+
+@pytest.mark.asyncio
+async def test_arrow_keys_navigate_option_list(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that down/up arrow keys move the cursor in the OptionList."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await _submit_query(app=app, pilot=pilot, query="first")
+        await _submit_query(app=app, pilot=pilot, query="second")
+        await _submit_query(app=app, pilot=pilot, query="third")
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        await pilot.press("H")
+        await pilot.pause()
+
+        assert isinstance(app.screen, HistoryModal)
+        from textual.widgets import OptionList
+
+        option_list = app.screen.query_one("#history-list", OptionList)
+        assert option_list.highlighted == 0
+
+        await pilot.press("down")
+        await pilot.pause()
+        assert option_list.highlighted == 1
+
+        await pilot.press("down")
+        await pilot.pause()
+        assert option_list.highlighted == 2
+
+        await pilot.press("up")
+        await pilot.pause()
+        assert option_list.highlighted == 1
+
+
+@pytest.mark.asyncio
+async def test_arrow_down_wraps_to_start(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that down arrow wraps to first option from last."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await _submit_query(app=app, pilot=pilot, query="first")
+        await _submit_query(app=app, pilot=pilot, query="second")
+        await _submit_query(app=app, pilot=pilot, query="third")
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        await pilot.press("H")
+        await pilot.pause()
+
+        assert isinstance(app.screen, HistoryModal)
+        from textual.widgets import OptionList
+
+        option_list = app.screen.query_one("#history-list", OptionList)
+        option_list.highlighted = 2
+        await pilot.pause()
+
+        await pilot.press("down")
+        await pilot.pause()
+        assert option_list.highlighted == 0
+
+
+@pytest.mark.asyncio
+async def test_arrow_up_wraps_to_end(
+    sample_jsonl_file: Path,
+) -> None:
+    """Test that up arrow wraps to last option from first."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await _submit_query(app=app, pilot=pilot, query="first")
+        await _submit_query(app=app, pilot=pilot, query="second")
+        await _submit_query(app=app, pilot=pilot, query="third")
+
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        await pilot.press("H")
+        await pilot.pause()
+
+        assert isinstance(app.screen, HistoryModal)
+        from textual.widgets import OptionList
+
+        option_list = app.screen.query_one("#history-list", OptionList)
+        assert option_list.highlighted == 0
+
+        await pilot.press("up")
+        await pilot.pause()
+        assert option_list.highlighted == 2

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Label, OptionList
@@ -46,6 +47,8 @@ class HistoryModal(ModalScreen[str | None]):
         ("escape", "cancel", "Close"),
         ("j", "cursor_down", "Down"),
         ("k", "cursor_up", "Up"),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("up", "cursor_up", "Up", show=False),
     ]
 
     @property

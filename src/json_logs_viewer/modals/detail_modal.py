@@ -44,6 +44,8 @@ class DetailModal(ModalScreen[None]):
     BINDINGS = [
         Binding("j", "next_log", "Next", show=True),
         Binding("k", "previous_log", "Previous", show=True),
+        Binding("down", "next_log", "Next", show=False),
+        Binding("up", "previous_log", "Previous", show=False),
         Binding("escape,q", "dismiss", "Close", show=True),
         Binding("y", "copy_log", "Copy", show=True),
     ]
