@@ -261,7 +261,7 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 **Goal**: Display full JSON for selected log entry.
 
-- [ ] **DetailModal** (`modals/detail_modal.py`):
+- [x] **DetailModal** (`modals/detail_modal.py`):
     - ModalScreen for log detail view
     - Pretty-printed JSON with syntax highlighting (Rich JSON)
     - Navigation: `j` (next log), `k` (previous log)
@@ -269,7 +269,7 @@ queries, boolean operators, and toggle between filter and highlight modes.
     - Copy buttons (placeholder for Phase 8)
     - Context window display
 
-- [ ] **Integration**:
+- [x] **Integration**:
     - `Enter` in LogList opens DetailModal
     - Pass selected LogEntry to modal
     - Update AppState.selected_index on navigation
@@ -277,7 +277,7 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 **Testing**:
 
-- [ ] `tests/integration/test_detail_modal.py`
+- [x] `tests/integration/test_detail_modal.py`
     - Test Enter opens detail modal
     - Test modal displays pretty-printed JSON
     - Test `j`/`k` navigates between logs

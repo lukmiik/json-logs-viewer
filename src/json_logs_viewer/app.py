@@ -10,6 +10,7 @@ from textual.screen import Screen
 
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import read_lines_backward
+from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
 from json_logs_viewer.widgets.log_list import LogList
@@ -236,6 +237,15 @@ class LogViewerApp(App):
         """Ensure selected_index stays in bounds."""
         if self.selected_index >= len(self.filtered_logs):
             self.selected_index = max(0, len(self.filtered_logs) - 1)
+
+    def on_log_list_log_selected(self, event: LogList.LogSelected) -> None:
+        """Open detail modal when log is selected."""
+        modal = DetailModal(
+            log_entry=event.log_entry,
+            current_index=self.selected_index,
+            logs=self.filtered_logs,
+        )
+        self.push_screen(modal)
 
 
 def main() -> None:
