@@ -59,8 +59,10 @@ class LogList(ScrollView):
     """
 
     BINDINGS = [
-        ("j, down", "cursor_down", "Down"),
-        ("k, up", "cursor_up", "Up"),
+        ("j", "cursor_down", "Down"),
+        ("k", "cursor_up", "Up"),
+        Binding("down", "cursor_down", "Down", show=False),
+        Binding("up", "cursor_up", "Up", show=False),
         ("h", "scroll_left", "Left"),
         ("l", "scroll_right", "Right"),
         Binding("ctrl+u", "page_up", "Page Up", show=False),
