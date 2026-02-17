@@ -166,7 +166,7 @@ boolean operators, and dual display modes (filter vs highlight).
 
 ### Core Features
 
-- [ ] **Query Grammar** (`filter_engine.py`):
+- [x] **Query Grammar** (`filter_engine.py`):
     - `plain text` - Full-text search across all fields (level, message, timestamp, data
       dict values)
     - `field:` - Field existence check (matches logs that have this field, any value)
@@ -178,21 +178,21 @@ boolean operators, and dual display modes (filter vs highlight).
     - `parse_filter(*, query: str, case_sensitive: bool) -> Callable[[LogEntry], bool]`
     - `FilterError` exception for invalid queries with toast notification
 
-- [ ] **SearchBar Widget** (`widgets/search_bar.py`):
+- [x] **SearchBar Widget** (`widgets/search_bar.py`):
     - Input widget with placeholder
     - History button (opens HistoryModal)
     - Real-time filtering on type (debounced)
     - Submit filter to AppState.filter_query
     - Show validation errors
 
-- [ ] **StatusBar Toggles** (`widgets/status_bar.py`):
+- [x] **StatusBar Toggles** (`widgets/status_bar.py`):
     - **"Aa" button**: Toggle case sensitivity (default: off/case-insensitive)
     - **"Highlight" button**: Toggle between filter mode and highlight mode (default:
       filter)
     - Both toggles stored in AppState as reactive values
     - In-memory only (no persistence)
 
-- [ ] **Filter Integration** (`app.py`):
+- [x] **Filter Integration** (`app.py`):
     - New reactive states: `case_sensitive: bool = False`,
       `highlight_matches: bool = False`
     - Watch filter_query, case_sensitive, highlight_matches for changes
@@ -201,7 +201,7 @@ boolean operators, and dual display modes (filter vs highlight).
     - `apply_filter()` method handles both modes
     - Add successful queries to search_history
 
-- [ ] **LogList Highlighting** (`widgets/log_list.py`):
+- [x] **LogList Highlighting** (`widgets/log_list.py`):
     - CSS classes for match/no-match states
     - Text highlighting with color
     - Opacity reduction for non-matching rows
@@ -235,7 +235,7 @@ NOT level:DEBUG          # Exclude debug logs
 
 ### Testing
 
-- [ ] `tests/unit/test_filter_engine.py`
+- [x] `tests/unit/test_filter_engine.py`
     - Test full-text search across all fields
     - Test field:value matching (partial, case-insensitive by default)
     - Test field: existence check
@@ -245,7 +245,7 @@ NOT level:DEBUG          # Exclude debug logs
     - Test grouping with parentheses
     - Test case sensitivity toggle
     - Test invalid query error handling
-- [ ] `tests/integration/test_search.py`
+- [x] `tests/integration/test_search.py`
     - Test search bar input and focus
     - Test real-time filtering updates LogList
     - Test toggle buttons (case sensitivity, highlight mode)
