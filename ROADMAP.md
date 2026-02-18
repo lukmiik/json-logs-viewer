@@ -323,7 +323,8 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 - [ ] **Clipboard Integration**:
     - Copy single log: `y` in LogList or DetailModal
-    - Copy with context: `Y` in DetailModal (configurable N logs before/after)
+    - Copy with context: `Y` in DetailModal (N logs before/after, think of a good
+      number)
     - Format as pretty-printed JSON
 
 - [ ] **Copy with Context**:

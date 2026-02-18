@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from json_logs_viewer.app import LogViewerApp
-from json_logs_viewer.constants import SEARCH_HISTORY_LIMIT
+from json_logs_viewer.widgets import search_bar as search_bar_module
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 
@@ -138,22 +138,24 @@ async def test_submit_deduplicates_consecutive_history(
 
 
 @pytest.mark.asyncio
-async def test_search_history_limit_15(sample_jsonl_file: Path) -> None:
-    """Test that search history is limited to 15 items."""
+async def test_search_history_limit_15(
+    sample_jsonl_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that search history is limited to SEARCH_HISTORY_LIMIT items."""
+    monkeypatch.setattr(search_bar_module, "SEARCH_HISTORY_LIMIT", 5)
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         search_bar = app.query_one("#search", SearchBar)
         app.action_focus_search()
         await pilot.pause()
 
-        for i in range(SEARCH_HISTORY_LIMIT + 5):
+        for i in range(7):
             search_bar.value = f"query{i}"
             app.action_focus_search()
-            await pilot.pause()
             await pilot.press("enter")
             await pilot.pause()
 
-        assert len(app.search_history) == SEARCH_HISTORY_LIMIT
+        assert len(app.search_history) == 5
 
 
 @pytest.mark.asyncio
