@@ -9,6 +9,12 @@ from textual.containers import VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Footer, Static
 
+from json_logs_viewer.clipboard import (
+    format_log_as_json,
+    format_logs_as_jsonl,
+    get_log_with_context,
+)
+from json_logs_viewer.constants import COPY_CONTEXT_SIZE
 from json_logs_viewer.models import LogEntry
 
 if TYPE_CHECKING:
@@ -48,6 +54,7 @@ class DetailModal(ModalScreen[None]):
         Binding("up", "previous_log", "Previous", show=False),
         Binding("escape,q", "dismiss", "Close", show=True),
         Binding("y", "copy_log", "Copy", show=True),
+        Binding("Y", "copy_log_with_context", "Copy+", show=True),
     ]
 
     def __init__(
@@ -99,4 +106,19 @@ class DetailModal(ModalScreen[None]):
         json_widget.update(JSON(json_str))
 
     def action_copy_log(self) -> None:
-        self.notify("Copy feature coming in Phase 8", severity="information")
+        """Copy the current log entry to clipboard."""
+        text = format_log_as_json(log_entry=self.log_entry)
+        self.app.copy_to_clipboard(text)
+        self.notify("Copied log to clipboard")
+
+    def action_copy_log_with_context(self) -> None:
+        """Copy the current log entry with surrounding context to clipboard."""
+        context_logs = get_log_with_context(
+            logs=self.logs,
+            current_index=self.current_index,
+            context_size=COPY_CONTEXT_SIZE,
+        )
+        text = format_logs_as_jsonl(log_entries=context_logs)
+        self.app.copy_to_clipboard(text)
+        count = len(context_logs)
+        self.notify(f"Copied {count} logs to clipboard")

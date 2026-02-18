@@ -1,5 +1,6 @@
 """Integration tests for DetailModal."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -304,3 +305,218 @@ async def test_navigation_does_not_go_before_start(
         await pilot.pause()
 
         assert modal.current_index == 0
+
+
+class TestCopyInModal:
+    """Tests for copy functionality in DetailModal."""
+
+    @pytest.mark.asyncio
+    async def test_y_copies_current_log(self, sample_jsonl_file: Path) -> None:
+        """Test that pressing y in modal copies current log to clipboard."""
+        copied_text: list[str] = []
+
+        app = LogViewerApp(file=str(sample_jsonl_file))
+
+        def mock_copy(text: str) -> None:
+            copied_text.append(text)
+
+        app.copy_to_clipboard = mock_copy  # type: ignore[method-assign]
+
+        async with app.run_test() as pilot:
+            app.selected_index = 0
+            await pilot.pause()
+
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            modal = app.screen
+            assert isinstance(modal, DetailModal)
+
+            await pilot.press("y")
+            await pilot.pause()
+
+            assert len(copied_text) == 1
+            parsed = json.loads(copied_text[0])
+            assert parsed["level"] == "INFO"
+
+    @pytest.mark.asyncio
+    async def test_y_copies_after_navigation(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that y copies correct log after navigating in modal."""
+        copied_text: list[str] = []
+
+        app = LogViewerApp(file=str(sample_jsonl_file))
+
+        def mock_copy(text: str) -> None:
+            copied_text.append(text)
+
+        app.copy_to_clipboard = mock_copy  # type: ignore[method-assign]
+
+        async with app.run_test() as pilot:
+            app.selected_index = 0
+            await pilot.pause()
+
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            modal = app.screen
+            assert isinstance(modal, DetailModal)
+
+            await pilot.press("j")
+            await pilot.pause()
+            assert modal.current_index == 1
+
+            await pilot.press("y")
+            await pilot.pause()
+
+            assert len(copied_text) == 1
+            parsed = json.loads(copied_text[0])
+            assert parsed["level"] == "ERROR"
+
+    @pytest.mark.asyncio
+    async def test_shift_y_copies_with_context(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that pressing Y copies log with context."""
+        copied_text: list[str] = []
+
+        app = LogViewerApp(file=str(sample_jsonl_file))
+
+        def mock_copy(text: str) -> None:
+            copied_text.append(text)
+
+        app.copy_to_clipboard = mock_copy  # type: ignore[method-assign]
+
+        async with app.run_test() as pilot:
+            app.selected_index = 1
+            await pilot.pause()
+
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            modal = app.screen
+            assert isinstance(modal, DetailModal)
+
+            await pilot.press("Y")
+            await pilot.pause()
+
+            assert len(copied_text) == 1
+            lines = copied_text[0].split("\n")
+            parsed_logs = [json.loads(line) for line in lines]
+            assert len(parsed_logs) == 4
+            levels = [log["level"] for log in parsed_logs]
+            assert levels == ["INFO", "ERROR", "WARN", "DEBUG"]
+
+    @pytest.mark.asyncio
+    async def test_shift_y_uses_filtered_logs(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that Y uses filtered logs, not full logs."""
+        copied_text: list[str] = []
+
+        app = LogViewerApp(file=str(sample_jsonl_file))
+
+        def mock_copy(text: str) -> None:
+            copied_text.append(text)
+
+        app.copy_to_clipboard = mock_copy  # type: ignore[method-assign]
+
+        async with app.run_test() as pilot:
+            app.filter_query = "level:ERROR"
+            await pilot.pause()
+
+            assert len(app.filtered_logs) == 1
+
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            modal = app.screen
+            assert isinstance(modal, DetailModal)
+
+            await pilot.press("Y")
+            await pilot.pause()
+
+            assert len(copied_text) == 1
+            lines = copied_text[0].split("\n")
+            parsed_logs = [json.loads(line) for line in lines]
+            assert len(parsed_logs) == 1
+            assert parsed_logs[0]["level"] == "ERROR"
+
+    @pytest.mark.asyncio
+    async def test_shift_y_at_start_of_logs(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that Y handles context at start of logs correctly."""
+        copied_text: list[str] = []
+
+        app = LogViewerApp(file=str(sample_jsonl_file))
+
+        def mock_copy(text: str) -> None:
+            copied_text.append(text)
+
+        app.copy_to_clipboard = mock_copy  # type: ignore[method-assign]
+
+        async with app.run_test() as pilot:
+            app.selected_index = 0
+            await pilot.pause()
+
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            modal = app.screen
+            assert isinstance(modal, DetailModal)
+
+            await pilot.press("Y")
+            await pilot.pause()
+
+            assert len(copied_text) == 1
+            lines = copied_text[0].split("\n")
+            parsed_logs = [json.loads(line) for line in lines]
+            assert len(parsed_logs) == 4
+            assert parsed_logs[0]["level"] == "INFO"
+
+    @pytest.mark.asyncio
+    async def test_shift_y_at_end_of_logs(
+        self, sample_jsonl_file: Path
+    ) -> None:
+        """Test that Y handles context at end of logs correctly."""
+        copied_text: list[str] = []
+
+        app = LogViewerApp(file=str(sample_jsonl_file))
+
+        def mock_copy(text: str) -> None:
+            copied_text.append(text)
+
+        app.copy_to_clipboard = mock_copy  # type: ignore[method-assign]
+
+        async with app.run_test() as pilot:
+            app.selected_index = 3
+            await pilot.pause()
+
+            log_list = app.query_one("#logs", LogList)
+            log_list.focus()
+            await pilot.press("enter")
+            await pilot.pause()
+
+            modal = app.screen
+            assert isinstance(modal, DetailModal)
+
+            await pilot.press("Y")
+            await pilot.pause()
+
+            assert len(copied_text) == 1
+            lines = copied_text[0].split("\n")
+            parsed_logs = [json.loads(line) for line in lines]
+            assert len(parsed_logs) == 4
+            assert parsed_logs[-1]["level"] == "DEBUG"

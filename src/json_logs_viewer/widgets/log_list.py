@@ -14,6 +14,12 @@ from textual.message import Message
 from textual.scroll_view import ScrollView
 from textual.strip import Strip
 
+from json_logs_viewer.clipboard import (
+    format_log_as_json,
+    format_logs_as_jsonl,
+    get_log_with_context,
+)
+from json_logs_viewer.constants import COPY_CONTEXT_SIZE
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.models import LogEntry
 
@@ -74,6 +80,8 @@ class LogList(ScrollView):
         ("enter", "select_cursor", "Details"),
         ("/", "app.focus_search", "Search"),
         ("w", "app.toggle_wrap", "Wrap"),
+        ("y", "copy_log", "Copy"),
+        ("Y", "copy_log_with_context", "Copy+"),
         ("q", "app.quit", "Quit"),
     ]
 
@@ -556,3 +564,32 @@ class LogList(ScrollView):
     def action_scroll_right(self) -> None:
         if not self._wrap_mode:
             self.scroll_right()
+
+    def action_copy_log(self) -> None:
+        """Copy the currently selected log entry to clipboard."""
+        if not self._log_entries:
+            return
+        if not (0 <= self._cursor_index < len(self._log_entries)):
+            return
+
+        log_entry = self._log_entries[self._cursor_index]
+        text = format_log_as_json(log_entry=log_entry)
+        self.app.copy_to_clipboard(text)
+        self.notify("Copied log to clipboard")
+
+    def action_copy_log_with_context(self) -> None:
+        """Copy the current log entry with surrounding context to clipboard."""
+        if not self._log_entries:
+            return
+        if not (0 <= self._cursor_index < len(self._log_entries)):
+            return
+
+        context_logs = get_log_with_context(
+            logs=self._log_entries,
+            current_index=self._cursor_index,
+            context_size=COPY_CONTEXT_SIZE,
+        )
+        text = format_logs_as_jsonl(log_entries=context_logs)
+        self.app.copy_to_clipboard(text)
+        count = len(context_logs)
+        self.notify(f"Copied {count} logs to clipboard")

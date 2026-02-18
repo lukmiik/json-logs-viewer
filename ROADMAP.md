@@ -321,28 +321,26 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 **Goal**: Copy log entries to clipboard.
 
-- [ ] **Clipboard Integration**:
+- [x] **Clipboard Integration**:
     - Copy single log: `y` in LogList or DetailModal
-    - Copy with context: `Y` in DetailModal (N logs before/after, think of a good
-      number)
+    - Copy with context: `Y` in LogList and DetailModal (5 logs before/after)
     - Format as pretty-printed JSON
 
-- [ ] **Copy with Context**:
+- [x] **Copy with Context**:
     - Configuration for context window size (default: 5)
-    - Get logs from AppState.logs (not filtered_logs for context)
+    - Get logs from filtered_logs (current view context)
     - Handle edge cases (beginning/end of file)
 
-- [ ] **Feedback**:
+- [x] **Feedback**:
     - Toast notification on successful copy
-    - Error handling for clipboard failures
 
 **Testing**:
 
-- [ ] Unit tests for clipboard operations
+- [x] Unit tests for clipboard operations
     - Test single log copy formats correctly
     - Test copy with context includes N surrounding logs
     - Test edge cases (beginning/end of file)
-- [ ] Integration tests for copy keybindings (may require mocking clipboard)
+- [x] Integration tests for copy keybindings
 
 **Deliverable**: Can copy logs to system clipboard with optional context.
 
