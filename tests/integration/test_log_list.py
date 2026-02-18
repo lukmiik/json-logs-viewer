@@ -410,6 +410,93 @@ async def test_virtual_size_width_matches_max_content(
 
 
 @pytest.mark.asyncio
+async def test_max_width_updates_on_scroll(
+    varying_width_logs_file: Path,
+) -> None:
+    """Test that max content width updates based on visible lines."""
+    app = LogViewerApp(file=str(varying_width_logs_file))
+    async with app.run_test(size=(80, 5)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        log_list.scroll_to(y=0, animate=False)
+        await pilot.pause()
+
+        short_width = len(
+            json.dumps(log_list._log_entries[0].data, ensure_ascii=False)
+        )
+        assert log_list._max_content_width == short_width
+
+        log_list.scroll_to(y=5, animate=False)
+        await pilot.pause()
+
+        long_width = len(
+            json.dumps(log_list._log_entries[5].data, ensure_ascii=False)
+        )
+        assert log_list._max_content_width == long_width
+        assert long_width > short_width
+
+        log_list.scroll_to(y=7, animate=False)
+        await pilot.pause()
+
+        assert log_list._max_content_width == short_width
+
+
+@pytest.mark.asyncio
+async def test_virtual_size_width_updates_on_scroll(
+    varying_width_logs_file: Path,
+) -> None:
+    """Test that virtual_size width changes as user scrolls."""
+    app = LogViewerApp(file=str(varying_width_logs_file))
+    async with app.run_test(size=(80, 5)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        log_list.scroll_to(y=0, animate=False)
+        await pilot.pause()
+        narrow_width = log_list.virtual_size.width
+
+        log_list.scroll_to(y=5, animate=False)
+        await pilot.pause()
+        wide_width = log_list.virtual_size.width
+
+        assert wide_width > narrow_width
+
+        log_list.scroll_to(y=10, animate=False)
+        await pilot.pause()
+        medium_width = log_list.virtual_size.width
+
+        assert medium_width < wide_width
+
+
+@pytest.mark.asyncio
+async def test_max_width_does_not_update_in_wrap_mode(
+    varying_width_logs_file: Path,
+) -> None:
+    """Test that max width stays constant in wrap mode."""
+    app = LogViewerApp(file=str(varying_width_logs_file))
+    async with app.run_test(size=(80, 5)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+        log_list.focus()
+        await pilot.pause()
+
+        app.wrap_log_lines = True
+        await pilot.pause()
+
+        log_list.scroll_to(y=0, animate=False)
+        await pilot.pause()
+        width_at_top = log_list.virtual_size.width
+
+        log_list.scroll_to(y=5, animate=False)
+        await pilot.pause()
+        width_at_wide = log_list.virtual_size.width
+
+        assert width_at_top == width_at_wide
+
+
+@pytest.mark.asyncio
 async def test_render_line_returns_correct_content(
     sample_jsonl_file: Path,
 ) -> None:

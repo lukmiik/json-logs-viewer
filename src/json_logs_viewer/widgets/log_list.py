@@ -92,6 +92,7 @@ class LogList(ScrollView):
         super().__init__(**kwargs)
         self._log_entries: list[LogEntry] = []
         self._line_cache: LRUCache[int, str] = LRUCache(maxsize=2000)
+        self._line_width_cache: dict[int, int] = {}
         self._cursor_index: int = 0
         self._max_content_width: int = 0
         self._pending_scroll: bool = False
@@ -124,12 +125,21 @@ class LogList(ScrollView):
                 self._on_filter_settings_changed,
             )
             self._recompute_match_flags()
+            self.watch(self, "scroll_y", self._on_scroll_y_changed)
 
     def on_resize(self) -> None:
         """Apply pending scroll when the widget gets its size."""
         self._apply_pending_scroll()
         if self._wrap_mode:
             self._recalculate_wrap()
+        self._update_max_width_for_visible_range()
+        self._update_virtual_size()
+
+    def _on_scroll_y_changed(self, _: float) -> None:
+        """Handle vertical scroll position changes."""
+        if not self._wrap_mode:
+            self._update_max_width_for_visible_range()
+            self._update_virtual_size()
 
     def _on_wrap_mode_changed(self, wrap_log_lines: bool) -> None:
         """Handle wrap mode toggle."""
@@ -190,17 +200,43 @@ class LogList(ScrollView):
                 self._wrapped_lines.append((entry_idx, sub_line))
             current_row += len(wrapped)
 
+    def _update_max_width_for_visible_range(self) -> None:
+        """Update max content width based on visible lines in viewport."""
+        if not self._log_entries:
+            self._max_content_width = 0
+            return
+
+        scroll_y = self.scroll_offset.y
+        visible_height = self.size.height if self.size.height > 0 else 50
+
+        start_idx = max(0, scroll_y)
+        end_idx = min(len(self._log_entries), scroll_y + visible_height)
+
+        if start_idx >= end_idx:
+            start_idx = 0
+            end_idx = min(len(self._log_entries), visible_height)
+
+        max_width = 0
+        for idx in range(start_idx, end_idx):
+            if idx in self._line_width_cache:
+                max_width = max(max_width, self._line_width_cache[idx])
+            elif idx in self._line_cache:
+                max_width = max(max_width, len(self._line_cache[idx]))
+
+        self._max_content_width = max_width
+
     def set_logs(self, *, logs: list[LogEntry]) -> None:
         """Update the log entries and recalculate virtual size."""
         self._log_entries = logs
         self._line_cache = LRUCache(maxsize=2000)
+        self._line_width_cache = {}
         self._recompute_match_flags()
 
-        max_len = 0
-        for log in logs:
+        for idx, log in enumerate(logs):
             json_str = json.dumps(log.data, ensure_ascii=False)
-            max_len = max(max_len, len(json_str))
-        self._max_content_width = max_len
+            self._line_width_cache[idx] = len(json_str)
+
+        self._update_max_width_for_visible_range()
 
         if self._wrap_mode:
             self._recalculate_wrap()

@@ -65,3 +65,34 @@ def many_logs_file(tmp_path: Path) -> Path:
 def many_logs_entry_count() -> int:
     """Number of entries in many_logs_file fixture."""
     return 50
+
+
+@pytest.fixture
+def varying_width_logs_file(tmp_path: Path) -> Path:
+    """Create JSONL with logs of varying widths for scroll width tests."""
+    log_file = tmp_path / "varying_width.jsonl"
+    entries = [
+        {"short": "a"},
+        {"short": "b"},
+        {"short": "c"},
+        {"short": "d"},
+        {"short": "e"},
+        {
+            "very_long_field_name": "x" * 100,
+            "another_long_field": "y" * 100,
+        },
+        {"short": "f"},
+        {"short": "g"},
+        {"short": "h"},
+        {"short": "i"},
+        {"short": "j"},
+        {
+            "medium_width": "m" * 50,
+        },
+        {"short": "k"},
+        {"short": "l"},
+    ]
+    with log_file.open("w", encoding="utf-8") as f:
+        for entry in entries:
+            f.write(json.dumps(entry) + "\n")
+    return log_file
