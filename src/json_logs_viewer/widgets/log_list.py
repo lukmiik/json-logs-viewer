@@ -19,7 +19,11 @@ from json_logs_viewer.clipboard import (
     format_logs_as_jsonl,
     get_log_with_context,
 )
-from json_logs_viewer.constants import COPY_CONTEXT_SIZE
+from json_logs_viewer.constants import (
+    COLUMN_SEPARATOR,
+    COPY_CONTEXT_SIZE,
+    MAX_COL_WIDTH,
+)
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.models import LogEntry
 
@@ -110,6 +114,7 @@ class LogList(ScrollView):
         self._match_flags: list[bool] = []
         self._highlight_mode: bool = False
         self._active_query: str = ""
+        self._column_widths: dict[str, int] = {}
 
     def on_mount(self) -> None:
         """Set up watchers for app state changes."""
@@ -132,6 +137,7 @@ class LogList(ScrollView):
                 "highlight_matches",
                 self._on_filter_settings_changed,
             )
+            self.watch(self.app, "columns", self._on_columns_changed)
             self._recompute_match_flags()
             self.watch(self, "scroll_y", self._on_scroll_y_changed)
 
@@ -161,6 +167,39 @@ class LogList(ScrollView):
         self._scroll_cursor_into_view()
         self.refresh()
 
+    def _calculate_column_widths(self) -> dict[str, int]:
+        """Calculate column widths from all rows, with early termination.
+
+        Stops scanning once every column has reached MAX_COL_WIDTH.
+        """
+        columns = self._app.columns
+        if not columns:
+            return {}
+
+        widths = {col: len(col) for col in columns}
+        unsettled = {col for col in columns if widths[col] < MAX_COL_WIDTH}
+
+        for log in self._log_entries:
+            if not unsettled:
+                break
+            for col in list(unsettled):
+                value = str(log.data.get(col, ""))
+                widths[col] = max(widths[col], min(len(value), MAX_COL_WIDTH))
+                if widths[col] >= MAX_COL_WIDTH:
+                    unsettled.discard(col)
+
+        return widths
+
+    def _on_columns_changed(self, _: list[str]) -> None:
+        """Handle column configuration changes."""
+        self._line_cache.clear()
+        self._column_widths = self._calculate_column_widths()
+        if self._wrap_mode:
+            self._recalculate_wrap()
+        self._update_virtual_size()
+        self._scroll_cursor_into_view()
+        self.refresh()
+
     def _get_content_width(self) -> int:
         """Get available content width, accounting for scrollbar if needed."""
         width = self.size.width
@@ -181,29 +220,40 @@ class LogList(ScrollView):
         if width <= 0:
             return
 
+        # Build a temporary dict so we don't evict from LRU
+        all_texts: dict[int, str] = {}
         for entry_idx, log in enumerate(self._log_entries):
-            if entry_idx not in self._line_cache:
-                self._line_cache[entry_idx] = json.dumps(
-                    log.data, ensure_ascii=False
-                )
+            text = json.dumps(log.data, ensure_ascii=False)
+            all_texts[entry_idx] = text
+            self._line_cache[entry_idx] = text
+
+        columns = self._app.columns
+        column_width = 0
+        if columns:
+            col_widths = self._calculate_column_widths()
+            column_width = sum(col_widths.values()) + len(
+                COLUMN_SEPARATOR
+            ) * len(columns)
 
         def build_wrapped_lines(*, content_width: int) -> int:
             total = 0
             for entry_idx in range(len(self._log_entries)):
-                text = self._line_cache[entry_idx]
+                text = all_texts[entry_idx]
                 wrapped = _wrap_text(text=text, width=content_width)
                 total += len(wrapped)
             return total
 
-        estimated_lines = build_wrapped_lines(content_width=width)
+        json_content_width = max(1, width - column_width)
+        estimated_lines = build_wrapped_lines(content_width=json_content_width)
         needs_scrollbar = estimated_lines > self.size.height
         content_width = width - 1 if needs_scrollbar else width
+        json_content_width = max(1, content_width - column_width)
 
         current_row = 0
         for entry_idx in range(len(self._log_entries)):
             self._entry_start_rows[entry_idx] = current_row
-            text = self._line_cache[entry_idx]
-            wrapped = _wrap_text(text=text, width=content_width)
+            text = all_texts[entry_idx]
+            wrapped = _wrap_text(text=text, width=json_content_width)
             for sub_line in range(len(wrapped)):
                 self._wrapped_lines.append((entry_idx, sub_line))
             current_row += len(wrapped)
@@ -302,6 +352,15 @@ class LogList(ScrollView):
 
     def _update_virtual_size(self) -> None:
         """Set virtual_size based on number of log entries."""
+        columns = self._app.columns
+        column_width = 0
+        if columns:
+            if not self._column_widths:
+                self._column_widths = self._calculate_column_widths()
+            column_width = sum(self._column_widths.values()) + len(
+                COLUMN_SEPARATOR
+            ) * len(columns)
+
         if self._wrap_mode:
             height = (
                 len(self._wrapped_lines)
@@ -312,7 +371,7 @@ class LogList(ScrollView):
             self.styles.overflow_x = "hidden"
         else:
             height = len(self._log_entries)
-            width = self._max_content_width + 2
+            width = self._max_content_width + column_width + 2
             self.styles.overflow_x = "auto"
         self.virtual_size = Size(width, height)
 
@@ -338,7 +397,25 @@ class LogList(ScrollView):
             self._line_cache[line_index] = json.dumps(
                 log.data, ensure_ascii=False
             )
-        text = self._line_cache[line_index]
+        raw_json = self._line_cache[line_index]
+
+        columns = self._app.columns
+        if columns:
+            if not self._column_widths:
+                self._column_widths = self._calculate_column_widths()
+            column_parts = []
+            for col in columns:
+                value = str(self._log_entries[line_index].data.get(col, ""))
+                width = self._column_widths.get(col, len(col))
+                truncated = value[:width]
+                column_parts.append(truncated.ljust(width))
+            text = (
+                COLUMN_SEPARATOR.join(column_parts)
+                + COLUMN_SEPARATOR
+                + raw_json
+            )
+        else:
+            text = raw_json
 
         is_highlighted = line_index == self._cursor_index
         if is_highlighted:
@@ -373,7 +450,31 @@ class LogList(ScrollView):
             )
         text = self._line_cache[entry_idx]
 
-        wrapped = _wrap_text(text=text, width=width)
+        columns = self._app.columns
+        column_prefix = ""
+        column_width = 0
+        if columns:
+            if not self._column_widths:
+                self._column_widths = self._calculate_column_widths()
+            if sub_line == 0:
+                column_parts = []
+                for col in columns:
+                    value = str(self._log_entries[entry_idx].data.get(col, ""))
+                    col_w = self._column_widths.get(col, len(col))
+                    truncated = value[:col_w]
+                    column_parts.append(truncated.ljust(col_w))
+                column_prefix = (
+                    COLUMN_SEPARATOR.join(column_parts) + COLUMN_SEPARATOR
+                )
+                column_width = len(column_prefix)
+            else:
+                column_width = sum(self._column_widths.values()) + len(
+                    COLUMN_SEPARATOR
+                ) * len(columns)
+                column_prefix = " " * column_width
+
+        json_content_width = max(1, width - column_width)
+        wrapped = _wrap_text(text=text, width=json_content_width)
         if sub_line >= len(wrapped):
             return self._blank_strip()
 
@@ -386,7 +487,8 @@ class LogList(ScrollView):
                 entry_idx=entry_idx, base=self.rich_style or Style()
             )
 
-        padded = line_text.ljust(width)
+        full_line = column_prefix + line_text
+        padded = full_line.ljust(width)
         segments = [Segment(padded, style)]
         return Strip(segments, width)
 

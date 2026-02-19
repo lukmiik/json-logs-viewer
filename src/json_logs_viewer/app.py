@@ -1,5 +1,6 @@
 import argparse
 import json
+from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,7 @@ from textual.screen import Screen
 
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import read_lines_backward
+from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.history_modal import HistoryModal
 from json_logs_viewer.models import LogEntry
@@ -24,10 +26,11 @@ class LogViewerApp(App):
 
     BINDINGS = [
         ("w", "toggle_wrap", "Toggle Wrap"),
-        ("c", "toggle_case_sensitive", "Case Sensitivity"),
+        ("C", "toggle_case_sensitive", "Case Sensitivity"),
         ("m", "toggle_highlight_matches", "Search Highlight"),
         ("question_mark", "show_feature_summary", "Help"),
         ("H", "show_history", "History"),
+        ("c", "show_columns", "Columns"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -39,11 +42,13 @@ class LogViewerApp(App):
     wrap_log_lines: reactive[bool] = reactive(False)
     case_sensitive: reactive[bool] = reactive(False)
     highlight_matches: reactive[bool] = reactive(False)
+    columns: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
 
     def __init__(self, *, file: str | None = None, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(**kwargs)
         self.initial_file = file
         self._last_selected_log_entry: LogEntry | None = None
+        self._field_counts: Counter[str] = Counter()
 
     def compose(self) -> ComposeResult:
         yield LogList(id="logs")
@@ -56,7 +61,10 @@ class LogViewerApp(App):
         if self.initial_file:
             self.load_file(filepath=self.initial_file)
 
-    def watch_logs(self) -> None:
+    def watch_logs(
+        self, old_logs: list[LogEntry], logs: list[LogEntry]
+    ) -> None:
+        self._rebuild_field_counts(old_logs=old_logs, new_logs=logs)
         self.apply_filter()
 
     def watch_filter_query(self) -> None:
@@ -116,6 +124,30 @@ class LogViewerApp(App):
         selected_log_entry = self._get_selected_log_entry()
         if selected_log_entry is not None:
             self._last_selected_log_entry = selected_log_entry
+
+    def _rebuild_field_counts(
+        self, *, old_logs: list[LogEntry], new_logs: list[LogEntry]
+    ) -> None:
+        """Rebuild or incrementally update the field frequency counter.
+
+        If new_logs is a superset (append), only count the new entries.
+        Otherwise, recount from scratch.
+        """
+        old_len = len(old_logs)
+        new_len = len(new_logs)
+        if new_len >= old_len > 0 and new_logs[:old_len] is old_logs[:old_len]:
+            # Incremental append (follow mode): only count new entries.
+            for log in new_logs[old_len:]:
+                self._field_counts.update(log.data.keys())
+        else:
+            # Full replacement: recount everything.
+            self._field_counts = Counter()
+            for log in new_logs:
+                self._field_counts.update(log.data.keys())
+
+    def discover_fields(self) -> list[str]:
+        """Return top 20 fields by frequency."""
+        return [f for f, _ in self._field_counts.most_common(20)]
 
     def _restore_selected_log_entry(
         self, *, log_entry: LogEntry | None
@@ -226,6 +258,18 @@ class LogViewerApp(App):
         self._update_search_bar_visibility()
         self.query_one("#logs", LogList).focus()
 
+    def action_show_columns(self) -> None:
+        """Open column configuration modal."""
+        if isinstance(self.screen, ColumnsModal):
+            return
+        self.push_screen(ColumnsModal(), callback=self._on_columns_selected)
+
+    def _on_columns_selected(self, columns: list[str] | None) -> None:
+        """Handle column selection from modal."""
+        if columns is None:
+            return
+        self.columns = columns
+
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)
         yield SystemCommand(
@@ -247,6 +291,11 @@ class LogViewerApp(App):
             "Show help",
             "Open a modal with a summary of app features",
             self.action_show_feature_summary,
+        )
+        yield SystemCommand(
+            "Configure columns",
+            "Select which fields to display as columns",
+            self.action_show_columns,
         )
 
     def watch_filtered_logs(self) -> None:

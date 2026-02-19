@@ -144,7 +144,7 @@ async def test_status_bar_toggle_keybinds_update_state_and_buttons() -> None:
         assert "-active-toggle" not in case_button.classes
         assert "-active-toggle" not in highlight_button.classes
 
-        await pilot.press("c")
+        await pilot.press("C")
         await pilot.pause()
         assert app.case_sensitive is True
         assert "-active-toggle" in case_button.classes

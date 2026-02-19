@@ -350,29 +350,29 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 **Goal**: Allow users to customize displayed columns.
 
-- [ ] **Column Configuration UI**:
+- [x] **Column Configuration UI**:
     - Command palette command: `:columns`
     - Modal or inline interface to:
         - Add/remove columns from available fields
         - Reorder columns
         - Preview changes
 
-- [ ] **Field Discovery**:
+- [x] **Field Discovery**:
     - Scan existing logs for common fields
     - Show available fields for column selection
 
-- [ ] **Persistence** (in-memory only for MVP):
+- [x] **Persistence** (in-memory only for MVP):
     - Store in AppState.columns
     - Apply immediately to LogList
     - Reset to defaults option
 
 **Testing**:
 
-- [ ] Unit tests for column configuration
+- [x] Unit tests for column configuration
     - Test adding/removing columns
     - Test column reordering
     - Test field discovery from logs
-- [ ] Integration tests for column UI
+- [x] Integration tests for column UI
 
 **Deliverable**: Can customize which fields appear as columns in the log list.
 

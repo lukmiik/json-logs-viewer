@@ -9968,7 +9968,7 @@
 {"level": "CRITICAL", "timestamp": "2024-01-15T12:46:07Z", "message": "Processing request", "service": "api", "request_id": "req_009967", "duration_ms": 499}
 {"level": "DEBUG", "timestamp": "2024-01-15T12:46:08Z", "message": "File uploaded", "service": "database", "request_id": "req_009968", "duration_ms": 298, "user_id": 920}
 {"level": "CRITICAL", "timestamp": "2024-01-15T12:46:09Z", "message": "Request processed", "service": "storage", "request_id": "req_009969", "duration_ms": 206, "user_id": 99}
-{"level": "ERROR", "timestamp": "2024-01-15T12:46:10Z", "message": "File uploaded", "service": "websocket", "request_id": "req_009970", "duration_ms": 70, "error": "Connection refused"}
+{"level": "ERROR", "timestamp": "2024-01-15T12:46:10Z", "message": "File uploaded, Request processed, Operation completed", "service": "websocket", "request_id": "req_009970", "duration_ms": 70, "error": "Connection refused"}
 {"level": "DEBUG", "timestamp": "2024-01-15T12:46:11Z", "message": "Operation completed", "service": "cache", "request_id": "req_009971", "duration_ms": 226}
 {"level": "WARN", "timestamp": "2024-01-15T12:46:12Z", "message": "API call completed", "service": "websocket", "request_id": "req_009972", "duration_ms": 278, "user_id": 233}
 {"level": "ERROR", "timestamp": "2024-01-15T12:46:13Z", "message": "Cache miss", "service": "auth", "request_id": "req_009973", "duration_ms": 271, "error": "Invalid input"}
