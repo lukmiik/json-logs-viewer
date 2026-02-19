@@ -75,6 +75,8 @@ class LogList(ScrollView):
         Binding("up", "cursor_up", "Up", show=False),
         ("h", "scroll_left", "Left"),
         ("l", "scroll_right", "Right"),
+        Binding("0", "scroll_line_start", "Line Start", show=False),
+        Binding("$", "scroll_line_end", "Line End", show=False),
         Binding("ctrl+u", "page_up", "Page Up", show=False),
         Binding("ctrl+d", "page_down", "Page Down", show=False),
         Binding("n", "next_match", "Next Match", show=False),
@@ -666,6 +668,14 @@ class LogList(ScrollView):
     def action_scroll_right(self) -> None:
         if not self._wrap_mode:
             self.scroll_right()
+
+    def action_scroll_line_start(self) -> None:
+        if not self._wrap_mode:
+            self.scroll_to(x=0, animate=False)
+
+    def action_scroll_line_end(self) -> None:
+        if not self._wrap_mode:
+            self.scroll_to(x=self.max_scroll_x, animate=False)
 
     def action_copy_log(self) -> None:
         """Copy the currently selected log entry to clipboard."""
