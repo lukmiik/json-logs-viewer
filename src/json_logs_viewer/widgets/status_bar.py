@@ -20,7 +20,7 @@ class StatusInfo(Horizontal):
         height: 1;
         background: $surface;
         color: $text-muted;
-        padding: 0 1;
+        padding: 0 0 0 1;
     }
     #status-left {
         width: 1fr;
