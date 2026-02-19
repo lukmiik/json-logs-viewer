@@ -25,9 +25,9 @@ class LogViewerApp(App):
     CSS_PATH = "styles.tcss"
 
     BINDINGS = [
-        ("w", "toggle_wrap", "Toggle Wrap"),
-        ("C", "toggle_case_sensitive", "Case Sensitivity"),
-        ("m", "toggle_highlight_matches", "Search Highlight"),
+        ("/", "focus_search", "Search"),
+        ("C", "toggle_case_sensitive", "Case"),
+        ("m", "toggle_highlight_matches", "Highlight"),
         ("question_mark", "show_feature_summary", "Help"),
         ("H", "show_history", "History"),
         ("c", "show_columns", "Columns"),
