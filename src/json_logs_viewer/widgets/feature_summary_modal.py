@@ -37,13 +37,31 @@ class FeatureSummaryModal(ModalScreen[None]):
         with VerticalScroll(id="feature-summary-dialog") as dialog:
             yield Static(
                 "JSON Logs Viewer\n\n"
-                "- Open and browse JSONL logs in a scrollable list.\n"
-                "- Use / to focus the search bar and filter entries.\n"
-                "- Filter supports field queries like level:ERROR.\n"
-                "- Combine filters with AND / OR / NOT and parentheses.\n"
-                "- Toggle line wrapping, case sensitivity, and"
-                " highlight mode.\n"
-                "- Navigate quickly with j/k, g/G, and arrow keys.",
+                "[b]Navigation[/b]\n"
+                "  j/k, ↑/↓  Move up/down\n"
+                "  gg/G      Jump to top/bottom\n"
+                "  Enter     Open detail view\n"
+                "  q         Quit\n\n"
+                "[b]Search & Filter[/b]\n"
+                "  /         Focus search bar\n"
+                "  field:val Field-specific match\n"
+                "  field:    Field existence check\n"
+                "  AND/OR/NOT  Boolean operators\n"
+                "  ()        Grouping\n"
+                "  Aa        Toggle case sensitivity\n"
+                "  Highlight Toggle filter/highlight mode\n\n"
+                "[b]Detail View[/b]\n"
+                "  Enter     Open pretty-printed JSON detail\n"
+                "  j/k       Navigate between logs in detail\n"
+                "  Esc/q     Close detail view\n\n"
+                "[b]Copy[/b]\n"
+                "  y         Copy current log as JSON\n"
+                "  Y         Copy log with context (5 surrounding)\n\n"
+                "[b]History & Columns[/b]\n"
+                "  H         Open search history modal\n"
+                "            Select a past query to reapply it\n"
+                "  c         Open column configuration modal\n"
+                "            Add, remove, or reorder displayed columns",
                 id="feature-summary-content",
             )
         dialog.border_title = "Help"
