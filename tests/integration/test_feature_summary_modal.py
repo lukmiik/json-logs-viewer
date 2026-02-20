@@ -3,8 +3,7 @@
 from pathlib import Path
 
 import pytest
-from textual.containers import VerticalScroll
-from textual.widgets import Static
+from textual.widgets import TextArea
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
@@ -81,11 +80,10 @@ async def test_modal_displays_expected_content_and_metadata(
         modal = app.screen
         assert isinstance(modal, FeatureSummaryModal)
 
-        dialog = modal.query_one("#feature-summary-dialog", VerticalScroll)
-        content = modal.query_one("#feature-summary-content", Static)
+        dialog = modal.query_one("#feature-summary-content", TextArea)
 
         assert dialog.size.width > 20
         assert dialog.size.height > 5
         assert str(dialog.border_title) == "Help"
         assert str(dialog.border_subtitle) == "ESCAPE to dismiss"
-        assert "JSON Logs Viewer" in str(content.content)
+        assert "JSON Logs Viewer" in str(dialog.text)
