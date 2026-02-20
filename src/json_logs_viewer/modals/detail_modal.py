@@ -3,11 +3,10 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, cast
 
-from rich.json import JSON
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Footer, Static
+from textual.widgets import Footer, TextArea
 
 from json_logs_viewer.clipboard import (
     format_log_as_json,
@@ -37,13 +36,18 @@ class DetailModal(ModalScreen[None]):
         width: 80%;
         height: 80%;
         border: heavy $block-cursor-background;
-        padding: 1 2;
+        padding: 0;
     }
 
     DetailModal #json-content {
         height: 1fr;
         width: 100%;
-        overflow: auto;
+        border: none;
+        background: transparent;
+    }
+
+    DetailModal #json-content:focus {
+        border: none;
     }
     """
 
@@ -79,7 +83,7 @@ class DetailModal(ModalScreen[None]):
         )
 
         with VerticalScroll(id="detail-dialog") as dialog:
-            yield Static(JSON(json_str), id="json-content")
+            yield TextArea(json_str, id="json-content", read_only=True)
             yield Footer()
         dialog.border_title = "Log Detail"
         dialog.border_subtitle = "j/k: navigate | ESC: close"
@@ -99,11 +103,11 @@ class DetailModal(ModalScreen[None]):
             self._update_content()
 
     def _update_content(self) -> None:
-        json_widget = self.query_one("#json-content", Static)
+        json_widget = self.query_one("#json-content", TextArea)
         json_str = json.dumps(
             self.log_entry.data, indent=2, ensure_ascii=False
         )
-        json_widget.update(JSON(json_str))
+        json_widget.text = json_str
 
     def action_copy_log(self) -> None:
         """Copy the current log entry to clipboard."""
