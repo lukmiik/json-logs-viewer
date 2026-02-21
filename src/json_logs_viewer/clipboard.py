@@ -30,9 +30,7 @@ def format_logs_as_jsonl(*, log_entries: list[LogEntry]) -> str:
     Returns:
         JSONL string with one JSON object per line.
     """
-    lines = [
-        json.dumps(entry.data, ensure_ascii=False) for entry in log_entries
-    ]
+    lines = [entry.raw_json for entry in log_entries]
     return "\n".join(lines)
 
 

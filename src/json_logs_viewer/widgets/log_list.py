@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING, Any, cast
 
 from rich.console import Console
@@ -225,7 +224,7 @@ class LogList(ScrollView):
         # Build a temporary dict so we don't evict from LRU
         all_texts: dict[int, str] = {}
         for entry_idx, log in enumerate(self._log_entries):
-            text = json.dumps(log.data, ensure_ascii=False)
+            text = log.raw_json
             all_texts[entry_idx] = text
             self._line_cache[entry_idx] = text
 
@@ -293,8 +292,7 @@ class LogList(ScrollView):
         self._recompute_match_flags()
 
         for idx, log in enumerate(logs):
-            json_str = json.dumps(log.data, ensure_ascii=False)
-            self._line_width_cache[idx] = len(json_str)
+            self._line_width_cache[idx] = len(log.raw_json)
 
         self._update_max_width_for_visible_range()
 
@@ -396,9 +394,7 @@ class LogList(ScrollView):
 
         if line_index not in self._line_cache:
             log = self._log_entries[line_index]
-            self._line_cache[line_index] = json.dumps(
-                log.data, ensure_ascii=False
-            )
+            self._line_cache[line_index] = log.raw_json
         raw_json = self._line_cache[line_index]
 
         columns = self._app.columns
@@ -447,9 +443,7 @@ class LogList(ScrollView):
 
         if entry_idx not in self._line_cache:
             log = self._log_entries[entry_idx]
-            self._line_cache[entry_idx] = json.dumps(
-                log.data, ensure_ascii=False
-            )
+            self._line_cache[entry_idx] = log.raw_json
         text = self._line_cache[entry_idx]
 
         columns = self._app.columns

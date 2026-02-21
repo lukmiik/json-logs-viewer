@@ -20,6 +20,7 @@ class LogEntry(BaseModel):
 
     line_number: int
     data: dict[str, Any]
+    raw_json: str = ""
 
     timestamp: datetime | None = None
     level: str | None = None

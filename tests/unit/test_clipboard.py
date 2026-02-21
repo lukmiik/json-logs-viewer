@@ -49,9 +49,9 @@ class TestFormatLogsAsJsonl:
     def test_formats_multiple_logs_as_jsonl(self) -> None:
         """Test that multiple logs are formatted as JSONL."""
         entries = [
-            LogEntry(line_number=1, data={"id": 1}),
-            LogEntry(line_number=2, data={"id": 2}),
-            LogEntry(line_number=3, data={"id": 3}),
+            LogEntry(line_number=1, data={"id": 1}, raw_json='{"id": 1}'),
+            LogEntry(line_number=2, data={"id": 2}, raw_json='{"id": 2}'),
+            LogEntry(line_number=3, data={"id": 3}, raw_json='{"id": 3}'),
         ]
         result = format_logs_as_jsonl(log_entries=entries)
         lines = result.split("\n")
@@ -67,7 +67,13 @@ class TestFormatLogsAsJsonl:
 
     def test_single_entry_no_trailing_newline(self) -> None:
         """Test that single entry has no trailing newline."""
-        entries = [LogEntry(line_number=1, data={"test": "value"})]
+        entries = [
+            LogEntry(
+                line_number=1,
+                data={"test": "value"},
+                raw_json='{"test": "value"}',
+            )
+        ]
         result = format_logs_as_jsonl(log_entries=entries)
         assert not result.endswith("\n")
 

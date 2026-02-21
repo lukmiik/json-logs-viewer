@@ -204,7 +204,9 @@ class LogViewerApp(App):
             for line_num, line_text in read_lines_backward(filepath=path):
                 try:
                     data = json.loads(line_text)
-                    log = LogEntry(line_number=line_num, data=data)
+                    log = LogEntry(
+                        line_number=line_num, data=data, raw_json=line_text
+                    )
                     logs.append(log)
                 except json.JSONDecodeError as e:
                     self.log.warning(f"Line {line_num}: invalid JSON: {e}")
