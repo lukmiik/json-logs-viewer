@@ -196,6 +196,9 @@ class LogViewerApp(App):
             self.exit(message=f"Not a file: {filepath}")
             return
 
+        log_list = self.query_one("#logs", LogList)
+        log_list.loading = True
+
         logs: list[LogEntry] = []
         try:
             for line_num, line_text in read_lines_backward(filepath=path):
@@ -208,6 +211,7 @@ class LogViewerApp(App):
                     continue
             logs.reverse()
         except Exception as e:
+            log_list.loading = False
             self.exit(message=f"Error reading file: {e}")
             return
         self._last_selected_log_entry = None
@@ -215,6 +219,7 @@ class LogViewerApp(App):
 
         self.filepath = filepath
         self.selected_index = max(0, len(logs) - 1)
+        log_list.loading = False
 
     def _update_search_bar_visibility(
         self, *, force_visible: bool = False

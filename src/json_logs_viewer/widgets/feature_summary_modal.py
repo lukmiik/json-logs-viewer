@@ -21,6 +21,7 @@ class FeatureSummaryModal(ModalScreen[None]):
         width: 80;
         height: 80%;
         border: heavy $block-cursor-background;
+        scrollbar-size: 1 1;
     }
     
     FeatureSummaryModal TextArea:focus {
