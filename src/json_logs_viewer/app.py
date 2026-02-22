@@ -16,6 +16,7 @@ from json_logs_viewer.log_reader import read_lines_backward
 from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
+from json_logs_viewer.modals.file_picker_modal import FilePickerModal
 from json_logs_viewer.modals.history_modal import HistoryModal
 from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
@@ -35,6 +36,7 @@ class LogViewerApp(App):
         ("question_mark", "show_feature_summary", "Help"),
         ("H", "show_history", "History"),
         ("c", "show_columns", "Columns"),
+        ("o", "open_file", "Open"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -54,11 +56,13 @@ class LogViewerApp(App):
         *,
         file: str | None = None,
         follow: bool = False,
+        show_picker_on_start: bool = False,
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
         super().__init__(**kwargs)
         self.initial_file = file
         self._initial_follow = follow
+        self._show_picker_on_start = show_picker_on_start
         self._last_selected_log_entry: LogEntry | None = None
         self._field_counts: Counter[str] = Counter()
         self._watcher: WatcherBase | None = None
@@ -73,12 +77,16 @@ class LogViewerApp(App):
         yield StatusBar(id="status")
 
     def on_mount(self) -> None:
-        """Load file if provided via CLI."""
+        """Load file if provided via CLI, otherwise open file picker."""
         self._update_search_bar_visibility()
         if self.initial_file:
             self.load_file(filepath=self.initial_file)
-        if self._initial_follow:
-            self.follow_mode = True
+            if self._initial_follow:
+                self.follow_mode = True
+        elif self._show_picker_on_start:
+            self.push_screen(
+                FilePickerModal(), callback=self._on_file_selected
+            )
 
     def watch_logs(
         self, old_logs: list[LogEntry], logs: list[LogEntry]
@@ -209,10 +217,10 @@ class LogViewerApp(App):
         """Read and parse JSONL file."""
         path = Path(filepath)
         if not path.exists():
-            self.exit(message=f"File not found: {filepath}")
+            self.notify(f"File not found: {filepath}", severity="error")
             return
         if not path.is_file():
-            self.exit(message=f"Not a file: {filepath}")
+            self.notify(f"Not a file: {filepath}", severity="error")
             return
 
         log_list = self.query_one("#logs", LogList)
@@ -233,7 +241,7 @@ class LogViewerApp(App):
             logs.reverse()
         except Exception as e:
             log_list.loading = False
-            self.exit(message=f"Error reading file: {e}")
+            self.notify(f"Error reading file: {e}", severity="error")
             return
         self._last_selected_log_entry = None
         self.logs = logs
@@ -242,6 +250,7 @@ class LogViewerApp(App):
         self._follow_offset = path.stat().st_size
         self.selected_index = max(0, len(logs) - 1)
         log_list.loading = False
+        self.call_after_refresh(log_list._scroll_cursor_into_view)
 
     def _update_search_bar_visibility(
         self, *, force_visible: bool = False
@@ -284,6 +293,29 @@ class LogViewerApp(App):
         self.filter_query = query
         self._update_search_bar_visibility()
         self.query_one("#logs", LogList).focus()
+
+    def action_open_file(self) -> None:
+        """Open file picker modal."""
+        if isinstance(self.screen, FilePickerModal):
+            return
+        self.push_screen(FilePickerModal(), callback=self._on_file_selected)
+
+    def _on_file_selected(self, filepath: str | None) -> None:
+        """Handle file selection from picker, resetting all state."""
+        if filepath is None:
+            return
+        if self.follow_mode:
+            self.follow_mode = False
+        self.filter_query = ""
+        self.case_sensitive = False
+        self.highlight_matches = False
+        self.wrap_log_lines = False
+        self.columns = []
+        self.search_history = []
+        search_bar = self.query_one("#search", SearchBar)
+        search_bar.value = ""
+        self._update_search_bar_visibility()
+        self.load_file(filepath=filepath)
 
     def action_show_columns(self) -> None:
         """Open column configuration modal."""
@@ -388,6 +420,11 @@ class LogViewerApp(App):
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)
         yield SystemCommand(
+            "Open file",
+            "Browse and open a log file",
+            self.action_open_file,
+        )
+        yield SystemCommand(
             "Toggle line wrap",
             "Switch between horizontal scroll and soft wrap modes",
             self.action_toggle_wrap,
@@ -438,7 +475,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    app = LogViewerApp(file=args.file, follow=args.follow)
+    app = LogViewerApp(
+        file=args.file,
+        follow=args.follow,
+        show_picker_on_start=args.file is None,
+    )
     app.run()
 
 
