@@ -54,13 +54,16 @@ class StatusInfo(Horizontal):
     filtered: reactive[int] = reactive(0)
     case_sensitive: reactive[bool] = reactive(False)
     highlight_matches: reactive[bool] = reactive(False)
+    follow_mode: reactive[bool] = reactive(False)
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="status-left"):
             yield Label(id="status-filename")
             yield Label(id="status-total")
             yield Label(id="status-filtered")
+            yield Label(id="status-follow")
         with Horizontal(id="status-right"):
+            yield Button("Follow", id="status-follow-toggle")
             yield Button("Aa", id="status-case-sensitive")
             yield Button("Highlight", id="status-highlight-matches")
             yield Button("History", id="status-history")
@@ -72,6 +75,8 @@ class StatusInfo(Horizontal):
         total_label.update(f"Total: {self.total}")
         filtered_label = self.query_one("#status-filtered", Label)
         filtered_label.update(f"Filtered: {self.filtered}")
+        follow_label = self.query_one("#status-follow", Label)
+        follow_label.update("⏺ FOLLOW" if self.follow_mode else "")
 
     def watch_filename(self) -> None:
         if self.is_mounted:
@@ -93,6 +98,11 @@ class StatusInfo(Horizontal):
         if self.is_mounted:
             self._update_toggles()
 
+    def watch_follow_mode(self) -> None:
+        if self.is_mounted:
+            self._update_labels()
+            self._update_toggles()
+
     def on_mount(self) -> None:
         self._update_labels()
         self._update_toggles()
@@ -110,6 +120,9 @@ class StatusInfo(Horizontal):
             button_id="status-highlight-matches",
             active=self.highlight_matches,
         )
+        self._set_toggle_active(
+            button_id="status-follow-toggle", active=self.follow_mode
+        )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if not self.app:
@@ -120,6 +133,8 @@ class StatusInfo(Horizontal):
             app.case_sensitive = not app.case_sensitive
         elif event.button.id == "status-highlight-matches":
             app.highlight_matches = not app.highlight_matches
+        elif event.button.id == "status-follow-toggle":
+            app.action_toggle_follow()
         elif event.button.id == "status-history":
             app.action_show_history()
 
@@ -150,6 +165,7 @@ class StatusBar(Widget):
             self.watch(self.app, "filepath", self._update_status)
             self.watch(self.app, "case_sensitive", self._update_status)
             self.watch(self.app, "highlight_matches", self._update_status)
+            self.watch(self.app, "follow_mode", self._update_status)
 
     def _update_status(self) -> None:
         if not self.app:
@@ -161,3 +177,4 @@ class StatusBar(Widget):
         info.filtered = len(app.filtered_logs)
         info.case_sensitive = app.case_sensitive
         info.highlight_matches = app.highlight_matches
+        info.follow_mode = app.follow_mode

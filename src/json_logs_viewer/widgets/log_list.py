@@ -494,6 +494,13 @@ class LogList(ScrollView):
             return self._cursor_index
         return self._entry_start_rows.get(self._cursor_index, 0)
 
+    @property
+    def _is_at_bottom(self) -> bool:
+        """Check if scroll position is at or near the bottom."""
+        if not self._log_entries:
+            return True
+        return self.scroll_offset.y >= self.max_scroll_y - 1
+
     def _on_filtered_logs_changed(self, filtered_logs: list[LogEntry]) -> None:
         """Update log entries when filtered_logs changes."""
         self.set_logs(logs=filtered_logs)

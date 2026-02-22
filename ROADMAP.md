@@ -382,7 +382,7 @@ queries, boolean operators, and toggle between filter and highlight modes.
 
 **Goal**: Real-time log updates from file changes.
 
-- [ ] **LogWatcher** (`log_watcher.py`):
+- [x] **LogWatcher** (`log_watcher.py`):
     - Watchdog-based file monitoring
     - Track file position to read only new lines
     - Callback system for new LogEntry
@@ -390,25 +390,25 @@ queries, boolean operators, and toggle between filter and highlight modes.
     - Constructor:
       `__init__(self, *, filepath: str, callback: Callable[[LogEntry], None])`
 
-- [ ] **Follow Mode Integration**:
+- [x] **Follow Mode Integration**:
     - CLI flag `-f` / `--follow`
     - Command palette: `:follow` toggle
     - Auto-scroll to bottom when new logs arrive (if at bottom)
     - Pause follow when user scrolls up, resume on manual scroll to bottom
     - Visual indicator in StatusBar
 
-- [ ] **Performance**:
+- [x] **Performance**:
     - Debounced updates for high-frequency changes
     - Batch multiple new lines
 
 **Testing**:
 
-- [ ] `tests/unit/test_log_watcher.py`
+- [x] `tests/unit/test_log_watcher.py`
     - Test file watching detects new lines
     - Test callback triggered with LogEntry
     - Test file position tracking
     - Test debouncing/batching
-- [ ] Integration tests for follow mode UI
+- [x] Integration tests for follow mode UI
     - Test follow toggle updates state
     - Test auto-scroll behavior
 

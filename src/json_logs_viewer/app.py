@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import argparse
 import json
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import IO, Any
 
 from textual.app import App, ComposeResult, SystemCommand
 from textual.reactive import reactive
@@ -11,6 +13,7 @@ from textual.screen import Screen
 
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import read_lines_backward
+from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.history_modal import HistoryModal
@@ -28,6 +31,7 @@ class LogViewerApp(App):
         ("/", "focus_search", "Search"),
         ("C", "toggle_case_sensitive", "Case"),
         ("m", "toggle_highlight_matches", "Highlight"),
+        ("f", "toggle_follow", "Follow"),
         ("question_mark", "show_feature_summary", "Help"),
         ("H", "show_history", "History"),
         ("c", "show_columns", "Columns"),
@@ -43,12 +47,25 @@ class LogViewerApp(App):
     case_sensitive: reactive[bool] = reactive(False)
     highlight_matches: reactive[bool] = reactive(False)
     columns: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
+    follow_mode: reactive[bool] = reactive(False)
 
-    def __init__(self, *, file: str | None = None, **kwargs: Any) -> None:  # noqa: ANN401
+    def __init__(
+        self,
+        *,
+        file: str | None = None,
+        follow: bool = False,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> None:
         super().__init__(**kwargs)
         self.initial_file = file
+        self._initial_follow = follow
         self._last_selected_log_entry: LogEntry | None = None
         self._field_counts: Counter[str] = Counter()
+        self._watcher: WatcherBase | None = None
+        self._watch_file: IO[bytes] | None = None
+        self._follow_buffer: str = ""
+        self._last_line_number: int = 0
+        self._follow_offset: int = 0
 
     def compose(self) -> ComposeResult:
         yield LogList(id="logs")
@@ -60,6 +77,8 @@ class LogViewerApp(App):
         self._update_search_bar_visibility()
         if self.initial_file:
             self.load_file(filepath=self.initial_file)
+        if self._initial_follow:
+            self.follow_mode = True
 
     def watch_logs(
         self, old_logs: list[LogEntry], logs: list[LogEntry]
@@ -220,6 +239,7 @@ class LogViewerApp(App):
         self.logs = logs
 
         self.filepath = filepath
+        self._follow_offset = path.stat().st_size
         self.selected_index = max(0, len(logs) - 1)
         log_list.loading = False
 
@@ -277,6 +297,94 @@ class LogViewerApp(App):
             return
         self.columns = columns
 
+    def action_toggle_follow(self) -> None:
+        if not self.filepath:
+            self.notify("No file loaded", severity="warning")
+            return
+        self.follow_mode = not self.follow_mode
+
+    def watch_follow_mode(self, follow_mode: bool) -> None:
+        if follow_mode:
+            self._start_follow()
+        else:
+            self._stop_follow()
+
+    def _start_follow(self) -> None:
+        if not self.filepath or self._watcher is not None:
+            return
+        self._last_line_number = len(self.logs)
+        self._follow_buffer = ""
+        self._watch_file = open(self.filepath, "rb")  # noqa: SIM115
+        self._watch_file.seek(self._follow_offset)
+
+        self._watcher = get_watcher()
+        self._watcher.watch(
+            fileno=self._watch_file.fileno(),
+            callback=self._on_watcher_data,
+            error_callback=self._on_watcher_error,
+        )
+        self._watcher.start()
+
+    def _stop_follow(self) -> None:
+        if self._watcher is not None:
+            self._watcher.close()  # signals exit and joins thread
+            self._watcher = None
+        if self._watch_file is not None:
+            self._follow_offset = self._watch_file.tell()
+            self._watch_file.close()
+            self._watch_file = None
+        self._follow_buffer = ""
+
+    def _on_watcher_data(self, chunk: bytes) -> None:
+        """Called from watcher thread — bridge to main thread."""
+        self.call_from_thread(self._process_chunk, chunk)
+
+    def _on_watcher_error(self, error: Exception) -> None:
+        """Called from watcher thread on error."""
+        self.call_from_thread(self.notify, str(error), severity="error")
+        self.call_from_thread(self._stop_follow_and_update)
+
+    def _stop_follow_and_update(self) -> None:
+        self.follow_mode = False
+
+    def _process_chunk(self, chunk: bytes) -> None:
+        """Decode chunk, split lines, parse JSON, append to logs."""
+        text = self._follow_buffer + chunk.decode("utf-8", errors="replace")
+
+        if text.endswith("\n"):
+            lines = text.split("\n")
+            self._follow_buffer = ""
+        else:
+            parts = text.split("\n")
+            lines = parts[:-1]
+            self._follow_buffer = parts[-1]
+
+        new_logs: list[LogEntry] = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                data = json.loads(line)
+                self._last_line_number += 1
+                log = LogEntry(
+                    line_number=self._last_line_number,
+                    data=data,
+                    raw_json=line,
+                )
+                new_logs.append(log)
+            except json.JSONDecodeError:
+                self.log.warning(f"Follow: invalid JSON: {line[:80]}")
+
+        if new_logs:
+            was_on_last = self.selected_index == len(self.filtered_logs) - 1
+            self.logs = [*self.logs, *new_logs]
+            if self.follow_mode and was_on_last:
+                self.selected_index = len(self.filtered_logs) - 1
+
+    def on_unmount(self) -> None:
+        self._stop_follow()
+
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         yield from super().get_system_commands(screen)
         yield SystemCommand(
@@ -304,6 +412,11 @@ class LogViewerApp(App):
             "Select which fields to display as columns",
             self.action_show_columns,
         )
+        yield SystemCommand(
+            "Toggle follow mode",
+            "Watch file for new log entries in real-time",
+            self.action_toggle_follow,
+        )
 
     def watch_filtered_logs(self) -> None:
         """Ensure selected_index stays in bounds."""
@@ -312,11 +425,7 @@ class LogViewerApp(App):
 
     def on_log_list_log_selected(self, event: LogList.LogSelected) -> None:
         """Open detail modal when log is selected."""
-        modal = DetailModal(
-            log_entry=event.log_entry,
-            current_index=self.selected_index,
-            logs=self.filtered_logs,
-        )
+        modal = DetailModal(log_entry=event.log_entry)
         self.push_screen(modal)
 
 
@@ -325,11 +434,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="JSON Logs Viewer")
     parser.add_argument("file", nargs="?", help="JSONL file to view")
     parser.add_argument(
-        "-f", "--follow", action="store_true", help="Follow mode (Phase 10)"
+        "-f", "--follow", action="store_true", help="Follow mode"
     )
     args = parser.parse_args()
 
-    app = LogViewerApp(file=args.file)
+    app = LogViewerApp(file=args.file, follow=args.follow)
     app.run()
 
 

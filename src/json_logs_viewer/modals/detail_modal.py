@@ -67,19 +67,27 @@ class DetailModal(ModalScreen[None]):
         self,
         *,
         log_entry: LogEntry,
-        current_index: int,
-        logs: list[LogEntry],
     ) -> None:
         super().__init__()
         self.log_entry = log_entry
-        self.current_index = current_index
-        self.logs = logs
         self._selection_timer: Timer | None = None
         self._last_selected_text: str = ""
 
     @property
     def _app(self) -> LogViewerApp:
         return cast("LogViewerApp", self.app)
+
+    @property
+    def current_index(self) -> int:
+        return self._app.selected_index
+
+    @current_index.setter
+    def current_index(self, value: int) -> None:
+        self._app.selected_index = value
+
+    @property
+    def logs(self) -> list[LogEntry]:
+        return self._app.filtered_logs
 
     def compose(self) -> ComposeResult:
         json_str = json.dumps(
@@ -96,14 +104,12 @@ class DetailModal(ModalScreen[None]):
         if self.current_index < len(self.logs) - 1:
             self.current_index += 1
             self.log_entry = self.logs[self.current_index]
-            self._app.selected_index = self.current_index
             self._update_content()
 
     def action_previous_log(self) -> None:
         if self.current_index > 0:
             self.current_index -= 1
             self.log_entry = self.logs[self.current_index]
-            self._app.selected_index = self.current_index
             self._update_content()
 
     def _update_content(self) -> None:

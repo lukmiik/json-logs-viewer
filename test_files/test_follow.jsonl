@@ -1,0 +1,157 @@
+{"timestamp": "2026-02-22T12:36:18.266475+00:00", "level": "INFO", "message": "Invalid input received", "service": "worker", "request_id": "req-2629", "latency_ms": 135}
+{"timestamp": "2026-02-22T12:36:18.266601+00:00", "level": "INFO", "message": "Request processed successfully", "service": "cache", "request_id": "req-8538", "latency_ms": 457}
+{"timestamp": "2026-02-22T12:36:18.266618+00:00", "level": "WARN", "message": "Rate limit exceeded", "service": "db", "request_id": "req-4048", "latency_ms": 451}
+{"timestamp": "2026-02-22T12:36:18.266631+00:00", "level": "WARN", "message": "Slow query detected", "service": "api", "request_id": "req-6747", "latency_ms": 407}
+{"timestamp": "2026-02-22T12:36:18.266642+00:00", "level": "INFO", "message": "Cache miss for key", "service": "api", "request_id": "req-2379", "latency_ms": 163}
+{"timestamp": "2026-02-22T12:36:18.266652+00:00", "level": "INFO", "message": "Rate limit exceeded", "service": "auth", "request_id": "req-3745", "latency_ms": 129}
+{"timestamp": "2026-02-22T12:36:18.266661+00:00", "level": "ERROR", "message": "Message published to queue", "service": "cache", "request_id": "req-5308", "latency_ms": 207}
+{"timestamp": "2026-02-22T12:36:18.266671+00:00", "level": "INFO", "message": "Request processed successfully", "service": "worker", "request_id": "req-4610", "latency_ms": 195}
+{"timestamp": "2026-02-22T12:36:18.266680+00:00", "level": "INFO", "message": "Message published to queue", "service": "api", "request_id": "req-6910", "latency_ms": 33}
+{"timestamp": "2026-02-22T12:36:18.266689+00:00", "level": "WARN", "message": "Message published to queue", "service": "cache", "request_id": "req-4823", "latency_ms": 117}
+{"timestamp": "2026-02-22T12:36:19.267099+00:00", "level": "INFO", "message": "Background job completed", "service": "api", "request_id": "req-3225", "latency_ms": 140}
+{"timestamp": "2026-02-22T12:36:19.267283+00:00", "level": "INFO", "message": "Authentication failed", "service": "auth", "request_id": "req-3550", "latency_ms": 410}
+{"timestamp": "2026-02-22T12:36:20.267837+00:00", "level": "DEBUG", "message": "Rate limit exceeded", "service": "cache", "request_id": "req-5996", "latency_ms": 222}
+{"timestamp": "2026-02-22T12:36:20.267975+00:00", "level": "ERROR", "message": "Invalid input received", "service": "cache", "request_id": "req-1074", "latency_ms": 259}
+{"timestamp": "2026-02-22T12:36:21.268560+00:00", "level": "INFO", "message": "Authentication failed", "service": "db", "request_id": "req-6430", "latency_ms": 120}
+{"timestamp": "2026-02-22T12:36:21.268685+00:00", "level": "INFO", "message": "Connection established", "service": "cache", "request_id": "req-1743", "latency_ms": 130}
+{"timestamp": "2026-02-22T12:36:22.269209+00:00", "level": "DEBUG", "message": "TLS handshake failed", "service": "cache", "request_id": "req-5010", "latency_ms": 146}
+{"timestamp": "2026-02-22T12:36:23.269893+00:00", "level": "WARN", "message": "Timeout waiting for response", "service": "api", "request_id": "req-6344", "latency_ms": 58}
+{"timestamp": "2026-02-22T12:36:23.270023+00:00", "level": "INFO", "message": "Schema validation error", "service": "api", "request_id": "req-8669", "latency_ms": 68}
+{"timestamp": "2026-02-22T12:36:23.270087+00:00", "level": "INFO", "message": "Background job completed", "service": "worker", "request_id": "req-6058", "latency_ms": 117}
+{"timestamp": "2026-02-22T12:36:23.270138+00:00", "level": "DEBUG", "message": "Background job completed", "service": "db", "request_id": "req-3150", "latency_ms": 409}
+{"timestamp": "2026-02-22T12:36:24.270491+00:00", "level": "INFO", "message": "Background job completed", "service": "api", "request_id": "req-3459", "latency_ms": 35}
+{"timestamp": "2026-02-22T12:36:24.270524+00:00", "level": "INFO", "message": "Message published to queue", "service": "auth", "request_id": "req-8026", "latency_ms": 342}
+{"timestamp": "2026-02-22T12:36:25.270704+00:00", "level": "INFO", "message": "Schema validation error", "service": "db", "request_id": "req-5939", "latency_ms": 373}
+{"timestamp": "2026-02-22T12:36:25.270739+00:00", "level": "DEBUG", "message": "Authentication failed", "service": "api", "request_id": "req-6368", "latency_ms": 469}
+{"timestamp": "2026-02-22T12:36:26.270990+00:00", "level": "DEBUG", "message": "Authentication failed", "service": "api", "request_id": "req-2354", "latency_ms": 485}
+{"timestamp": "2026-02-22T12:36:26.271056+00:00", "level": "INFO", "message": "Health check passed", "service": "db", "request_id": "req-7362", "latency_ms": 86}
+{"timestamp": "2026-02-22T12:36:27.271538+00:00", "level": "INFO", "message": "TLS handshake failed", "service": "worker", "request_id": "req-5342", "latency_ms": 68}
+{"timestamp": "2026-02-22T12:36:28.272169+00:00", "level": "INFO", "message": "Rate limit exceeded", "service": "api", "request_id": "req-3861", "latency_ms": 282}
+{"timestamp": "2026-02-22T12:36:28.272333+00:00", "level": "ERROR", "message": "Message published to queue", "service": "worker", "request_id": "req-2184", "latency_ms": 445}
+{"timestamp": "2026-02-22T12:36:28.272397+00:00", "level": "INFO", "message": "Authentication failed", "service": "api", "request_id": "req-7382", "latency_ms": 262}
+{"timestamp": "2026-02-22T12:36:28.272447+00:00", "level": "INFO", "message": "Timeout waiting for response", "service": "cache", "request_id": "req-4360", "latency_ms": 169}
+{"timestamp": "2026-02-22T12:36:29.273010+00:00", "level": "ERROR", "message": "Message published to queue", "service": "db", "request_id": "req-3082", "latency_ms": 172}
+{"timestamp": "2026-02-22T12:36:29.273140+00:00", "level": "INFO", "message": "Authentication failed", "service": "db", "request_id": "req-7682", "latency_ms": 253}
+{"timestamp": "2026-02-22T12:36:29.273200+00:00", "level": "DEBUG", "message": "Message published to queue", "service": "api", "request_id": "req-7829", "latency_ms": 211}
+{"timestamp": "2026-02-22T12:36:29.273250+00:00", "level": "INFO", "message": "Health check passed", "service": "worker", "request_id": "req-3660", "latency_ms": 225}
+{"timestamp": "2026-02-22T12:36:30.273872+00:00", "level": "DEBUG", "message": "Background job completed", "service": "api", "request_id": "req-3339", "latency_ms": 256}
+{"timestamp": "2026-02-22T12:36:30.273998+00:00", "level": "DEBUG", "message": "TLS handshake failed", "service": "worker", "request_id": "req-8189", "latency_ms": 377}
+{"timestamp": "2026-02-22T12:36:30.274058+00:00", "level": "INFO", "message": "TLS handshake failed", "service": "api", "request_id": "req-2135", "latency_ms": 322}
+{"timestamp": "2026-02-22T12:36:30.274106+00:00", "level": "WARN", "message": "Request processed successfully", "service": "auth", "request_id": "req-2509", "latency_ms": 483}
+{"timestamp": "2026-02-22T12:36:31.274660+00:00", "level": "INFO", "message": "Database connection pool exhausted", "service": "worker", "request_id": "req-2106", "latency_ms": 178}
+{"timestamp": "2026-02-22T12:36:31.274790+00:00", "level": "ERROR", "message": "Health check passed", "service": "api", "request_id": "req-4745", "latency_ms": 356}
+{"timestamp": "2026-02-22T12:36:32.275473+00:00", "level": "DEBUG", "message": "Message published to queue", "service": "api", "request_id": "req-5441", "latency_ms": 300}
+{"timestamp": "2026-02-22T12:36:32.275569+00:00", "level": "ERROR", "message": "Slow query detected", "service": "auth", "request_id": "req-9957", "latency_ms": 377}
+{"timestamp": "2026-02-22T12:36:32.275598+00:00", "level": "ERROR", "message": "Request processed successfully", "service": "cache", "request_id": "req-9454", "latency_ms": 208}
+{"timestamp": "2026-02-22T12:36:32.275619+00:00", "level": "ERROR", "message": "Rate limit exceeded", "service": "cache", "request_id": "req-9064", "latency_ms": 325}
+{"timestamp": "2026-02-22T12:36:32.275637+00:00", "level": "ERROR", "message": "Background job completed", "service": "auth", "request_id": "req-5853", "latency_ms": 324}
+{"timestamp": "2026-02-22T12:36:33.275864+00:00", "level": "WARN", "message": "Schema validation error", "service": "api", "request_id": "req-3653", "latency_ms": 397}
+{"timestamp": "2026-02-22T12:36:34.276136+00:00", "level": "WARN", "message": "Invalid input received", "service": "worker", "request_id": "req-8171", "latency_ms": 40}
+{"timestamp": "2026-02-22T12:36:34.276227+00:00", "level": "WARN", "message": "Authentication failed", "service": "worker", "request_id": "req-7031", "latency_ms": 489}
+{"timestamp": "2026-02-22T12:36:34.276271+00:00", "level": "DEBUG", "message": "Connection established", "service": "auth", "request_id": "req-4154", "latency_ms": 445}
+{"timestamp": "2026-02-22T12:36:34.276300+00:00", "level": "INFO", "message": "Message published to queue", "service": "worker", "request_id": "req-9373", "latency_ms": 200}
+{"timestamp": "2026-02-22T12:36:35.276645+00:00", "level": "INFO", "message": "Retry attempt", "service": "api", "request_id": "req-1998", "latency_ms": 174}
+{"timestamp": "2026-02-22T12:36:35.276734+00:00", "level": "INFO", "message": "Cache miss for key", "service": "worker", "request_id": "req-1021", "latency_ms": 469}
+{"timestamp": "2026-02-22T12:36:36.277064+00:00", "level": "INFO", "message": "Message published to queue", "service": "worker", "request_id": "req-4072", "latency_ms": 62}
+{"timestamp": "2026-02-22T12:36:36.277149+00:00", "level": "ERROR", "message": "Timeout waiting for response", "service": "cache", "request_id": "req-6980", "latency_ms": 1}
+{"timestamp": "2026-02-22T12:36:37.277514+00:00", "level": "WARN", "message": "Background job completed", "service": "worker", "request_id": "req-2651", "latency_ms": 169}
+{"timestamp": "2026-02-22T12:36:37.277610+00:00", "level": "ERROR", "message": "TLS handshake failed", "service": "auth", "request_id": "req-7658", "latency_ms": 19}
+{"timestamp": "2026-02-22T12:36:37.277638+00:00", "level": "INFO", "message": "Timeout waiting for response", "service": "worker", "request_id": "req-7694", "latency_ms": 400}
+{"timestamp": "2026-02-22T12:36:37.277660+00:00", "level": "DEBUG", "message": "Timeout waiting for response", "service": "auth", "request_id": "req-1746", "latency_ms": 285}
+{"timestamp": "2026-02-22T12:36:37.277678+00:00", "level": "INFO", "message": "Cache miss for key", "service": "api", "request_id": "req-3961", "latency_ms": 357}
+{"timestamp": "2026-02-22T12:36:38.277986+00:00", "level": "WARN", "message": "Database connection pool exhausted", "service": "db", "request_id": "req-3989", "latency_ms": 249}
+{"timestamp": "2026-02-22T12:36:39.278392+00:00", "level": "ERROR", "message": "Cache miss for key", "service": "api", "request_id": "req-8969", "latency_ms": 420}
+{"timestamp": "2026-02-22T12:36:39.278485+00:00", "level": "DEBUG", "message": "Invalid input received", "service": "cache", "request_id": "req-7373", "latency_ms": 273}
+{"timestamp": "2026-02-22T12:36:39.278513+00:00", "level": "INFO", "message": "Background job completed", "service": "db", "request_id": "req-5803", "latency_ms": 282}
+{"timestamp": "2026-02-22T12:36:40.278869+00:00", "level": "INFO", "message": "Retry attempt", "service": "worker", "request_id": "req-4487", "latency_ms": 481}
+{"timestamp": "2026-02-22T12:36:40.278984+00:00", "level": "WARN", "message": "Background job completed", "service": "api", "request_id": "req-5987", "latency_ms": 467}
+{"timestamp": "2026-02-22T12:36:40.279013+00:00", "level": "ERROR", "message": "Request processed successfully", "service": "api", "request_id": "req-9624", "latency_ms": 290}
+{"timestamp": "2026-02-22T12:36:40.279034+00:00", "level": "ERROR", "message": "Invalid input received", "service": "worker", "request_id": "req-7758", "latency_ms": 51}
+{"timestamp": "2026-02-22T12:36:40.279053+00:00", "level": "ERROR", "message": "Slow query detected", "service": "db", "request_id": "req-8766", "latency_ms": 84}
+{"timestamp": "2026-02-22T12:36:41.279411+00:00", "level": "INFO", "message": "Retry attempt", "service": "api", "request_id": "req-7108", "latency_ms": 464}
+{"timestamp": "2026-02-22T12:36:42.279806+00:00", "level": "INFO", "message": "Cache miss for key", "service": "api", "request_id": "req-3281", "latency_ms": 204}
+{"timestamp": "2026-02-22T12:36:42.279891+00:00", "level": "INFO", "message": "Message published to queue", "service": "db", "request_id": "req-2290", "latency_ms": 355}
+{"timestamp": "2026-02-22T12:36:42.279919+00:00", "level": "INFO", "message": "Slow query detected", "service": "worker", "request_id": "req-5737", "latency_ms": 212}
+{"timestamp": "2026-02-22T12:36:43.280245+00:00", "level": "WARN", "message": "Authentication failed", "service": "auth", "request_id": "req-2974", "latency_ms": 82}
+{"timestamp": "2026-02-22T12:36:43.280399+00:00", "level": "INFO", "message": "Retry attempt", "service": "auth", "request_id": "req-3425", "latency_ms": 356}
+{"timestamp": "2026-02-22T12:36:43.280457+00:00", "level": "ERROR", "message": "Health check passed", "service": "db", "request_id": "req-8271", "latency_ms": 327}
+{"timestamp": "2026-02-22T12:36:44.280796+00:00", "level": "INFO", "message": "Background job completed", "service": "cache", "request_id": "req-6469", "latency_ms": 190}
+{"timestamp": "2026-02-22T12:36:44.280893+00:00", "level": "WARN", "message": "Slow query detected", "service": "auth", "request_id": "req-5785", "latency_ms": 140}
+{"timestamp": "2026-02-22T12:36:44.280920+00:00", "level": "ERROR", "message": "Rate limit exceeded", "service": "auth", "request_id": "req-6626", "latency_ms": 421}
+{"timestamp": "2026-02-22T12:36:44.280942+00:00", "level": "DEBUG", "message": "Connection established", "service": "db", "request_id": "req-1286", "latency_ms": 202}
+{"timestamp": "2026-02-22T12:36:44.280960+00:00", "level": "ERROR", "message": "Authentication failed", "service": "cache", "request_id": "req-1531", "latency_ms": 186}
+{"timestamp": "2026-02-22T12:36:45.281295+00:00", "level": "DEBUG", "message": "Retry attempt", "service": "auth", "request_id": "req-7496", "latency_ms": 170}
+{"timestamp": "2026-02-22T12:36:45.281395+00:00", "level": "ERROR", "message": "Timeout waiting for response", "service": "worker", "request_id": "req-4730", "latency_ms": 387}
+{"timestamp": "2026-02-22T12:36:45.281423+00:00", "level": "INFO", "message": "Rate limit exceeded", "service": "worker", "request_id": "req-1968", "latency_ms": 23}
+{"timestamp": "2026-02-22T12:36:46.282465+00:00", "level": "ERROR", "message": "Health check passed", "service": "auth", "request_id": "req-1821", "latency_ms": 432}
+{"timestamp": "2026-02-22T12:36:46.282576+00:00", "level": "WARN", "message": "Request processed successfully", "service": "api", "request_id": "req-5578", "latency_ms": 35}
+{"timestamp": "2026-02-22T12:36:47.282982+00:00", "level": "WARN", "message": "Authentication failed", "service": "auth", "request_id": "req-7319", "latency_ms": 38}
+{"timestamp": "2026-02-22T12:36:47.283069+00:00", "level": "ERROR", "message": "Message published to queue", "service": "db", "request_id": "req-5164", "latency_ms": 13}
+{"timestamp": "2026-02-22T12:36:47.283096+00:00", "level": "INFO", "message": "Cache miss for key", "service": "worker", "request_id": "req-5486", "latency_ms": 320}
+{"timestamp": "2026-02-22T12:36:48.283429+00:00", "level": "WARN", "message": "Background job completed", "service": "db", "request_id": "req-9324", "latency_ms": 147}
+{"timestamp": "2026-02-22T12:36:48.283515+00:00", "level": "WARN", "message": "Cache miss for key", "service": "auth", "request_id": "req-3212", "latency_ms": 45}
+{"timestamp": "2026-02-22T12:36:48.283541+00:00", "level": "ERROR", "message": "Retry attempt", "service": "cache", "request_id": "req-4309", "latency_ms": 206}
+{"timestamp": "2026-02-22T12:36:49.283859+00:00", "level": "ERROR", "message": "Health check passed", "service": "worker", "request_id": "req-3366", "latency_ms": 161}
+{"timestamp": "2026-02-22T12:36:49.283946+00:00", "level": "WARN", "message": "TLS handshake failed", "service": "api", "request_id": "req-6205", "latency_ms": 44}
+{"timestamp": "2026-02-22T12:36:49.283974+00:00", "level": "INFO", "message": "Rate limit exceeded", "service": "cache", "request_id": "req-7765", "latency_ms": 183}
+{"timestamp": "2026-02-22T12:36:50.284316+00:00", "level": "INFO", "message": "TLS handshake failed", "service": "db", "request_id": "req-1269", "latency_ms": 80}
+{"timestamp": "2026-02-22T12:36:50.284393+00:00", "level": "WARN", "message": "TLS handshake failed", "service": "cache", "request_id": "req-2770", "latency_ms": 10}
+{"timestamp": "2026-02-22T12:36:51.284751+00:00", "level": "DEBUG", "message": "Schema validation error", "service": "worker", "request_id": "req-2854", "latency_ms": 293}
+{"timestamp": "2026-02-22T12:36:51.284847+00:00", "level": "WARN", "message": "Background job completed", "service": "cache", "request_id": "req-8458", "latency_ms": 314}
+{"timestamp": "2026-02-22T12:36:51.284875+00:00", "level": "ERROR", "message": "Cache miss for key", "service": "api", "request_id": "req-5391", "latency_ms": 108}
+{"timestamp": "2026-02-22T12:36:51.284897+00:00", "level": "DEBUG", "message": "Retry attempt", "service": "db", "request_id": "req-8627", "latency_ms": 108}
+{"timestamp": "2026-02-22T12:36:51.284917+00:00", "level": "WARN", "message": "Authentication failed", "service": "db", "request_id": "req-2959", "latency_ms": 290}
+{"timestamp": "2026-02-22T12:36:52.285278+00:00", "level": "DEBUG", "message": "Connection established", "service": "api", "request_id": "req-6202", "latency_ms": 163}
+{"timestamp": "2026-02-22T12:36:52.285373+00:00", "level": "ERROR", "message": "Database connection pool exhausted", "service": "cache", "request_id": "req-1362", "latency_ms": 405}
+{"timestamp": "2026-02-22T12:36:52.285402+00:00", "level": "ERROR", "message": "Schema validation error", "service": "worker", "request_id": "req-2371", "latency_ms": 385}
+{"timestamp": "2026-02-22T12:36:53.285735+00:00", "level": "INFO", "message": "Message published to queue", "service": "auth", "request_id": "req-7035", "latency_ms": 389}
+{"timestamp": "2026-02-22T12:36:53.285830+00:00", "level": "WARN", "message": "Authentication failed", "service": "worker", "request_id": "req-7909", "latency_ms": 491}
+{"timestamp": "2026-02-22T12:36:53.285856+00:00", "level": "INFO", "message": "Slow query detected", "service": "worker", "request_id": "req-3021", "latency_ms": 251}
+{"timestamp": "2026-02-22T12:36:53.285877+00:00", "level": "INFO", "message": "TLS handshake failed", "service": "auth", "request_id": "req-8844", "latency_ms": 172}
+{"timestamp": "2026-02-22T12:36:53.285896+00:00", "level": "INFO", "message": "Database connection pool exhausted", "service": "api", "request_id": "req-3950", "latency_ms": 361}
+{"timestamp": "2026-02-22T12:36:54.286182+00:00", "level": "WARN", "message": "Health check passed", "service": "cache", "request_id": "req-4306", "latency_ms": 173}
+{"timestamp": "2026-02-22T12:36:54.286241+00:00", "level": "DEBUG", "message": "Database connection pool exhausted", "service": "api", "request_id": "req-5763", "latency_ms": 299}
+{"timestamp": "2026-02-22T12:36:55.286504+00:00", "level": "WARN", "message": "Health check passed", "service": "auth", "request_id": "req-5659", "latency_ms": 317}
+{"timestamp": "2026-02-22T12:36:56.286801+00:00", "level": "INFO", "message": "Timeout waiting for response", "service": "worker", "request_id": "req-4431", "latency_ms": 64}
+{"timestamp": "2026-02-22T12:36:56.286894+00:00", "level": "DEBUG", "message": "Database connection pool exhausted", "service": "auth", "request_id": "req-5154", "latency_ms": 278}
+{"timestamp": "2026-02-22T12:36:56.286921+00:00", "level": "WARN", "message": "Database connection pool exhausted", "service": "auth", "request_id": "req-2901", "latency_ms": 447}
+{"timestamp": "2026-02-22T12:36:56.286942+00:00", "level": "INFO", "message": "Rate limit exceeded", "service": "db", "request_id": "req-2716", "latency_ms": 120}
+{"timestamp": "2026-02-22T12:36:57.287385+00:00", "level": "ERROR", "message": "Timeout waiting for response", "service": "cache", "request_id": "req-5554", "latency_ms": 462}
+{"timestamp": "2026-02-22T12:36:57.287473+00:00", "level": "ERROR", "message": "Connection established", "service": "db", "request_id": "req-3786", "latency_ms": 288}
+{"timestamp": "2026-02-22T12:36:58.287918+00:00", "level": "WARN", "message": "Request processed successfully", "service": "cache", "request_id": "req-8938", "latency_ms": 468}
+{"timestamp": "2026-02-22T12:36:58.288017+00:00", "level": "INFO", "message": "Schema validation error", "service": "worker", "request_id": "req-1658", "latency_ms": 156}
+{"timestamp": "2026-02-22T12:36:58.288045+00:00", "level": "INFO", "message": "Background job completed", "service": "cache", "request_id": "req-2349", "latency_ms": 409}
+{"timestamp": "2026-02-22T12:36:58.288064+00:00", "level": "INFO", "message": "Schema validation error", "service": "api", "request_id": "req-4207", "latency_ms": 20}
+{"timestamp": "2026-02-22T12:36:58.288083+00:00", "level": "DEBUG", "message": "Timeout waiting for response", "service": "worker", "request_id": "req-5401", "latency_ms": 278}
+{"timestamp": "2026-02-22T12:36:59.288504+00:00", "level": "DEBUG", "message": "Timeout waiting for response", "service": "auth", "request_id": "req-2012", "latency_ms": 22}
+{"timestamp": "2026-02-22T12:36:59.288593+00:00", "level": "INFO", "message": "Invalid input received", "service": "auth", "request_id": "req-2266", "latency_ms": 278}
+{"timestamp": "2026-02-22T12:37:00.288996+00:00", "level": "ERROR", "message": "Cache miss for key", "service": "api", "request_id": "req-3315", "latency_ms": 101}
+{"timestamp": "2026-02-22T12:37:00.289096+00:00", "level": "INFO", "message": "Slow query detected", "service": "cache", "request_id": "req-4070", "latency_ms": 462}
+{"timestamp": "2026-02-22T12:37:00.289124+00:00", "level": "ERROR", "message": "Background job completed", "service": "auth", "request_id": "req-1457", "latency_ms": 169}
+{"timestamp": "2026-02-22T12:37:00.289145+00:00", "level": "WARN", "message": "Rate limit exceeded", "service": "cache", "request_id": "req-6106", "latency_ms": 218}
+{"timestamp": "2026-02-22T12:37:00.289162+00:00", "level": "INFO", "message": "Database connection pool exhausted", "service": "worker", "request_id": "req-9300", "latency_ms": 434}
+{"timestamp": "2026-02-22T12:37:01.289521+00:00", "level": "ERROR", "message": "Connection established", "service": "cache", "request_id": "req-8018", "latency_ms": 468}
+{"timestamp": "2026-02-22T12:37:01.289610+00:00", "level": "ERROR", "message": "Retry attempt", "service": "worker", "request_id": "req-1609", "latency_ms": 56}
+{"timestamp": "2026-02-22T12:37:01.289638+00:00", "level": "INFO", "message": "Request processed successfully", "service": "auth", "request_id": "req-1957", "latency_ms": 434}
+{"timestamp": "2026-02-22T12:37:01.289658+00:00", "level": "INFO", "message": "Rate limit exceeded", "service": "api", "request_id": "req-9596", "latency_ms": 419}
+{"timestamp": "2026-02-22T12:37:01.289676+00:00", "level": "INFO", "message": "Health check passed", "service": "db", "request_id": "req-9392", "latency_ms": 436}
+{"timestamp": "2026-02-22T12:37:02.290008+00:00", "level": "INFO", "message": "Background job completed", "service": "api", "request_id": "req-5693", "latency_ms": 403}
+{"timestamp": "2026-02-22T12:37:02.290101+00:00", "level": "WARN", "message": "Background job completed", "service": "auth", "request_id": "req-6503", "latency_ms": 107}
+{"timestamp": "2026-02-22T12:37:02.290128+00:00", "level": "ERROR", "message": "Background job completed", "service": "api", "request_id": "req-3251", "latency_ms": 314}
+{"timestamp": "2026-02-22T12:37:02.290149+00:00", "level": "DEBUG", "message": "Timeout waiting for response", "service": "db", "request_id": "req-4964", "latency_ms": 60}
+{"timestamp": "2026-02-22T12:37:03.290501+00:00", "level": "DEBUG", "message": "Database connection pool exhausted", "service": "cache", "request_id": "req-8068", "latency_ms": 130}
+{"timestamp": "2026-02-22T12:37:03.290584+00:00", "level": "WARN", "message": "Cache miss for key", "service": "worker", "request_id": "req-5721", "latency_ms": 317}
+{"timestamp": "2026-02-22T12:37:03.290610+00:00", "level": "DEBUG", "message": "Database connection pool exhausted", "service": "auth", "request_id": "req-4843", "latency_ms": 205}
+{"timestamp": "2026-02-22T12:37:03.290630+00:00", "level": "INFO", "message": "Invalid input received", "service": "cache", "request_id": "req-8602", "latency_ms": 403}
+{"timestamp": "2026-02-22T12:37:03.290647+00:00", "level": "INFO", "message": "Health check passed", "service": "api", "request_id": "req-4726", "latency_ms": 218}
+{"timestamp": "2026-02-22T12:37:04.290888+00:00", "level": "WARN", "message": "Schema validation error", "service": "worker", "request_id": "req-1710", "latency_ms": 364}
+{"timestamp": "2026-02-22T12:37:04.290917+00:00", "level": "INFO", "message": "Schema validation error", "service": "cache", "request_id": "req-5170", "latency_ms": 498}
+{"timestamp": "2026-02-22T12:37:04.290924+00:00", "level": "DEBUG", "message": "Retry attempt", "service": "db", "request_id": "req-4384", "latency_ms": 180}
+{"timestamp": "2026-02-22T12:37:05.291192+00:00", "level": "WARN", "message": "Authentication failed", "service": "cache", "request_id": "req-2641", "latency_ms": 35}
+{"timestamp": "2026-02-22T12:37:05.291311+00:00", "level": "ERROR", "message": "Health check passed", "service": "auth", "request_id": "req-6443", "latency_ms": 179}
+{"timestamp": "2026-02-22T12:37:05.291348+00:00", "level": "INFO", "message": "Request processed successfully", "service": "api", "request_id": "req-5989", "latency_ms": 368}
+{"timestamp": "2026-02-22T12:37:06.291731+00:00", "level": "DEBUG", "message": "Cache miss for key", "service": "db", "request_id": "req-6997", "latency_ms": 464}
+{"timestamp": "2026-02-22T12:37:06.291825+00:00", "level": "INFO", "message": "Request processed successfully", "service": "api", "request_id": "req-3999", "latency_ms": 59}
+{"timestamp": "2026-02-22T12:37:07.292048+00:00", "level": "ERROR", "message": "Schema validation error", "service": "db", "request_id": "req-4312", "latency_ms": 8}
+{"timestamp": "2026-02-22T12:37:07.292074+00:00", "level": "INFO", "message": "Database connection pool exhausted", "service": "db", "request_id": "req-9876", "latency_ms": 453}
+{"timestamp": "2026-02-22T12:37:08.292349+00:00", "level": "INFO", "message": "Timeout waiting for response", "service": "api", "request_id": "req-1816", "latency_ms": 202}
