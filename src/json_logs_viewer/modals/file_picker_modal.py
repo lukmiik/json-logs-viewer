@@ -6,6 +6,7 @@ from pathlib import Path
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.reactive import reactive
 from textual.screen import ModalScreen
 from textual.widgets import DirectoryTree
 
@@ -15,11 +16,13 @@ ALLOWED_EXTENSIONS: set[str] = {".json", ".jsonl"}
 class FilteredDirectoryTree(DirectoryTree):
     """DirectoryTree filtering hidden and non-JSON files."""
 
+    show_hidden: reactive[bool] = reactive(False)
+
     def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
         return [
             path
             for path in paths
-            if not path.name.startswith(".")
+            if (self.show_hidden or not path.name.startswith("."))
             and (path.is_dir() or path.suffix in ALLOWED_EXTENSIONS)
         ]
 
@@ -56,6 +59,7 @@ class FilePickerModal(ModalScreen[str | None]):
         ("l", "expand_node", "Expand"),
         ("h", "collapse_node", "Collapse"),
         Binding("G", "scroll_end", "Bottom", show=False),
+        (".", "toggle_hidden", "Toggle hidden"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -64,7 +68,7 @@ class FilePickerModal(ModalScreen[str | None]):
 
         dialog.border_title = "Open File"
         dialog.border_subtitle = (
-            "ENTER: open | h/l: collapse/expand | ESC: cancel"
+            "ENTER: open | h/l: collapse/expand | .: hidden | ESC: cancel"
         )
 
     def on_directory_tree_file_selected(
@@ -101,3 +105,8 @@ class FilePickerModal(ModalScreen[str | None]):
 
     def action_scroll_end(self) -> None:
         self._get_tree().action_scroll_end()
+
+    def action_toggle_hidden(self) -> None:
+        tree = self._get_tree()
+        tree.show_hidden = not tree.show_hidden
+        tree.reload()
