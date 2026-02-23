@@ -39,6 +39,7 @@ class DetailModal(ModalScreen[None]):
         height: 80%;
         border: heavy $block-cursor-background;
         padding: 0;
+        scrollbar-size: 1 1;
     }
 
     DetailModal #json-content {
@@ -46,6 +47,8 @@ class DetailModal(ModalScreen[None]):
         width: 100%;
         border: none;
         background: transparent;
+        scrollbar-size-vertical: 1;
+        scrollbar-size-horizontal: 1;
     }
 
     DetailModal #json-content:focus {
