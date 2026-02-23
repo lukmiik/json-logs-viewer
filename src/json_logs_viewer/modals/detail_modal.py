@@ -64,6 +64,10 @@ class DetailModal(ModalScreen[None]):
         Binding("escape,q", "dismiss", "Close", show=True),
         Binding("y", "copy_log", "Copy", show=True),
         Binding("Y", "copy_log_with_context", "Copy+", show=True),
+        Binding("ctrl+d", "scroll_down", "Page Down", show=True),
+        Binding("ctrl+u", "scroll_up", "Page Up", show=True),
+        Binding("g", "scroll_top", "Top", show=False),
+        Binding("G", "scroll_bottom", "Bottom", show=False),
     ]
 
     def __init__(
@@ -101,7 +105,7 @@ class DetailModal(ModalScreen[None]):
             yield TextArea(json_str, id="json-content", read_only=True)
             yield Footer()
         dialog.border_title = "Log Detail"
-        dialog.border_subtitle = "j/k: navigate | ESC: close"
+        dialog.border_subtitle = "j/k: nav | ctrl+d/u: scroll | ESC: close"
 
     def action_next_log(self) -> None:
         if self.current_index < len(self.logs) - 1:
@@ -161,3 +165,15 @@ class DetailModal(ModalScreen[None]):
         self.app.copy_to_clipboard(text)
         count = len(context_logs)
         self.notify(f"Copied {count} logs to clipboard")
+
+    def action_scroll_down(self) -> None:
+        self.query_one("#json-content", TextArea).action_page_down()
+
+    def action_scroll_up(self) -> None:
+        self.query_one("#json-content", TextArea).action_page_up()
+
+    def action_scroll_top(self) -> None:
+        self.query_one("#json-content", TextArea).action_scroll_home()
+
+    def action_scroll_bottom(self) -> None:
+        self.query_one("#json-content", TextArea).action_scroll_end()

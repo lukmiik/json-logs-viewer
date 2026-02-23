@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.screen import ModalScreen
 from textual.timer import Timer
 from textual.widgets import TextArea
@@ -29,7 +30,13 @@ class FeatureSummaryModal(ModalScreen[None]):
     }
     """
 
-    BINDINGS = [("escape", "dismiss", "Close")]
+    BINDINGS = [
+        ("escape", "dismiss", "Close"),
+        Binding("ctrl+d", "scroll_down", "Page Down", show=True),
+        Binding("ctrl+u", "scroll_up", "Page Up", show=True),
+        Binding("g", "scroll_top", "Top", show=False),
+        Binding("G", "scroll_bottom", "Bottom", show=False),
+    ]
 
     def __init__(self) -> None:
         super().__init__()
@@ -55,6 +62,8 @@ class FeatureSummaryModal(ModalScreen[None]):
             "Detail View\n"
             "  Enter        Open pretty-printed JSON detail\n"
             "  j/k          Navigate between logs in detail\n"
+            "  ctrl+d/u     Scroll page down/up\n"
+            "  g/G          Scroll to top/bottom\n"
             "  Esc/q        Close detail view\n\n"
             "Copy\n"
             "  y            Copy current log as JSON\n"
@@ -92,3 +101,19 @@ class FeatureSummaryModal(ModalScreen[None]):
             self._last_selected_text = ""
             ta = self.query_one("#feature-summary-content", TextArea)
             ta.selection = Selection.cursor(ta.cursor_location)
+
+    def action_scroll_down(self) -> None:
+        self.query_one("#feature-summary-content", TextArea).action_page_down()
+
+    def action_scroll_up(self) -> None:
+        self.query_one("#feature-summary-content", TextArea).action_page_up()
+
+    def action_scroll_top(self) -> None:
+        self.query_one(
+            "#feature-summary-content", TextArea
+        ).action_scroll_home()
+
+    def action_scroll_bottom(self) -> None:
+        self.query_one(
+            "#feature-summary-content", TextArea
+        ).action_scroll_end()
