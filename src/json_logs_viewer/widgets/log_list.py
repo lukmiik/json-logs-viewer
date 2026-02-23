@@ -653,6 +653,11 @@ class LogList(ScrollView):
             self._scroll_cursor_into_view()
             self.refresh()
 
+            if event.chain == 2:
+                self.post_message(
+                    self.LogSelected(log_entry=self._log_entries[entry_idx])
+                )
+
     def action_select_cursor(self) -> None:
         if 0 <= self._cursor_index < len(self._log_entries):
             log = self._log_entries[self._cursor_index]
