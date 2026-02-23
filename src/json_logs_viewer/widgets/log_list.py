@@ -8,6 +8,7 @@ from rich.style import Style
 from rich.text import Text
 from textual.binding import Binding
 from textual.cache import LRUCache
+from textual.events import Click
 from textual.geometry import Size
 from textual.message import Message
 from textual.scroll_view import ScrollView
@@ -631,6 +632,26 @@ class LogList(ScrollView):
         else:
             self.scroll_to(y=last, animate=False)
         self.refresh()
+
+    def on_click(self, event: Click) -> None:
+        """Select the log entry under the mouse click."""
+        content_y = event.y - self.gutter.top
+        row = int(content_y + self.scroll_offset.y)
+
+        if self._wrap_mode and self._wrapped_lines:
+            if 0 <= row < len(self._wrapped_lines):
+                entry_idx, _ = self._wrapped_lines[row]
+            else:
+                return
+        else:
+            entry_idx = row
+
+        if 0 <= entry_idx < len(self._log_entries):
+            self._cursor_index = entry_idx
+            if self._app:
+                self._app.selected_index = entry_idx
+            self._scroll_cursor_into_view()
+            self.refresh()
 
     def action_select_cursor(self) -> None:
         if 0 <= self._cursor_index < len(self._log_entries):
