@@ -473,7 +473,21 @@ def main() -> None:
     parser.add_argument(
         "-f", "--follow", action="store_true", help="Follow mode"
     )
+    parser.add_argument(
+        "--serve", action="store_true", help="Serve app in browser"
+    )
     args = parser.parse_args()
+
+    if args.serve:
+        from textual_serve.server import Server
+
+        cmd = "json-logs-viewer"
+        if args.file:
+            cmd += f" {args.file}"
+        if args.follow:
+            cmd += " --follow"
+        Server(cmd).serve()
+        return
 
     app = LogViewerApp(
         file=args.file,
