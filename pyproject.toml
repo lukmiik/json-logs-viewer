@@ -60,6 +60,7 @@ extend-select = ["E501"]
 
 [project.scripts]
 json-logs-viewer = "json_logs_viewer:main"
+jlv = "json_logs_viewer:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
