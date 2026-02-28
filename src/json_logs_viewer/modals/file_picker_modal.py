@@ -18,6 +18,12 @@ class FilteredDirectoryTree(DirectoryTree):
 
     show_hidden: reactive[bool] = reactive(False)
 
+    async def _reload_for_path(self) -> None:
+        await super().watch_path()
+
+    def watch_path(self) -> None:  # type: ignore[override]
+        self.call_next(self._reload_for_path)
+
     def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:
         return [
             path
