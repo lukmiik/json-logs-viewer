@@ -1,369 +1,175 @@
-# Architecture Guidelines
+# Architecture
 
-## Overview
+jlv is a single-screen Textual app. All state lives in memory on the `App`
+as reactive attributes. Widgets subscribe to those attributes and redraw
+themselves when they change. Nothing is persisted between runs.
 
-This document describes the architecture of the JSON Logs Viewer TUI application. The
-architecture prioritizes simplicity for the MVP with all data stored in memory.
-
-## Design Principles
-
-1. **Simplicity First**: Everything stored in memory, no persistence between sessions
-2. **Reactive UI**: Textual's reactive system for state management
-3. **Keyboard-Centric**: Vim-like keybindings throughout
-4. **Modular Components**: Clear separation between UI, business logic, and data
-
-## Architecture Layers
+## Layout
 
 ```
-┌─────────────────────────────────────────┐
-│              UI Layer                   │
-│  ┌─────────┐ ┌──────────┐ ┌──────────┐ │
-│  │LogList  │ │Detail    │ │Search    │ │
-│  │(DataTable)│ │(Modal)   │ │(Input)   │ │
-│  └─────────┘ └──────────┘ └────┬─────┘ │
-│                                │        │
-│  ┌─────────────────────────────▼──────┐ │
-│  │ HistoryModal (OptionList)          │ │
-│  │ - Searchable list of past queries  │ │
-│  │ - Built-in filtering capability    │ │
-│  └────────────────────────────────────┘ │
-└────────────┬────────────────────────────┘
-             │ Reactive Updates
-┌────────────▼────────────────────────────┐
-│         Application State               │
-│  ┌─────────────────────────────────┐   │
-│  │  logs: list[LogEntry]           │   │
-│  │  filtered_logs: list[LogEntry]  │   │
-│  │  filter_query: str              │   │
-│  │  columns: list[str]             │   │
-│  │  selected_index: int            │   │
-│  │  follow_mode: bool              │   │
-│  │  search_history: list[str]      │   │
-│  └─────────────────────────────────┘   │
-└────────────┬────────────────────────────┘
-             │
-┌────────────▼────────────────────────────┐
-│         File Watcher                    │
-│  watchdog observer → new lines          │
-│  → parse JSON → append to logs          │
-└─────────────────────────────────────────┘
+src/json_logs_viewer/
+├── __init__.py            exports main()
+├── app.py                 LogViewerApp: state, file loading, filtering,
+│                          follow mode, command palette, CLI (main)
+├── models.py              LogEntry (pydantic)
+├── filter_engine.py       query tokenizer, parser, AST matchers
+├── log_reader.py          mmap-based backward line reader
+├── log_watcher.py         follow-mode watcher threads
+├── clipboard.py           formatting helpers for copy actions
+├── constants.py           history limit, copy context size, column width
+├── styles.tcss            app-level CSS
+├── widgets/
+│   ├── log_list.py        LogList: virtual ScrollView, the main list
+│   ├── search_bar.py      SearchBar: Input bound to filter_query
+│   ├── status_bar.py      StatusBar: file/count labels, toggle buttons,
+│   │                      Footer
+│   └── feature_summary_modal.py   help modal (`?`)
+└── modals/
+    ├── detail_modal.py    DetailModal: pretty JSON of one entry
+    ├── history_modal.py   HistoryModal: OptionList of past queries
+    ├── columns_modal.py   ColumnsModal: SelectionList of fields
+    └── file_picker_modal.py   FilePickerModal: DirectoryTree
 ```
 
-## Data Model
+## Screen
 
-### LogEntry (Pydantic Model)
+```
+┌──────────────────────────────────────────────┐
+│ LogList (#logs)                     1fr      │
+│   [col1 | col2 | ] {"raw": "json line"}      │
+├──────────────────────────────────────────────┤
+│ SearchBar (#search)    hidden unless focused │
+│                        or a query is active  │
+├──────────────────────────────────────────────┤
+│ StatusBar (#status)                          │
+│   File: x  Total: n  Filtered: m  ⏺ FOLLOW   │
+│                [Follow] [Aa] [Highlight] [History]
+│   Footer (keybindings)                       │
+└──────────────────────────────────────────────┘
+```
+
+Modals are pushed with `push_screen(..., callback=...)`. Their result is
+handled in an `_on_*_selected` callback on the app.
+
+## State (`LogViewerApp` reactives)
+
+| Attribute           | Type             | Meaning                                    |
+|---------------------|------------------|--------------------------------------------|
+| `logs`              | `list[LogEntry]` | every parsed entry in file order           |
+| `filtered_logs`     | `list[LogEntry]` | what LogList shows                         |
+| `filter_query`      | `str`            | current query text                         |
+| `selected_index`    | `int`            | cursor index into `filtered_logs`          |
+| `search_history`    | `list[str]`      | submitted queries, oldest first, max 100   |
+| `filepath`          | `str \| None`    | loaded file                                |
+| `wrap_log_lines`    | `bool`           | soft wrap vs horizontal scroll             |
+| `case_sensitive`    | `bool`           | filter case sensitivity                    |
+| `highlight_matches` | `bool`           | highlight mode vs filter mode              |
+| `columns`           | `list[str]`      | fields shown as columns                    |
+| `follow_mode`       | `bool`           | watcher thread running                     |
+
+`SearchBar` sets `filter_query` on `enter` and appends the query to
+`search_history` (skipping an immediate repeat). `HistoryModal` shows the
+history newest first.
+
+`logs`, `filter_query`, `case_sensitive` and `highlight_matches` all trigger
+`apply_filter()`. In filter mode `filtered_logs` is the matching subset. In
+highlight mode `filtered_logs` is `logs` and LogList computes per-row match
+flags itself to dim non-matches and drive `n`/`N`.
+
+After each filter change `_restore_selected_log_entry` keeps the cursor on the
+same entry, or on the nearest surviving entry in file order.
+
+Lists are always replaced, never mutated in place, so the reactive watchers
+fire (e.g. follow mode does `self.logs = [*self.logs, *new_logs]`).
+
+## Data model
 
 ```python
-from pydantic import BaseModel, model_validator
-from datetime import datetime
-from typing import Any
-
-
-TIMESTAMP_FIELDS = ["Timestamp", "timestamp", "time", "ts", "Time", "@t"]
-LEVEL_FIELDS = ["SeverityText", "severity", "level", "log_level", "Level", "loglevel"]
-MESSAGE_FIELDS = ["message", "msg", "Message", "body", "event", "@m"]
-
-
 class LogEntry(BaseModel):
-    """Represents a single log entry with automatic field normalization."""
-
-    line_number: int
-    data: dict[str, Any]
-
+    line_number: int          # 1-based line in the file
+    data: dict[str, Any]      # parsed JSON object
+    raw_json: str = ""        # original line, used for display and copy
     timestamp: datetime | None = None
     level: str | None = None
     message: str | None = None
-
-    @model_validator(mode="before")
-    @classmethod
-    def extract_normalized_fields(cls, data: Any) -> dict[str, Any]:  # noqa: ANN401
-        if not isinstance(data, dict):
-            return data
-
-        log_data = data.get("data")
-        if not isinstance(log_data, dict):
-            return data
-
-        return {
-            **data,
-            "timestamp": cls._find_first(
-                data=log_data, candidates=TIMESTAMP_FIELDS
-            ),
-            "level": cls._find_first(data=log_data, candidates=LEVEL_FIELDS),
-            "message": cls._find_first(
-                data=log_data, candidates=MESSAGE_FIELDS
-            ),
-        }
-
-    @staticmethod
-    def _find_first(
-        *, data: dict[str, Any], candidates: list[str]
-    ) -> Any | None:  # noqa: ANN401
-        for candidate in candidates:
-            if candidate in data:
-                return data[candidate]
-        return None
 ```
 
-**Why custom parsing instead of Pydantic aliases?**
-
-- Flexible field detection: tries multiple common field names in priority order
-- Handles any log format without configuration: `Timestamp`, `timestamp`, `time`, `ts`, etc.
-- Works automatically for diverse log formats (CloudWatch, GCP, custom JSON, etc.)
-- Raw data preserved in `data` field for full access to original fields
-
-**Why `Json` type instead of `dict[str, Any]`?**
-
-- Stores raw JSON string internally, lazy parses on first access
-- Validates JSON is valid on model creation
-- Can access raw string via `model.data.repr_` if needed for export
-
-### AppState
-
-Central reactive state container:
-
-```python
-from textual.reactive import reactive
-
-
-class AppState:
-    """Reactive application state."""
-    logs: reactive[list[LogEntry]] = reactive([])
-    filtered_logs: reactive[list[LogEntry]] = reactive([])
-    filter_query: reactive[str] = reactive("")
-    columns: reactive[list[str]] = reactive(["timestamp", "level"])
-    selected_index: reactive[int] = reactive(0)
-    follow_mode: reactive[bool] = reactive(False)
-    search_history: reactive[list[str]] = reactive([])
-```
-
-## Filter Query Language
-
-The filter syntax supports field:value pairs with boolean operators:
-
-```
-query ::= expression (('AND' | 'OR') expression)*
-expression ::= ['NOT'] field ':' value | '(' query ')'
-```
-
-### Examples
-
-- `level:ERROR` - Filter by log level
-- `level:ERROR AND service:api` - Multiple conditions
-- `NOT level:DEBUG` - Negation
-- `(status:500 OR status:503) AND method:POST` - Grouping
-
-### Implementation
-
-Simple recursive descent parser that converts queries into filter functions:
-
-```python
-def parse_filter(*, query: str) -> Callable[[LogEntry], bool]:
-    """Parse filter query and return filter function."""
-    # Returns: lambda log: log.level == "ERROR" and log.data.get("service") == "api"
-```
-
-## Components
-
-### 1. LogViewerApp (Main App)
-
-Entry point and container:
-
-- Holds AppState
-- Manages screens and modals
-- Registers command palette commands
-- Handles global keybindings
-
-### 2. LogList (DataTable Widget)
-
-Main log display:
-
-- Displays filtered_logs from AppState
-- Configurable columns based on AppState.columns
-- Virtual scrolling for performance
-- Vim navigation (j/k, gg/G)
-
-### 3. SearchBar (Input Widget)
-
-Filter input with history:
-
-- Text input for filter queries
-- Real-time filtering on type
-- History button opens HistoryModal
-- `/` keybinding to focus
-
-### 4. HistoryModal (OptionList Widget)
-
-Search history browser using Textual's built-in OptionList:
-
-**Features:**
-
-- Displays past searches from AppState.search_history as selectable options
-- Built-in search/filter capability within the OptionList itself
-- Keyboard navigation with arrow keys
-- Max 100 entries (in-memory only, no persistence between sessions)
-
-**Usage:**
-
-- Opened from SearchBar via history button or keybinding
-- Type to filter history items in real-time
-- Enter to select a query and apply it
-- Esc to close without selection
-
-**Implementation:**
-
-```python
-from textual.widgets import OptionList
-
-
-class HistoryModal(ModalScreen):
-    """Modal displaying search history with OptionList."""
-
-    def compose(self) -> ComposeResult:
-        yield OptionList(*self.app.state.search_history)
-
-    def on_option_list_option_selected(self, *, event: events.Message) -> None:
-        """Handle selection from OptionList."""
-        selected_query = event.option.prompt
-        self.dismiss(selected_query)
-```
-
-### 5. DetailModal (Modal Screen)
-
-Log detail view:
-
-- Pretty-printed JSON with syntax highlighting
-- Copy buttons (single log, with context)
-- Navigation to next/previous log (j/k)
-- Opened with Enter from LogList
-
-### 6. StatusBar
-
-Bottom information bar:
-
-- Current file name
-- Follow mode indicator
-- Filter status
-- Help hints
-
-## File Watching
-
-Simple watchdog-based file monitoring:
-
-```python
-class LogWatcher:
-    """Watches log file for new entries."""
-
-    def __init__(self, *, filepath: str, callback: Callable[[LogEntry], None]) -> None:
-        self.filepath = filepath
-        self.callback = callback
-
-    def start(self) -> None:
-        """Start watching file for changes."""
-        # Uses watchdog to monitor file
-        # Reads new lines on modification
-        # Parses each line as LogEntry
-        # Calls callback with parsed entry
-```
-
-## Command Palette Integration
-
-Textual's builtin command palette (`Ctrl+Shift+P`) provides quick access:
-
-**Registered Commands:**
-
-- `:open <file>` - Open log file
-- `:follow` - Toggle follow mode
-- `:columns` - Open column configuration
-- `:clear` - Clear all logs (with confirmation)
-- `:export` - Export filtered view to file
-- `:quit` - Exit application
-
-Commands prefixed with `:` for clarity vs search with `/`.
-
-## Copy Operations
-
-Clipboard integration using `pyperclip`:
-
-1. **Copy Single**: Copy selected log as JSON
-2. **Copy Multiple**: Select range with visual mode, copy
-3. **Copy with Context**: Copy log + configurable context window
-
-## Memory Management
-
-**Current Approach (MVP):**
-
-- All logs stored in memory as LogEntry objects
-- Suitable for files up to ~100MB
-- No caching or disk offloading
-
-**Future Improvements:**
-
-- LRU cache for memory efficiency
-- SQLite index for large files
-- Streaming with partial loading
-
-## Keybindings
-
-### Global
-
-- `q` - Quit
-- `Ctrl+C` - Quit
-- `/` - Focus search
-- `Ctrl+Shift+P` - Command palette
-
-### Navigation (LogList)
-
-- `j/↓` - Down
-- `k/↑` - Up
-- `gg` - Top
-- `G` - Bottom
-- `Enter` - Open detail view
-- `y` - Copy current log
-
-### Detail View
-
-- `j` - Next log
-- `k` - Previous log
-- `y` - Copy current log
-- `Y` - Copy with context
-- `Esc/q` - Close
-
-### Search
-
-- `Enter` - Apply filter
-- `↑/↓` - Navigate history
-- `Tab` - Toggle case sensitivity (future)
-
-## No Persistence
-
-**Explicitly Out of Scope (MVP):**
-
-- No settings file
-- No search history persistence between sessions
-- No column preference persistence between sessions
-- No theme settings
-
-All configuration is in-memory and resets on restart.
-
-## Future Improvements (Post-MVP)
-
-**Performance & Scale:**
-
-- LRU cache for memory efficiency
-- SQLite index for large files (>100MB)
-- Streaming with partial loading
-- Background indexing
-
-**Persistence:**
-
-- Settings file for preferences
-- Search history persistence
-- Column layout persistence
-
-**Features:**
-
-- Multiple file tabs
-- Export formats (CSV, HTML)
-- Custom themes
-- Plugin system
+A `model_validator` fills `timestamp`, `level` and `message` from the first
+matching key in `TIMESTAMP_FIELDS`, `LEVEL_FIELDS` and `MESSAGE_FIELDS`. The
+UI does not use these fields yet: filtering, display and copy all work on
+`data` and `raw_json`.
+
+## Loading a file
+
+`load_file()` calls `read_lines_backward()` (log_reader.py). It mmaps the
+file, counts lines forward with `mm.find(b"\n")`, then walks backwards with
+`mm.rfind` to yield `(line_number, text)` pairs. Empty lines and lines that
+are not valid UTF-8 are skipped. Each line is parsed with `json.loads`.
+Invalid JSON is logged and skipped. The list is reversed into file order,
+assigned to `logs`, and the cursor is placed on the last entry. The file size
+is stored as the starting offset for follow mode.
+
+Opening another file through the picker resets the query, toggles, columns
+and history first.
+
+## Filtering
+
+`filter_engine.parse_filter(query=..., case_sensitive=...)` returns a
+`Callable[[LogEntry], bool]`.
+
+1. `Tokenizer` produces `FIELD`, `VALUE`, `QUOTED`, `AND`, `OR`, `NOT`,
+   `LPAREN`, `RPAREN`, `EOF`. A word directly followed by `:` is a field.
+2. `Parser` is recursive descent:
+   ```
+   expr    := term (OR term)*
+   term    := factor (AND factor)*
+   factor  := NOT factor | primary
+   primary := "(" expr ")" | FIELD [VALUE|QUOTED] | (VALUE|QUOTED)+
+   ```
+   There is no implicit AND. Two terms without an operator raise
+   `FilterError`.
+3. AST nodes:
+   - `FieldMatch`: substring match on `str(data[field])`.
+   - `FieldExists`: `field in data`.
+   - `FullText`: substring match on `"k=v k=v ..."` built from `data`.
+   - `And`, `Or`, `Not`, `Group`.
+
+Field lookup is top-level only.
+
+## LogList (virtual scrolling)
+
+`LogList` is a `ScrollView` that implements the line API (`render_line`).
+Only visible rows are rendered, so file size does not affect drawing cost.
+
+- Each row is the optional column prefix (`value.ljust(width) | ...`, widths
+  capped at `MAX_COL_WIDTH`) followed by `raw_json`.
+- `virtual_size` width is the longest line, which gives horizontal scrolling.
+  In wrap mode each entry is pre-wrapped to the viewport width and
+  `_entry_start_rows` maps entries to screen rows.
+- An `LRUCache` (2000 entries) caches each entry's raw line text.
+- The cursor keeps `SCROLLOFF = 3` rows of margin.
+- Clicking moves the cursor. Double-click or `enter` posts
+  `LogList.LogSelected`, and the app opens `DetailModal`.
+
+## Follow mode
+
+`log_watcher.get_watcher()` returns `PollWatcher` (Linux/Windows: `os.read`
+every 50 ms) or `SelectorWatcher` (macOS: kqueue). The watcher runs in a
+daemon thread on an fd opened at the stored offset. It hands byte chunks back
+with `call_from_thread`. `_process_chunk` buffers partial lines, parses
+complete ones and appends them to `logs`. If the cursor was on the last
+entry, it follows the new tail. On stop the current offset is saved so
+resuming continues where it left off.
+
+## Command palette
+
+`get_system_commands` adds: Open file, Toggle line wrap, Toggle
+case-sensitive filtering, Toggle highlight mode, Show help, Configure columns,
+Toggle follow mode.
+
+## CLI
+
+`main()` (also exposed as `jlv` and `json-logs-viewer`) uses argparse:
+`file` (optional), `-f/--follow`, `--serve`. `--serve` builds a command
+string and hands it to `textual_serve.server.Server`. Without a file the app
+starts with the file picker.

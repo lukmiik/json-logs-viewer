@@ -1,65 +1,39 @@
-## Python Environment Management
+# Commands
 
-This project uses [`uv`](https://docs.astral.sh/uv/) for all Python environment
-management, dependency handling, and tool execution.
-Always use `uv` instead of direct `python`, `pip`, or `pipx` commands:
+Use `uv` for everything (never bare `python`/`pip`).
 
-## Code Quality Checks
+- Run: `uv run jlv test_files/sample.jsonl`
+- Lint + format: `uv run ruff check --fix . && uv run ruff format .`
+- Types: `uv run ty check`
+- Tests: `uv run pytest` (one file: `uv run pytest tests/unit/test_filter_engine.py`)
+- Perf tests are excluded by default: `uv run pytest -m performance`
 
-After every code change, you MUST run the following quality checks:
+Run lint, format, types and tests before calling a change done. CI runs
+`ruff --fix`, so it won't catch lint errors for you.
 
-### 1. Ruff Linting
+# Conventions
 
-Check code for linting errors:
+- New functions take keyword-only args (`def f(*, a: int) -> None`) and are
+  called with keywords. Textual overrides/handlers (`compose`, `on_*`,
+  `watch_*`, `action_*`) and the `filter_engine` classes are exempt.
+- Type every function and non-obvious variable. Docstrings only where the code
+  isn't self-explanatory.
+- Line length is 79.
+- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
+  (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:` ...).
+- Screens pushed with `push_screen` go in `modals/`, widgets composed into the
+  main screen go in `widgets/`. (`widgets/feature_summary_modal.py` is a known
+  exception, not a pattern to copy.)
+- Test features through the app with Textual's `run_test()`/Pilot in
+  `tests/integration/`; pure logic goes in `tests/unit/`.
 
-```bash
-uv run ruff check --fix .
-```
+# Gotchas
 
-### 2. Ruff Formatting
-
-Format code automatically:
-
-```bash
-uv run ruff format .
-```
-
-### 3. Type Checking with ty
-
-Run type checking:
-
-```bash
-uv run ty check
-```
-
-## Coding/Formatting Guidelines
-
-### Function Signatures
-
-All methods must enforce keyword-only arguments using the `*` operator. The `*`
-must appear before any parameters to ensure all arguments are passed by name:
-
-```python
-def my_function(*, arg1: str, arg2: int) -> None:
-    ...
-```
-
-When calling functions, always use keyword arguments:
-
-```python
-my_function(arg1="hello", arg2=42)
-```
-
-### Type Annotations
-
-Everything should be typed. All functions, methods, and variables must have explicit
-type annotations.
-
-### Docstrings
-
-Docstrings should be used only when needed. Avoid redundant documentation for
-self-explanatory code.
-
-## Testing
-
-All features should be tested by textual builtin testing framework and pytest
+- App state lives in reactive lists on `LogViewerApp`. Replace them
+  (`self.logs = [*self.logs, *new]`), never mutate in place, or watchers
+  won't fire.
+- Filter queries have no implicit AND, and fields are top-level keys only.
+- When behaviour or keybindings change, update `README.md`,
+  `ARCHITECTURE.md` and the help text in `feature_summary_modal.py`.
+- `.notes/` and `.todo` are the owner's gitignored notes (known bugs in
+  `.notes/analysis/`). Don't commit them.
