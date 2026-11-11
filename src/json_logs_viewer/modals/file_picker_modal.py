@@ -12,6 +12,23 @@ from textual.screen import ModalScreen
 from textual.widgets import DirectoryTree
 
 ALLOWED_EXTENSIONS: set[str] = {".json", ".jsonl"}
+COMPRESSED_EXTENSIONS: set[str] = {".gz", ".bz2", ".xz"}
+
+
+def is_log_file(path: Path) -> bool:
+    """Whether the picker lists `path`, judged by its name.
+
+    app.jsonl or app.json, or compressed like app.jsonl.gz and logrotate's
+    app.jsonl.1.gz.
+    """
+    suffixes = path.suffixes
+    if not suffixes:
+        return False
+    if suffixes[-1] in ALLOWED_EXTENSIONS:
+        return True
+    return suffixes[-1] in COMPRESSED_EXTENSIONS and any(
+        suffix in ALLOWED_EXTENSIONS for suffix in suffixes[:-1]
+    )
 
 
 class FilteredDirectoryTree(DirectoryTree):
@@ -30,7 +47,7 @@ class FilteredDirectoryTree(DirectoryTree):
             path
             for path in paths
             if (self.show_hidden or not path.name.startswith("."))
-            and (path.is_dir() or path.suffix in ALLOWED_EXTENSIONS)
+            and (path.is_dir() or is_log_file(path))
         ]
 
 

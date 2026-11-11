@@ -188,7 +188,14 @@ an append). Lists stay in that order, so keeping the cursor after a filter
 change binary-searches on `seq`; within one file the nearest line is still
 measured in file lines.
 
-`read_source()` calls `read_lines_backward()` (log_reader.py). It mmaps the
+A gzip, bzip2 or xz file (recognised by its first bytes, not its name) is
+decompressed and parsed in one forward pass instead, and its `SourceFile`
+is `compressed`: `_start_follow` skips it (with only compressed files,
+follow mode says it can't follow). The file picker lists names like
+`app.jsonl.gz` and logrotate's `app.jsonl.1.gz` (`is_log_file`).
+
+For a plain file, `read_source()` calls `read_lines_backward()`
+(log_reader.py). It mmaps the
 file, counts lines forward with `mm.find(b"\n")`, then walks backwards with
 `mm.rfind` to yield `(line_number, text)` pairs. Empty lines and lines that
 are not valid UTF-8 are skipped. Each line is parsed with `json.loads`.

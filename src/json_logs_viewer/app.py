@@ -745,6 +745,14 @@ class LogViewerApp(App):
         """Start one watcher per open file, all in one session."""
         if not self._sources or self._follow_session is not None:
             return
+        # A compressed file can't grow: it was read whole and isn't watched.
+        followable = [s for s in self._sources if not s.compressed]
+        if not followable:
+            self.notify(
+                "Compressed files can't be followed", severity="warning"
+            )
+            self.follow_mode = False
+            return
         session = threading.Event()
         try:
             # The files must stay open after this method returns, so `with`
@@ -752,7 +760,7 @@ class LogViewerApp(App):
             # fails; pop_all() keeps them open once all succeeded.
             with ExitStack() as stack:
                 started: list[tuple[IO[bytes], WatcherBase]] = []
-                for source in self._sources:
+                for source in followable:
                     source.buffer = b""
                     watch_file = stack.enter_context(open(source.path, "rb"))
                     watch_file.seek(source.offset)
@@ -784,7 +792,7 @@ class LogViewerApp(App):
             return
         # Only store state once setup fully succeeded.
         for source, (watch_file, watcher) in zip(
-            self._sources, started, strict=True
+            followable, started, strict=True
         ):
             source.watch_file = watch_file
             source.watcher = watcher

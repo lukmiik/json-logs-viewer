@@ -37,6 +37,9 @@ An interactive terminal viewer for JSONL log files, built with
 - Several files at once (`jlv a.jsonl b.jsonl`, or `a` in the file picker to
   add one), merged by timestamp. The `@file` column shows each line's file;
   follow mode watches all of them.
+- Compressed logs (gzip, bzip2, xz, detected by content), e.g. rotated
+  `app.jsonl.1.gz`; read once, so follow mode skips them. Open them next to
+  the live file (`jlv app.jsonl.1.gz app.jsonl`) for one timeline.
 - Piped input (`... | jlv`, or `-` among the files): read and followed like a
   file, shown as `stdin`. POSIX terminals only (not Windows yet).
 - Follow mode (like `tail -F`) for files that are still being written. If
