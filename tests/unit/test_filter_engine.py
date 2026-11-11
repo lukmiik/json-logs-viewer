@@ -727,3 +727,20 @@ class TestLongQueries:
     def test_extreme_nesting_is_a_filter_error(self, query: str) -> None:
         with pytest.raises(FilterError, match="nested"):
             parse_filter(query=query)
+
+
+class TestUnclosedQuote:
+    """A quote not yet closed runs to the end (it used to lose a char)."""
+
+    @pytest.mark.parametrize(
+        ("query", "value"),
+        [('"abc', "abc"), ('msg:"abc', "abc"), ('"a b', "a b"), ('"', "")],
+    )
+    def test_value_runs_to_the_end(self, query: str, value: str) -> None:
+        tokens = Tokenizer(query).tokenize()
+        quoted = [t for t in tokens if t.type == TokenType.QUOTED]
+        assert quoted[0].value == value
+
+    def test_matches_what_was_typed(self) -> None:
+        assert not parse_filter(query='"abc')(make_log(m="abx"))
+        assert parse_filter(query='"abc')(make_log(m="xabcx"))

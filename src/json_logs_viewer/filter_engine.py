@@ -82,9 +82,9 @@ class Tokenizer:
         self.pos += 1
         while self.pos < len(self.query) and self.query[self.pos] != '"':
             self.pos += 1
+        value = self.query[start + 1 : self.pos]
         if self.pos < len(self.query):
-            self.pos += 1
-        value = self.query[start + 1 : self.pos - 1]
+            self.pos += 1  # the closing quote; an unclosed one runs to the end
         self.tokens.append(Token(TokenType.QUOTED, value, start))
 
     def _read_word_or_field(self) -> None:
