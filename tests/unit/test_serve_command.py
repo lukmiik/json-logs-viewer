@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shlex
 import subprocess
@@ -108,7 +109,7 @@ def test_main_serve_puts_file_in_environment(
             "title": "jlv x.jsonl; touch PWNED",
         }
     ]
-    assert os.environ[SERVE_FILE_ENV] == "x.jsonl; touch PWNED"
+    assert json.loads(os.environ[SERVE_FILE_ENV]) == ["x.jsonl; touch PWNED"]
 
 
 def test_main_child_reads_file_from_environment(
@@ -126,14 +127,14 @@ def test_main_child_reads_file_from_environment(
     history = Path("/tmp/history.json")
     monkeypatch.setattr(app_module, "LogViewerApp", FakeApp)
     monkeypatch.setattr(app_module, "default_history_path", lambda: history)
-    monkeypatch.setenv(SERVE_FILE_ENV, "a & b.jsonl")
+    monkeypatch.setenv(SERVE_FILE_ENV, json.dumps(["a & b.jsonl", "c;d"]))
     monkeypatch.setattr(sys, "argv", ["jlv", "--follow"])
 
     app_module.main()
 
     assert created == [
         {
-            "file": "a & b.jsonl",
+            "files": ["a & b.jsonl", "c;d"],
             "follow": True,
             "show_picker_on_start": False,
             "history_path": history,

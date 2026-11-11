@@ -11,11 +11,15 @@ if TYPE_CHECKING:
     from json_logs_viewer.models import LogEntry
 
 
-def default_export_path(*, source: Path | None) -> Path:
-    """`<name>.filtered.jsonl` beside the open file, else `export.jsonl`."""
+def default_export_path(*, source: Path | None, several: bool = False) -> Path:
+    """`<name>.filtered.jsonl` beside the open file, else `export.jsonl`.
+
+    With several files open: `combined.filtered.jsonl` beside the first.
+    """
     if source is None:
         return Path("export.jsonl")
-    return source.with_name(f"{source.stem}.filtered.jsonl")
+    stem = "combined" if several else source.stem
+    return source.with_name(f"{stem}.filtered.jsonl")
 
 
 def write_jsonl(*, path: Path, entries: list[LogEntry]) -> None:

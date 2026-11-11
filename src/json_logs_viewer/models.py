@@ -34,6 +34,9 @@ LEVEL_FIELDS = [
 ]
 MESSAGE_FIELDS = ["message", "msg", "Message", "body", "event", "@m"]
 
+# Column showing which open file a line came from (when several are open).
+FILE_COLUMN = "@file"
+
 # Column names that show a detected field, whatever it's called in a log.
 DETECTED_COLUMNS = {
     "@timestamp": TIMESTAMP_FIELDS,
@@ -85,6 +88,13 @@ class LogEntry(BaseModel):
     line_number: int
     data: dict[str, Any]
     raw_json: str = ""
+    # The file this line came from ("" if unknown). Several files can be
+    # open at once; line_number counts lines within this file.
+    source: str = ""
+    # Position in the app's logs list, assigned by the app whenever the list
+    # changes (LogViewerApp.watch_logs). Lists are kept in this order, so
+    # it sorts entries even when several files' line numbers interleave.
+    seq: int = 0
 
     timestamp: datetime | None = None
     level: str | None = None

@@ -378,8 +378,9 @@ async def test_toggling_follow_keeps_partial_line(tmp_path: Path) -> None:
         await pilot.pause()
         with path.open("a") as f:
             f.write('{"tag": "b", "msg": "spl')
+        source = app._sources[0]
         await _wait_for_logs(
-            app=app, pilot=pilot, predicate=lambda: bool(app._follow_buffer)
+            app=app, pilot=pilot, predicate=lambda: bool(source.buffer)
         )
 
         app.follow_mode = False
@@ -446,8 +447,8 @@ async def test_follow_on_deleted_file_disables_follow_without_crash(
         await pilot.pause()
 
         assert app.follow_mode is False
-        assert app._watcher is None
-        assert app._watch_file is None
+        assert all(s.watcher is None for s in app._sources)
+        assert all(s.watch_file is None for s in app._sources)
         assert len(app.logs) == 2
 
 
@@ -482,7 +483,7 @@ async def test_follow_setup_failure_closes_file(
         await pilot.pause()
 
         assert app.follow_mode is False
-        assert app._watch_file is None
+        assert all(s.watch_file is None for s in app._sources)
         assert len(opened) == 1
         assert opened[0].closed
 
@@ -514,8 +515,8 @@ async def test_watcher_read_error_stops_follow_without_stall(
         await pilot.pause()
 
         assert app.follow_mode is False
-        assert app._watcher is None
-        assert app._watch_file is None
+        assert all(s.watcher is None for s in app._sources)
+        assert all(s.watch_file is None for s in app._sources)
         # The poll interval is 50 ms; the old deadlock took the full 1 s.
         assert elapsed < 0.5
 

@@ -85,6 +85,20 @@ def test_command_palette(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     assert snap_compare(app, run_before=open_palette, terminal_size=SIZE)
 
 
+def test_two_files_merged(
+    snap_compare: SnapCompare, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two files in one timeline, with the @file column and file count."""
+    monkeypatch.chdir(DATA_DIR)
+    app = LogViewerApp(files=["app.jsonl", "worker.jsonl"])
+
+    async def show_file_column(pilot: Pilot) -> None:
+        app.columns = ["@file", "@level"]
+        await pilot.pause()
+
+    assert snap_compare(app, run_before=show_file_column, terminal_size=SIZE)
+
+
 def test_detail_view(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     # The cursor starts on the last line: go to the top, then to the entry
     # with a nested object.

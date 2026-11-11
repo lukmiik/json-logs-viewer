@@ -107,7 +107,7 @@ class DetailModal(ModalScreen[None]):
                 json_str, id="json-content", read_only=True, language="json"
             )
             yield Footer()
-        dialog.border_title = "Log Detail"
+        dialog.border_title = self._title()
         dialog.border_subtitle = "j/k: nav | ctrl+d/u: scroll | ESC: close"
 
     def action_next_log(self) -> None:
@@ -122,7 +122,15 @@ class DetailModal(ModalScreen[None]):
             self.log_entry = self.logs[self.current_index]
             self._update_content()
 
+    def _title(self) -> str:
+        """Log Detail · <file>:<line>, so merged files stay traceable."""
+        entry = self.log_entry
+        if not entry.source:
+            return "Log Detail"
+        return f"Log Detail · {entry.source}:{entry.line_number}"
+
     def _update_content(self) -> None:
+        self.query_one("#detail-dialog").border_title = self._title()
         json_widget = self.query_one("#json-content", TextArea)
         json_str = json.dumps(
             self.log_entry.data, indent=2, ensure_ascii=False

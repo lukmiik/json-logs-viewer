@@ -12,6 +12,16 @@ if TYPE_CHECKING:
     from json_logs_viewer.app import LogViewerApp  # noqa: F401
 
 
+def _files_label(*, paths: list[str]) -> str:
+    """The open file, or the first one and how many more."""
+    if not paths:
+        return "No file"
+    more = len(paths) - 1
+    if not more:
+        return paths[0]
+    return f"{paths[0]} +{more} file" + ("s" if more > 1 else "")
+
+
 class StatusInfo(Horizontal):
     """Displays file info and log counts."""
 
@@ -187,6 +197,7 @@ class StatusBar(Widget):
             self.watch(self.app, "logs", self._update_status)
             self.watch(self.app, "filtered_logs", self._update_status)
             self.watch(self.app, "filepath", self._update_status)
+            self.watch(self.app, "filepaths", self._update_status)
             self.watch(self.app, "case_sensitive", self._update_status)
             self.watch(self.app, "highlight_matches", self._update_status)
             self.watch(self.app, "follow_mode", self._update_status)
@@ -197,7 +208,7 @@ class StatusBar(Widget):
             return
         app = cast("LogViewerApp", self.app)
         info: StatusInfo = self.query_one(StatusInfo)
-        info.filename = app.filepath or "No file"
+        info.filename = _files_label(paths=app.filepaths)
         info.total = len(app.logs)
         info.filtered = len(app.filtered_logs)
         info.case_sensitive = app.case_sensitive

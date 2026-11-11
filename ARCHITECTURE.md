@@ -20,6 +20,7 @@ src/json_logs_viewer/
 ├── export.py              default_export_path, write_jsonl (atomic)
 ├── atomic_file.py         atomic_open: temp file + os.replace
 ├── history_store.py       search history file: path, load, save
+├── sources.py             SourceFile, read_source, merge_by_time
 ├── selection_copier.py    SelectionCopier: copy a selection once it settles
 ├── constants.py           history limit, copy context size, column width,
 │                          selection copy delay
@@ -78,8 +79,8 @@ the query's matches in highlight mode. `ExportModal` returns a path
 entry's `raw_json` to a temp file in the same directory, then
 `os.replace`s it, so a failed export never leaves a partial file.
 
-Clear view (`x`, confirmed with `ConfirmModal`) sets `logs = []`. The
-follow offset and `_last_line_number` are kept, so follow mode continues
+Clear view (`x`, confirmed with `ConfirmModal`) sets `logs = []`. Each
+file's follow `offset` and `line_count` are kept, so follow mode continues
 with only new lines, numbered as in the file. An empty view counts as
 "cursor on the last line", so the cursor follows the first new lines.
 
@@ -156,9 +157,25 @@ Only `level` is used so far: `level_category` maps it to `error`, `warning`,
 row colours in `LogList`. Filtering, display and copy work on `data` and
 `raw_json`.
 
-## Loading a file
+## Loading files
 
-`load_file()` calls `read_lines_backward()` (log_reader.py). It mmaps the
+`load_files(filepaths=...)` (`load_file` is the one-file shorthand) reads
+each file with `sources.read_source()`, which returns its entries (tagged
+with `source`, the path) and a `SourceFile` holding that file's follow
+state. Several files are merged by `merge_by_time()`: `heapq.merge` on each
+line's timestamp, or the last one before it in the same file, so every file
+keeps its own order and lines without a timestamp stay after their file's
+previous line; ties go to the file given first. `filepaths` lists the open
+files and `filepath` is the first. The status bar shows "a.jsonl +1 file",
+the `@file` column (offered first when several are open) shows each line's
+file name, and the detail view's title shows `path:line`.
+
+`watch_logs` numbers entries by position (`LogEntry.seq`; only the tail on
+an append). Lists stay in that order, so keeping the cursor after a filter
+change binary-searches on `seq`; within one file the nearest line is still
+measured in file lines.
+
+`read_source()` calls `read_lines_backward()` (log_reader.py). It mmaps the
 file, counts lines forward with `mm.find(b"\n")`, then walks backwards with
 `mm.rfind` to yield `(line_number, text)` pairs. Empty lines and lines that
 are not valid UTF-8 are skipped. Each line is parsed with `json.loads`.
@@ -167,14 +184,18 @@ assigned to `logs`, and the cursor is placed on the last entry.
 
 The size is measured before reading and only that many bytes are read, so
 anything appended meanwhile is left for follow mode. `find_line_boundary`
-then sets the follow position. It keeps one invariant: `_follow_offset` is
-where the first not-yet-consumed line starts, and `_last_line_number` is the
-number of file lines before it. An unterminated last line counts as consumed
+then sets the file's follow position. It keeps one invariant per
+`SourceFile`: `offset` is where the first not-yet-consumed line starts, and
+`line_count` is the number of file lines before it. An unterminated last line counts as consumed
 only if it parsed as JSON. A half-written object can't parse, so follow mode
 re-reads it once the writer finishes it.
 
-Opening another file through the picker resets the query, toggles and
-columns first. The search history is kept (it's shared by all files).
+Opening a file through the picker (`Enter`) replaces what is open and
+resets the query, toggles and columns first; the search history is kept
+(it's shared by all files). `a` in the picker adds the highlighted file to
+the open ones instead, keeping the query: everything is reloaded and merged
+again, and follow mode restarts so the new file is watched too. On the
+command line, `jlv a.jsonl b.jsonl` opens several at once.
 
 ## Filtering
 
@@ -271,13 +292,15 @@ Only visible rows are rendered, so file size does not affect drawing cost.
 
 `log_watcher.get_watcher()` returns `PollWatcher` (Linux/Windows: `os.read`
 every 50 ms) or `SelectorWatcher` (macOS: kqueue). The watcher runs in a
-daemon thread on an fd opened at the stored offset. `_process_chunk` splits
-the bytes on `\n` before decoding (so a UTF-8 character cut between reads
-stays intact), keeps the trailing partial line in `_follow_buffer`, counts
-every line (blank and invalid ones too) for `line_number`, and appends the
-parsed entries to `logs`. If the cursor was on the last entry, it follows the
-new tail. `_follow_offset` only advances past consumed lines, so resuming
-re-reads anything not yet processed.
+daemon thread on an fd opened at the stored offset; with several files there
+is one watcher per `SourceFile`, all in one session. `_process_chunk(chunk,
+source=...)` splits the bytes on `\n` before decoding (so a UTF-8 character
+cut between reads stays intact), keeps the trailing partial line in the
+source's `buffer`, counts every line (blank and invalid ones too) for
+`line_number`, and appends the parsed entries to `logs` as they arrive (new
+lines from several files are not re-sorted). If the cursor was on the last
+entry, it follows the new tail. The source's `offset` only advances past
+consumed lines, so resuming re-reads anything not yet processed.
 
 Appends are incremental. `models.appended_entries` detects that a new list is
 the old one plus a tail, comparing by identity so a reload with equal content
@@ -315,9 +338,9 @@ When a read returns no data, the watcher checks whether the file was reset:
 
 On a reset the watcher stops itself and calls `reset_callback`, which posts
 `LogViewerApp.FollowedFileReset` (`post_message` is thread-safe and doesn't
-block). The app then reloads the file with `load_file` and restarts follow
-mode, so `logs`, line numbers and the partial-line buffer match the new
-file.
+block). The app then reloads all open files with `load_files` and restarts
+follow mode, so `logs`, line numbers and the partial-line buffers match
+what is on disk.
 
 ## Command palette
 

@@ -10,10 +10,18 @@ from textual.screen import ModalScreen
 from textual.widgets import SelectionList
 from textual.widgets.selection_list import Selection
 
-from json_logs_viewer.models import DETECTED_COLUMNS
+from json_logs_viewer.models import DETECTED_COLUMNS, FILE_COLUMN
 
 if TYPE_CHECKING:
     from json_logs_viewer.app import LogViewerApp
+
+
+def _label(*, field: str) -> str:
+    if field in DETECTED_COLUMNS:
+        return f"{field} (detected)"
+    if field == FILE_COLUMN:
+        return f"{field} (source file)"
+    return field
 
 
 class ColumnsModal(ModalScreen[list[str] | None]):
@@ -60,7 +68,7 @@ class ColumnsModal(ModalScreen[list[str] | None]):
 
         selections = [
             Selection(
-                f"{field} (detected)" if field in DETECTED_COLUMNS else field,
+                _label(field=field),
                 field,
                 initial_state=(field in current),
             )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -33,7 +34,15 @@ class FilteredDirectoryTree(DirectoryTree):
         ]
 
 
-class FilePickerModal(ModalScreen[str | None]):
+@dataclass(frozen=True)
+class PickedFile:
+    """The picker's result: a file, and whether to add it to the open ones."""
+
+    path: str
+    add: bool = False
+
+
+class FilePickerModal(ModalScreen[PickedFile | None]):
     """Modal screen for browsing the filesystem and selecting a file."""
 
     DEFAULT_CSS = """
@@ -66,6 +75,7 @@ class FilePickerModal(ModalScreen[str | None]):
         ("h", "collapse_node", "Collapse"),
         Binding("G", "scroll_end", "Bottom", show=False),
         (".", "toggle_hidden", "Toggle hidden"),
+        ("a", "add_file", "Add to open"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -74,13 +84,21 @@ class FilePickerModal(ModalScreen[str | None]):
 
         dialog.border_title = "Open File"
         dialog.border_subtitle = (
-            "ENTER: open | h/l: collapse/expand | .: hidden | ESC: cancel"
+            "ENTER: open | a: add | h/l: collapse/expand | .: hidden | ESC"
         )
 
     def on_directory_tree_file_selected(
         self, event: DirectoryTree.FileSelected
     ) -> None:
-        self.dismiss(str(event.path))
+        self.dismiss(PickedFile(path=str(event.path)))
+
+    def action_add_file(self) -> None:
+        """Open the highlighted file next to the ones already open."""
+        node = self._get_tree().cursor_node
+        if node is None or node.data is None or node.allow_expand:
+            self.notify("Highlight a file to add", severity="warning")
+            return
+        self.dismiss(PickedFile(path=str(node.data.path), add=True))
 
     def action_cancel(self) -> None:
         self.dismiss(None)

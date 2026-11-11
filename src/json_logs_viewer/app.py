@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shlex
 import subprocess
@@ -36,33 +37,34 @@ from json_logs_viewer.history_store import (
     load_history,
     save_history,
 )
-from json_logs_viewer.log_reader import (
-    find_line_boundary,
-    read_lines_backward,
-)
 from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.confirm_modal import ConfirmModal
 from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.export_modal import ExportModal
-from json_logs_viewer.modals.file_picker_modal import FilePickerModal
+from json_logs_viewer.modals.file_picker_modal import (
+    FilePickerModal,
+    PickedFile,
+)
 from json_logs_viewer.modals.help_modal import HelpModal
 from json_logs_viewer.modals.history_modal import HistoryModal
 from json_logs_viewer.models import (
     DETECTED_COLUMNS,
+    FILE_COLUMN,
     LogEntry,
     appended_entries,
     find_first,
     parse_log_line,
 )
+from json_logs_viewer.sources import SourceFile, merge_by_time, read_source
 from json_logs_viewer.widgets.column_header import ColumnHeader
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
 
 
-def _line_number(entry: LogEntry) -> int:
-    return entry.line_number
+def _seq(entry: LogEntry) -> int:
+    return entry.seq
 
 
 class MainScreen(Screen[None]):
@@ -95,10 +97,12 @@ class LogViewerApp(App):
             chunk: bytes,
             session: threading.Event,
             consumed: threading.Event,
+            source: SourceFile,
         ) -> None:
             self.chunk = chunk
             self.session = session
             self.consumed = consumed
+            self.source = source
             super().__init__()
 
     class FollowedFileReset(Message):
@@ -112,10 +116,15 @@ class LogViewerApp(App):
         """The watcher stopped because reading the file failed."""
 
         def __init__(
-            self, *, error: Exception, session: threading.Event
+            self,
+            *,
+            error: Exception,
+            session: threading.Event,
+            source: SourceFile,
         ) -> None:
             self.error = error
             self.session = session
+            self.source = source
             super().__init__()
 
     BINDINGS = [
@@ -137,7 +146,9 @@ class LogViewerApp(App):
     filter_query: reactive[str] = reactive("")
     selected_index: reactive[int] = reactive(0)
     search_history: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
+    # The first open file (None if none); filepaths lists all of them.
     filepath: reactive[str | None] = reactive(None)
+    filepaths: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
     wrap_log_lines: reactive[bool] = reactive(False)
     case_sensitive: reactive[bool] = reactive(False)
     highlight_matches: reactive[bool] = reactive(False)
@@ -148,13 +159,15 @@ class LogViewerApp(App):
         self,
         *,
         file: str | None = None,
+        files: list[str] | None = None,
         follow: bool = False,
         show_picker_on_start: bool = False,
         history_path: Path | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
         super().__init__(**kwargs)
-        self.initial_file = file
+        # `file` for one file; `files` for several (merged by timestamp).
+        self.initial_files = files or ([file] if file else [])
         self._initial_follow = follow
         self._show_picker_on_start = show_picker_on_start
         # Where the search history is kept across runs; None keeps it in
@@ -170,16 +183,10 @@ class LogViewerApp(App):
         # The matcher behind filtered_logs; None means every log is shown
         # (no query, highlight mode, or an invalid query).
         self._active_matcher: Matcher | None = None
-        self._watcher: WatcherBase | None = None
-        self._watch_file: IO[bytes] | None = None
-        # Follow position invariant: _follow_offset is the byte where the
-        # first not-yet-consumed line starts, and _last_line_number is the
-        # number of file lines before it. _follow_buffer holds the bytes of
-        # a partial line read past _follow_offset but not yet terminated.
-        self._follow_buffer: bytes = b""
-        self._last_line_number: int = 0
-        self._follow_offset: int = 0
-        # Identifies the running follow session; set when it stops.
+        # The open files, each with its own follow position and watcher.
+        self._sources: list[SourceFile] = []
+        # Identifies the running follow session (all files' watchers share
+        # it); set when it stops.
         self._follow_session: threading.Event | None = None
 
     def get_default_screen(self) -> Screen[None]:
@@ -200,19 +207,22 @@ class LogViewerApp(App):
                 path=self._history_path, limit=SEARCH_HISTORY_LIMIT
             )
         self._update_search_bar_visibility()
-        if self.initial_file:
-            self.load_file(filepath=self.initial_file)
+        if self.initial_files:
+            self.load_files(filepaths=self.initial_files)
             if self._initial_follow:
                 self.follow_mode = True
         elif self._show_picker_on_start:
-            self.push_screen(
-                FilePickerModal(), callback=self._on_file_selected
-            )
+            self.push_screen(FilePickerModal(), callback=self._on_file_picked)
 
     def watch_logs(
         self, old_logs: list[LogEntry], logs: list[LogEntry]
     ) -> None:
         appended = appended_entries(old=old_logs, new=logs)
+        # Number the entries by position (only the new tail on an append),
+        # before filtering, which relies on it to keep the cursor in place.
+        first = 0 if appended is None else len(old_logs)
+        for seq, log in enumerate(logs[first:], first):
+            log.seq = seq
         if appended is None:
             # Not an append: the old counts belong to other logs.
             self._field_counts = Counter()
@@ -330,6 +340,8 @@ class LogViewerApp(App):
         # @timestamp/@level/@message first (when any log has them), then the
         # most common real fields.
         detected = [n for n in DETECTED_COLUMNS if self._detected_counts[n]]
+        if len(self._sources) > 1:
+            detected.insert(0, FILE_COLUMN)
         common = [
             f
             for f, _ in self._field_counts.most_common(20 + len(detected))
@@ -342,70 +354,71 @@ class LogViewerApp(App):
     ) -> None:
         """Keep the cursor on `log_entry`, or the nearest line still shown.
 
-        filtered_logs is a subsequence of logs in file order, so it is sorted
-        by line_number: a binary search finds the spot in O(log n) instead of
-        scanning every entry (this runs on every filter change).
+        filtered_logs is a subsequence of logs, so it is sorted by `seq`
+        (list position): a binary search finds the spot in O(log n) instead
+        of scanning every entry (this runs on every filter change).
         """
         filtered = self.filtered_logs
         if log_entry is None or not filtered:
             return
-        target = log_entry.line_number
-        pos = bisect_left(filtered, target, key=_line_number)
+        pos = bisect_left(filtered, log_entry.seq, key=_seq)
         if pos < len(filtered) and filtered[pos] is log_entry:
             self.selected_index = pos
             return
         # Filtered out: the nearest line is a neighbour of the insertion
-        # point. min() keeps the first on a tie, i.e. the earlier line.
+        # point. Within one file, distance is in file lines, so skipped
+        # blank or invalid lines count; across files, in list positions.
+        # min() keeps the first on a tie, i.e. the earlier line.
         neighbours = [i for i in (pos - 1, pos) if 0 <= i < len(filtered)]
-        self.selected_index = min(
-            neighbours, key=lambda i: abs(filtered[i].line_number - target)
-        )
+
+        def distance(index: int) -> int:
+            other = filtered[index]
+            if other.source == log_entry.source:
+                return abs(other.line_number - log_entry.line_number)
+            return abs(other.seq - log_entry.seq)
+
+        self.selected_index = min(neighbours, key=distance)
 
     def load_file(self, *, filepath: str) -> None:
-        """Read and parse JSONL file."""
-        path = Path(filepath)
-        if not path.exists():
-            self.notify(f"File not found: {filepath}", severity="error")
-            return
-        if not path.is_file():
-            self.notify(f"Not a file: {filepath}", severity="error")
-            return
+        """Open one file, replacing whatever is open."""
+        self.load_files(filepaths=[filepath])
 
+    def load_files(self, *, filepaths: list[str]) -> None:
+        """Open these files, replacing whatever is open.
+
+        Several files are merged into one timeline by timestamp. A file
+        that's missing or unreadable is reported and left out.
+        """
         log_list = self.query_one("#logs", LogList)
         log_list.loading = True
-
-        logs: list[LogEntry] = []
-        try:
-            # Measure first and read exactly this many bytes, so anything
-            # appended while loading is left for follow mode.
-            size = path.stat().st_size
-            for line_num, line_text in read_lines_backward(
-                filepath=path, size=size
-            ):
-                log = parse_log_line(line=line_text, line_number=line_num)
-                if log is None:
-                    self.log.warning(f"Line {line_num}: not a JSON object")
-                    continue
-                logs.append(log)
-            logs.reverse()
-            offset, line_count = find_line_boundary(filepath=path, size=size)
-        except Exception as e:
-            log_list.loading = False
-            self.notify(f"Error reading file: {e}", severity="error")
-            return
-        self._last_selected_log_entry = None
-        self.logs = logs
-
-        self.filepath = filepath
-        if offset < size and logs and logs[-1].line_number == line_count + 1:
-            # The unterminated last line parsed as JSON, so it is complete
-            # (a half-written JSON object can't parse): count it as consumed.
-            offset, line_count = size, line_count + 1
-        self._follow_offset = offset
-        self._last_line_number = line_count
-        self._follow_buffer = b""
-        self.selected_index = max(0, len(logs) - 1)
+        files: list[list[LogEntry]] = []
+        sources: list[SourceFile] = []
+        for filepath in dict.fromkeys(filepaths):  # drop duplicates
+            path = Path(filepath)
+            if not path.exists():
+                self.notify(f"File not found: {filepath}", severity="error")
+                continue
+            if not path.is_file():
+                self.notify(f"Not a file: {filepath}", severity="error")
+                continue
+            try:
+                logs, source = read_source(path=filepath)
+            except Exception as e:
+                self.notify(f"Error reading file: {e}", severity="error")
+                continue
+            files.append(logs)
+            sources.append(source)
         log_list.loading = False
+        if not sources:
+            return
+
+        self._sources = sources
+        merged = merge_by_time(files=files)
+        self._last_selected_log_entry = None
+        self.logs = merged
+        self.filepaths = [source.path for source in sources]
+        self.filepath = sources[0].path
+        self.selected_index = max(0, len(merged) - 1)
         self.call_after_refresh(log_list._scroll_cursor_into_view)
 
     def _update_search_bar_visibility(
@@ -469,7 +482,9 @@ class LogViewerApp(App):
         source = Path(self.filepath) if self.filepath else None
         self.push_screen(
             ExportModal(
-                default_path=default_export_path(source=source),
+                default_path=default_export_path(
+                    source=source, several=len(self._sources) > 1
+                ),
                 count=len(entries),
             ),
             # The entries are taken now, so what is written matches the
@@ -572,7 +587,30 @@ class LogViewerApp(App):
         """Open file picker modal."""
         if isinstance(self.screen, FilePickerModal):
             return
-        self.push_screen(FilePickerModal(), callback=self._on_file_selected)
+        self.push_screen(FilePickerModal(), callback=self._on_file_picked)
+
+    def _on_file_picked(self, picked: PickedFile | None) -> None:
+        if picked is None:
+            return
+        if picked.add:
+            self._add_file(filepath=picked.path)
+        else:
+            self._on_file_selected(picked.path)
+
+    def _add_file(self, *, filepath: str) -> None:
+        """Open one more file next to the open ones, keeping the query.
+
+        Everything is reloaded and merged again; follow mode restarts so the
+        new file is watched too.
+        """
+        if filepath in self.filepaths:
+            self.notify(f"Already open: {filepath}", severity="warning")
+            return
+        following = self.follow_mode
+        self._stop_follow()
+        self.load_files(filepaths=[*self.filepaths, filepath])
+        if following:
+            self._start_follow()
 
     def _on_file_selected(self, filepath: str | None) -> None:
         """Handle file selection from picker, resetting all state."""
@@ -604,7 +642,7 @@ class LogViewerApp(App):
         self.columns = columns
 
     def action_toggle_follow(self) -> None:
-        if not self.filepath:
+        if not self._sources:
             self.notify("No file loaded", severity="warning")
             return
         self.follow_mode = not self.follow_mode
@@ -616,59 +654,73 @@ class LogViewerApp(App):
             self._stop_follow()
 
     def _start_follow(self) -> None:
-        if not self.filepath or self._watcher is not None:
+        """Start one watcher per open file, all in one session."""
+        if not self._sources or self._follow_session is not None:
             return
-        self._follow_buffer = b""
         session = threading.Event()
         try:
-            # The file must stay open after this method returns, so `with`
-            # can't own it. ExitStack closes it if any later step fails;
-            # pop_all() keeps it open once everything succeeded.
+            # The files must stay open after this method returns, so `with`
+            # can't own them. ExitStack closes everything if any later step
+            # fails; pop_all() keeps them open once all succeeded.
             with ExitStack() as stack:
-                watch_file = stack.enter_context(open(self.filepath, "rb"))
-                watch_file.seek(self._follow_offset)
-                watcher = get_watcher()
-                stack.callback(watcher.close)
-                watcher.watch(
-                    fileno=watch_file.fileno(),
-                    path=self.filepath,
-                    callback=partial(self._on_watcher_data, session=session),
-                    error_callback=partial(
-                        self._on_watcher_error, session=session
-                    ),
-                    reset_callback=partial(
-                        self._on_watcher_reset, session=session
-                    ),
-                )
-                watcher.start()
+                started: list[tuple[IO[bytes], WatcherBase]] = []
+                for source in self._sources:
+                    source.buffer = b""
+                    watch_file = stack.enter_context(open(source.path, "rb"))
+                    watch_file.seek(source.offset)
+                    watcher = get_watcher()
+                    stack.callback(watcher.close)
+                    watcher.watch(
+                        fileno=watch_file.fileno(),
+                        path=source.path,
+                        callback=partial(
+                            self._on_watcher_data,
+                            session=session,
+                            source=source,
+                        ),
+                        error_callback=partial(
+                            self._on_watcher_error,
+                            session=session,
+                            source=source,
+                        ),
+                        reset_callback=partial(
+                            self._on_watcher_reset, session=session
+                        ),
+                    )
+                    watcher.start()
+                    started.append((watch_file, watcher))
                 stack.pop_all()
         except OSError as error:
             self.notify(f"Can't follow file: {error}", severity="error")
             self.follow_mode = False
             return
         # Only store state once setup fully succeeded.
-        self._watch_file = watch_file
-        self._watcher = watcher
+        for source, (watch_file, watcher) in zip(
+            self._sources, started, strict=True
+        ):
+            source.watch_file = watch_file
+            source.watcher = watcher
         self._follow_session = session
 
     def _stop_follow(self) -> None:
         if self._follow_session is not None:
-            # Wakes a watcher waiting for a chunk to be consumed, and marks
+            # Wakes watchers waiting for a chunk to be consumed, and marks
             # this session's still-queued messages as stale.
             self._follow_session.set()
             self._follow_session = None
-        if self._watcher is not None:
-            self._watcher.close()  # signals exit and joins thread
-            self._watcher = None
-        if self._watch_file is not None:
-            # _follow_offset already excludes the buffered partial line (see
-            # _process_chunk), so resuming re-reads that line from its start.
-            self._watch_file.close()
-            self._watch_file = None
-        self._follow_buffer = b""
+        for source in self._sources:
+            if source.watcher is not None:
+                source.watcher.close()  # signals exit and joins thread
+                source.watcher = None
+            if source.watch_file is not None:
+                # offset already excludes the buffered partial line (see
+                # _process_chunk), so resuming re-reads it from its start.
+                source.watch_file.close()
+                source.watch_file = None
+            source.buffer = b""
 
     def _on_watcher_data(
-        self, chunk: bytes, *, session: threading.Event
+        self, chunk: bytes, *, session: threading.Event, source: SourceFile
     ) -> None:
         """Called from watcher thread: hand the chunk to the main thread.
 
@@ -679,7 +731,9 @@ class LogViewerApp(App):
         """
         consumed = threading.Event()
         self.post_message(
-            self.FollowData(chunk=chunk, session=session, consumed=consumed)
+            self.FollowData(
+                chunk=chunk, session=session, consumed=consumed, source=source
+            )
         )
         while not consumed.wait(timeout=0.05):
             if session.is_set():
@@ -692,12 +746,16 @@ class LogViewerApp(App):
             # A chunk from a stopped session wasn't consumed: _follow_offset
             # still points before it, so resuming re-reads those bytes.
             if message.session is self._follow_session:
-                self._process_chunk(message.chunk)
+                self._process_chunk(message.chunk, source=message.source)
         finally:
             message.consumed.set()
 
     def _on_watcher_error(
-        self, error: Exception, *, session: threading.Event
+        self,
+        error: Exception,
+        *,
+        session: threading.Event,
+        source: SourceFile,
     ) -> None:
         """Called from watcher thread on error; the watcher then exits.
 
@@ -706,14 +764,17 @@ class LogViewerApp(App):
         follow mode by joining this thread, so both would wait (deadlock
         broken only by the 1 s join timeout).
         """
-        self.post_message(self.FollowError(error=error, session=session))
+        self.post_message(
+            self.FollowError(error=error, session=session, source=source)
+        )
 
     def on_log_viewer_app_follow_error(
         self, message: LogViewerApp.FollowError
     ) -> None:
         if message.session is not self._follow_session:
             return
-        self.notify(str(message.error), severity="error")
+        prefix = f"{message.source.name}: " if len(self._sources) > 1 else ""
+        self.notify(f"{prefix}{message.error}", severity="error")
         self.follow_mode = False
 
     def _on_watcher_reset(self, *, session: threading.Event) -> None:
@@ -723,38 +784,44 @@ class LogViewerApp(App):
     def on_log_viewer_app_followed_file_reset(
         self, message: LogViewerApp.FollowedFileReset
     ) -> None:
-        """Reload the file so the list mirrors what is on disk again."""
-        if message.session is not self._follow_session or not self.filepath:
+        """Reload the files so the list mirrors what is on disk again."""
+        if message.session is not self._follow_session or not self._sources:
             return
+        paths = [source.path for source in self._sources]
         self._stop_follow()
-        self.load_file(filepath=self.filepath)
+        self.load_files(filepaths=paths)
         self._start_follow()
         if self.follow_mode:
             self.notify("File was truncated or rotated; reloaded")
 
-    def _process_chunk(self, chunk: bytes) -> None:
+    def _process_chunk(
+        self, chunk: bytes, *, source: SourceFile | None = None
+    ) -> None:
         """Split chunk into lines, parse JSON, append to logs.
 
+        `source` is the file the bytes came from (default: the first one).
         Splits bytes before decoding, so a multi-byte UTF-8 character cut
-        between two chunks stays intact in the buffer.
+        between two chunks stays intact in the buffer. With several files,
+        new lines are appended as they arrive rather than re-sorted.
         """
-        *lines, self._follow_buffer = (self._follow_buffer + chunk).split(
-            b"\n"
-        )
-        self._follow_offset += sum(len(line) + 1 for line in lines)
+        if source is None:
+            source = self._sources[0]
+        *lines, source.buffer = (source.buffer + chunk).split(b"\n")
+        source.offset += sum(len(line) + 1 for line in lines)
 
         new_logs: list[LogEntry] = []
         for raw_line in lines:
             # Every line counts, so line numbers match the file even when
             # blank or invalid lines are skipped below.
-            self._last_line_number += 1
+            source.line_count += 1
             line = raw_line.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
-            log = parse_log_line(line=line, line_number=self._last_line_number)
+            log = parse_log_line(line=line, line_number=source.line_count)
             if log is None:
                 self.log.warning(f"Follow: not a JSON object: {line[:80]}")
                 continue
+            log.source = source.path
             new_logs.append(log)
 
         if new_logs:
@@ -852,7 +919,8 @@ def build_serve_command(
     textual-serve only takes a command string and runs it through a shell
     (`/bin/sh -c` on POSIX, `cmd.exe /c` on Windows). Rather than escape the
     filename for two very different shells, it isn't in the command at all:
-    main() passes it in the SERVE_FILE_ENV environment variable, which the
+    main() passes the file names (a JSON list) in the SERVE_FILE_ENV
+    environment variable, which the
     child inherits. The command holds only fixed arguments plus our own
     interpreter path, quoted for the platform's shell. `-m` runs the same
     interpreter and venv as this process.
@@ -871,7 +939,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="jlv", description="JSON Logs Viewer"
     )
-    parser.add_argument("file", nargs="?", help="JSONL file to view")
+    parser.add_argument(
+        "files",
+        nargs="*",
+        metavar="file",
+        help="JSONL file(s) to view; several are merged by timestamp",
+    )
     parser.add_argument(
         "-f", "--follow", action="store_true", help="Follow mode"
     )
@@ -896,23 +969,25 @@ def main() -> None:
                 "  pip install 'json-logs-viewer[serve]'"
             )
 
-        if args.file:
-            os.environ[SERVE_FILE_ENV] = args.file
+        if args.files:
+            # A JSON list: file names can contain any separator character.
+            os.environ[SERVE_FILE_ENV] = json.dumps(args.files)
         Server(
             build_serve_command(
                 follow=args.follow, no_history=args.no_history
             ),
             # Shown on the served page; it defaults to the command string.
-            title=f"jlv {Path(args.file).name}" if args.file else "jlv",
+            title=f"jlv {Path(args.files[0]).name}" if args.files else "jlv",
         ).serve()
         return
 
     # Pop, so programs started from the app don't inherit it.
-    file = args.file or os.environ.pop(SERVE_FILE_ENV, None)
+    served = os.environ.pop(SERVE_FILE_ENV, None)
+    files = args.files or (json.loads(served) if served else [])
     app = LogViewerApp(
-        file=file,
+        files=files,
         follow=args.follow,
-        show_picker_on_start=file is None,
+        show_picker_on_start=not files,
         history_path=None if args.no_history else default_history_path(),
     )
     app.run()

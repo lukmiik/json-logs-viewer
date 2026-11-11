@@ -31,6 +31,9 @@ An interactive terminal viewer for JSONL log files, built with
   offered by their dotted path (`attributes.level`, `http.status_code`).
   `@timestamp`, `@level` and `@message` show the detected field whatever a
   log calls it (`ts`, `severity`, `msg`, `attributes.level`, ...).
+- Several files at once (`jlv a.jsonl b.jsonl`, or `a` in the file picker to
+  add one), merged by timestamp. The `@file` column shows each line's file;
+  follow mode watches all of them.
 - Follow mode (like `tail -F`) for files that are still being written. If
   the file is truncated or rotated (e.g. by logrotate), it is reloaded.
 - File picker to open another file without restarting.
@@ -61,6 +64,7 @@ uv tool install '.[serve]'
 
 ```bash
 jlv app.jsonl            # open a file
+jlv api.jsonl worker.jsonl  # open several, merged into one timeline
 jlv app.jsonl -f         # open and follow new lines
 jlv                      # start with the file picker
 jlv app.jsonl --serve    # serve the app in a browser
