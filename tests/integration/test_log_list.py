@@ -1482,3 +1482,31 @@ async def test_max_width_follows_filter(
         app.filter_query = "short:"
         await pilot.pause()
         assert log_list._max_content_width == len('{"short": "a"}')
+
+
+@pytest.mark.asyncio
+async def test_wrap_toggle_keeps_cursor_visible(tmp_path: Path) -> None:
+    """The cursor stays visible when wrapping first makes the list scroll.
+
+    Unwrapped, every line fits (no vertical scrollbar yet); wrapped they
+    don't, and the cursor is on the last entry.
+    """
+    log_file = tmp_path / "app.log"
+    log_file.write_text(
+        "".join(
+            json.dumps({"i": i, "message": "word " * 14}) + "\n"
+            for i in range(12)
+        )
+    )
+    app = LogViewerApp(file=str(log_file))
+    async with app.run_test(size=(60, 24)) as pilot:
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+        assert log_list._cursor_index == 11
+
+        await pilot.press("w")
+        await pilot.pause()
+
+        cursor_row = log_list._get_cursor_row()
+        top = log_list.scroll_offset.y
+        assert top <= cursor_row < top + log_list.size.height

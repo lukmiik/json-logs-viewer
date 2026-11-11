@@ -607,11 +607,17 @@ class LogList(ScrollView):
         target_top = cursor_row - self.SCROLLOFF
         target_bottom = cursor_row + self.SCROLLOFF
 
+        # force=True: Textual ignores a vertical scroll while the widget has
+        # no vertical scrollbar, and the scrollbar only appears on the next
+        # layout pass. When the content has just grown past the screen
+        # (turning wrap on), the scroll would be silently dropped.
         if target_top < visible_top:
-            self.scroll_to(y=max(0, target_top), animate=False)
+            self.scroll_to(y=max(0, target_top), animate=False, force=True)
         elif target_bottom > visible_bottom:
             self.scroll_to(
-                y=max(0, target_bottom - self.size.height + 1), animate=False
+                y=max(0, target_bottom - self.size.height + 1),
+                animate=False,
+                force=True,
             )
 
     def action_cursor_down(self) -> None:
