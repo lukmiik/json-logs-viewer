@@ -174,8 +174,10 @@ def parse_log_line(*, line: str, line_number: int) -> LogEntry | None:
 
     Invalid JSON and valid JSON that isn't an object (`[1, 2]`, `"text"`)
     are both skipped by the callers, so one odd line never stops a file
-    from loading.
+    from loading. A leading byte order mark (Windows tools start UTF-8
+    files with one) is removed: json.loads rejects it.
     """
+    line = line.removeprefix("\ufeff")
     try:
         data = json.loads(line)
     except json.JSONDecodeError:

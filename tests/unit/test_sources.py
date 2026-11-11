@@ -68,3 +68,19 @@ def test_read_source_tags_lines_and_positions_follow(tmp_path: Path) -> None:
     assert [log.line_number for log in logs] == [1, 3]
     assert {log.source for log in logs} == {str(path)}
     assert (source.offset, source.line_count) == (path.stat().st_size, 3)
+
+
+def test_utf8_bom_doesnt_hide_the_first_line(tmp_path: Path) -> None:
+    """Windows tools often start UTF-8 files with a byte order mark."""
+    import gzip
+
+    content = b'\xef\xbb\xbf{"a": 1}\n{"a": 2}\n'
+    plain = tmp_path / "bom.jsonl"
+    plain.write_bytes(content)
+    packed = tmp_path / "bom.jsonl.gz"
+    packed.write_bytes(gzip.compress(content))
+
+    for path in (plain, packed):
+        logs, _ = read_source(path=str(path))
+        assert [log.data["a"] for log in logs] == [1, 2]
+        assert logs[0].raw_json == '{"a": 1}'
