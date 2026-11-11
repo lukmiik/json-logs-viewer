@@ -40,6 +40,13 @@ class LogViewerApp(App):
         watcher thread can exit before the app joins it.
         """
 
+    class FollowError(Message):
+        """The watcher stopped because reading the file failed."""
+
+        def __init__(self, error: Exception) -> None:
+            self.error = error
+            super().__init__()
+
     BINDINGS = [
         ("/", "focus_search", "Search"),
         ("C", "toggle_case_sensitive", "Case"),
@@ -417,9 +424,20 @@ class LogViewerApp(App):
         self.call_from_thread(self._process_chunk, chunk)
 
     def _on_watcher_error(self, error: Exception) -> None:
-        """Called from watcher thread on error."""
-        self.call_from_thread(self.notify, str(error), severity="error")
-        self.call_from_thread(self._stop_follow_and_update)
+        """Called from watcher thread on error; the watcher then exits.
+
+        post_message, not call_from_thread: call_from_thread blocks this
+        thread until the main thread is done, but the main thread stops
+        follow mode by joining this thread, so both would wait (deadlock
+        broken only by the 1 s join timeout).
+        """
+        self.post_message(self.FollowError(error))
+
+    def on_log_viewer_app_follow_error(
+        self, message: LogViewerApp.FollowError
+    ) -> None:
+        self.notify(str(message.error), severity="error")
+        self.follow_mode = False
 
     def _on_watcher_reset(self) -> None:
         """Called from watcher thread when the file was truncated/rotated."""
@@ -436,9 +454,6 @@ class LogViewerApp(App):
         self._start_follow()
         if self.follow_mode:
             self.notify("File was truncated or rotated; reloaded")
-
-    def _stop_follow_and_update(self) -> None:
-        self.follow_mode = False
 
     def _process_chunk(self, chunk: bytes) -> None:
         """Split chunk into lines, parse JSON, append to logs.

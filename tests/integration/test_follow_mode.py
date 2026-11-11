@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, BinaryIO
@@ -11,6 +14,7 @@ from typing import Any, BinaryIO
 import pytest
 
 from json_logs_viewer import app as app_module
+from json_logs_viewer import log_watcher as log_watcher_module
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.log_watcher import PollWatcher
 from json_logs_viewer.widgets.log_list import LogList
@@ -481,3 +485,36 @@ async def test_follow_setup_failure_closes_file(
         assert app._watch_file is None
         assert len(opened) == 1
         assert opened[0].closed
+
+
+@pytest.mark.asyncio
+async def test_watcher_read_error_stops_follow_without_stall(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A read error turns follow off promptly (no 1 s join deadlock)."""
+    path = tmp_path / "app.log"
+    _write_lines(path=path, tag="a", count=2, mode="w")
+    fail = threading.Event()
+    real_read = os.read
+
+    def flaky_read(fd: int, n: int) -> bytes:
+        if fail.is_set():
+            raise OSError(5, "Input/output error")
+        return real_read(fd, n)
+
+    monkeypatch.setattr(log_watcher_module.os, "read", flaky_read)
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        started = time.monotonic()
+        fail.set()
+        while app.follow_mode and time.monotonic() - started < 3:
+            await asyncio.sleep(0.005)
+        elapsed = time.monotonic() - started
+        await pilot.pause()
+
+        assert app.follow_mode is False
+        assert app._watcher is None
+        assert app._watch_file is None
+        # The poll interval is 50 ms; the old deadlock took the full 1 s.
+        assert elapsed < 0.5
