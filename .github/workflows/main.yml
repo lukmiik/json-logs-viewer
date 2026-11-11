@@ -27,11 +27,14 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
 
+      # CI must report problems, not repair them: --fix / plain `format`
+      # rewrite files in this throwaway checkout and exit 0, so bad code
+      # would still pass. github output annotates the PR diff inline.
       - name: Run ruff lint
-        run: uv run ruff check --fix .
+        run: uv run ruff check --output-format=github .
 
-      - name: Run ruff format
-        run: uv run ruff format .
+      - name: Check ruff formatting
+        run: uv run ruff format --check --diff .
 
       - name: Run ty check
         run: uv run ty check
