@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, cast
 from textual.binding import Binding
 from textual.containers import VerticalScroll
 from textual.screen import ModalScreen
-from textual.timer import Timer
 from textual.widgets import Footer, TextArea
 from textual.widgets.text_area import Selection
 
@@ -17,6 +16,7 @@ from json_logs_viewer.clipboard import (
 )
 from json_logs_viewer.constants import COPY_CONTEXT_SIZE
 from json_logs_viewer.models import LogEntry
+from json_logs_viewer.selection_copier import SelectionCopier
 
 if TYPE_CHECKING:
     from textual.app import ComposeResult
@@ -77,8 +77,9 @@ class DetailModal(ModalScreen[None]):
     ) -> None:
         super().__init__()
         self.log_entry = log_entry
-        self._selection_timer: Timer | None = None
-        self._last_selected_text: str = ""
+        self._selection_copier = SelectionCopier(
+            owner=self, clear_selection=self._clear_selection
+        )
 
     @property
     def _app(self) -> LogViewerApp:
@@ -129,24 +130,13 @@ class DetailModal(ModalScreen[None]):
     def on_text_area_selection_changed(
         self, event: TextArea.SelectionChanged
     ) -> None:
-        if event.text_area.id == "json-content":
-            selected_text = event.text_area.selected_text
-            if selected_text and selected_text != self._last_selected_text:
-                self._last_selected_text = selected_text
-                if self._selection_timer is not None:
-                    self._selection_timer.stop()
-                self._selection_timer = self.set_timer(
-                    0.5, self._copy_selection_to_clipboard
-                )
+        self._selection_copier.update(
+            selected_text=event.text_area.selected_text
+        )
 
-    def _copy_selection_to_clipboard(self) -> None:
-        self._selection_timer = None
-        if self._last_selected_text:
-            self.app.copy_to_clipboard(self._last_selected_text)
-            self.notify("Copied selection to clipboard")
-            self._last_selected_text = ""
-            ta = self.query_one("#json-content", TextArea)
-            ta.selection = Selection.cursor(ta.cursor_location)
+    def _clear_selection(self) -> None:
+        ta = self.query_one("#json-content", TextArea)
+        ta.selection = Selection.cursor(ta.cursor_location)
 
     def action_copy_log(self) -> None:
         """Copy the current log entry to clipboard."""

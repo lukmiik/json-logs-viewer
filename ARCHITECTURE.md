@@ -16,7 +16,9 @@ src/json_logs_viewer/
 ├── log_reader.py          mmap-based backward line reader
 ├── log_watcher.py         follow-mode watcher threads
 ├── clipboard.py           formatting helpers for copy actions
-├── constants.py           history limit, copy context size, column width
+├── selection_copier.py    SelectionCopier: copy a selection once it settles
+├── constants.py           history limit, copy context size, column width,
+│                          selection copy delay
 ├── styles.tcss            app-level CSS
 ├── widgets/
 │   ├── log_list.py        LogList: virtual ScrollView, the main list

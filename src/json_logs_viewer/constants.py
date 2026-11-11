@@ -2,3 +2,5 @@ SEARCH_HISTORY_LIMIT = 100
 COPY_CONTEXT_SIZE = 5
 MAX_COL_WIDTH = 30
 COLUMN_SEPARATOR = " | "
+# Seconds a text selection must stay unchanged before it is copied.
+SELECTION_COPY_DELAY = 0.5

@@ -12,7 +12,9 @@ An interactive terminal viewer for JSONL log files, built with
   between matches with `n`/`N`).
 - Case-sensitive toggle.
 - Soft-wrap toggle for long lines (horizontal scrolling otherwise).
-- Detail view with pretty-printed JSON. Mouse-selecting text copies it.
+- Detail view with pretty-printed JSON. Selected text (mouse or
+  shift+arrows) is copied once the selection stays put for half a second,
+  in the detail view, the help screen and the search bar.
 - Copy to the clipboard via OSC 52: `y` copies the log as pretty JSON, `Y`
   copies it plus up to 5 entries before and after as raw JSONL.
 - Columns: show any of the 20 most common top-level fields as aligned columns
