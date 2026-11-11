@@ -13,6 +13,16 @@ if TYPE_CHECKING:
     from json_logs_viewer.app import LogViewerApp  # noqa: F401
 
 
+def add_to_history(*, history: list[str], query: str, limit: int) -> list[str]:
+    """Return a new history list with `query` as the most recent entry.
+
+    A query that is already in the history is moved to the end instead of
+    being duplicated, so every entry is unique. A new list is returned
+    (never mutated in place) so assigning it to a reactive fires watchers.
+    """
+    return [*(item for item in history if item != query), query][-limit:]
+
+
 class SearchBar(Input):
     """Search input for filter queries."""
 
@@ -52,11 +62,11 @@ class SearchBar(Input):
         app = cast("LogViewerApp", self.app)
         app.filter_query = query
         if query:
-            history = app.search_history
-            if not history or history[-1] != query:
-                history.append(query)
-                if len(history) > SEARCH_HISTORY_LIMIT:
-                    history.pop(0)
+            app.search_history = add_to_history(
+                history=app.search_history,
+                query=query,
+                limit=SEARCH_HISTORY_LIMIT,
+            )
 
         self.action_focus_log_list()
 

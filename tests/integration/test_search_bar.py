@@ -242,3 +242,45 @@ async def test_escape_focuses_log_list(sample_jsonl_file: Path) -> None:
 
         log_list = app.query_one("#logs", LogList)
         assert log_list.has_focus
+
+
+@pytest.mark.asyncio
+async def test_resubmitting_query_moves_it_to_end(
+    sample_jsonl_file: Path,
+) -> None:
+    """A repeated query is moved to the most recent slot, not duplicated."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        search_bar = app.query_one("#search", SearchBar)
+        for query in ("error", "info", "error"):
+            search_bar.value = query
+            app.action_focus_search()
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+
+        assert app.search_history == ["info", "error"]
+
+
+@pytest.mark.asyncio
+async def test_submit_notifies_search_history_watchers(
+    sample_jsonl_file: Path,
+) -> None:
+    """search_history must be reassigned so reactive watchers fire."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    seen: list[list[str]] = []
+    async with app.run_test() as pilot:
+        app.watch(
+            app,
+            "search_history",
+            lambda history: seen.append(list(history)),
+            init=False,
+        )
+        search_bar = app.query_one("#search", SearchBar)
+        search_bar.value = "error"
+        app.action_focus_search()
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert seen == [["error"]]

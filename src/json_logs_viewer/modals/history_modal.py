@@ -60,7 +60,7 @@ class HistoryModal(ModalScreen[str | None]):
         with Vertical(id="history-dialog") as dialog:
             if history:
                 option_list = OptionList(
-                    *[Option(query, id=query) for query in history],
+                    *[Option(query) for query in history],
                     id="history-list",
                 )
                 yield option_list
@@ -75,6 +75,14 @@ class HistoryModal(ModalScreen[str | None]):
         """Dismiss with the selected query when Enter is pressed."""
         option = event.option
         self.dismiss(str(option.prompt))
+
+    def check_action(
+        self, action: str, parameters: tuple[object, ...]
+    ) -> bool | None:
+        """Disable cursor actions when there is no list to move in."""
+        if action in ("cursor_down", "cursor_up"):
+            return bool(self.query("#history-list"))
+        return True
 
     def action_cursor_down(self) -> None:
         option_list = self.query_one("#history-list", OptionList)

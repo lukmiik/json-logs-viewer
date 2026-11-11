@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from textual.widgets import OptionList
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.modals.history_modal import HistoryModal
@@ -316,3 +317,42 @@ async def test_arrow_up_wraps_to_end(
         await pilot.press("up")
         await pilot.pause()
         assert option_list.highlighted == 2
+
+
+@pytest.mark.asyncio
+async def test_repeated_query_opens_modal_without_duplicates(
+    sample_jsonl_file: Path,
+) -> None:
+    """Re-submitting an older query must not crash the modal (DuplicateID)."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        for query in ("error", "info", "error"):
+            await _submit_query(app=app, pilot=pilot, query=query)
+
+        await pilot.press("H")
+        await pilot.pause()
+
+        assert isinstance(app.screen, HistoryModal)
+        option_list = app.screen.query_one("#history-list", OptionList)
+        prompts = [
+            str(option_list.get_option_at_index(i).prompt)
+            for i in range(option_list.option_count)
+        ]
+        assert prompts == ["error", "info"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("key", ["j", "k", "down", "up"])
+async def test_cursor_keys_on_empty_history_do_not_crash(
+    sample_jsonl_file: Path, key: str
+) -> None:
+    """Cursor keys in an empty history modal must be a no-op."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.press("H")
+        await pilot.pause()
+
+        await pilot.press(key)
+        await pilot.pause()
+
+        assert isinstance(app.screen, HistoryModal)
