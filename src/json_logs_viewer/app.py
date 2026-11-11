@@ -157,12 +157,14 @@ class LogViewerApp(App):
     ) -> None:
         """Rebuild or incrementally update the field frequency counter.
 
-        If new_logs is a superset (append), only count the new entries.
-        Otherwise, recount from scratch.
+        If new_logs starts with old_logs (follow-mode append), only count the
+        new entries. Otherwise, recount from scratch.
         """
         old_len = len(old_logs)
         new_len = len(new_logs)
-        if new_len >= old_len > 0 and new_logs[:old_len] is old_logs[:old_len]:
+        # `==`, not `is`: a slice is always a new list, so `is` never matched.
+        # List equality checks element identity first, so this is fast.
+        if new_len >= old_len > 0 and new_logs[:old_len] == old_logs:
             # Incremental append (follow mode): only count new entries.
             for log in new_logs[old_len:]:
                 self._field_counts.update(log.data.keys())

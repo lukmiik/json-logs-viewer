@@ -112,3 +112,39 @@ async def test_discover_fields_counts_correctly() -> None:
         fields = app.discover_fields()
 
         assert fields == ["a", "b", "c"]
+
+
+@pytest.mark.asyncio
+async def test_appending_logs_counts_only_new_entries() -> None:
+    """Follow-mode appends update the existing counter instead of recounting.
+
+    A full recount replaces ``_field_counts`` with a new Counter, so keeping
+    the same object proves the incremental path ran.
+    """
+    app = LogViewerApp()
+    async with app.run_test():
+        app.logs = [
+            LogEntry(line_number=1, data={"a": 1}),
+            LogEntry(line_number=2, data={"a": 1, "b": 2}),
+        ]
+        counter = app._field_counts
+
+        app.logs = [*app.logs, LogEntry(line_number=3, data={"b": 1, "c": 2})]
+
+        assert app._field_counts is counter
+        assert app._field_counts == Counter({"a": 2, "b": 2, "c": 1})
+
+
+@pytest.mark.asyncio
+async def test_replacing_logs_recounts_from_scratch() -> None:
+    """Loading a different file must drop counts from the old file."""
+    app = LogViewerApp()
+    async with app.run_test():
+        app.logs = [LogEntry(line_number=1, data={"old": 1})]
+
+        app.logs = [
+            LogEntry(line_number=1, data={"new": 1}),
+            LogEntry(line_number=2, data={"new": 2}),
+        ]
+
+        assert app._field_counts == Counter({"new": 2})
