@@ -44,13 +44,13 @@ src/json_logs_viewer/
 
 ```
 ┌──────────────────────────────────────────────┐
+│ SearchBar (#search, layer "search")          │
+│   floats over the top while focused          │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┤
 │ #logs-pane (Vertical, carries the border)    │
 │   ColumnHeader  col1 | col2 |  (if columns)  │
 │   LogList (#logs)                   1fr      │
 │     [v1   | v2   | ] {"raw": "json line"}    │
-├──────────────────────────────────────────────┤
-│ SearchBar (#search)    shown only while      │
-│                        focused               │
 ├──────────────────────────────────────────────┤
 │ StatusBar (#status)                          │
 │   File: x  Total: n  Filtered: m  ⏺ FOLLOW   │
@@ -59,6 +59,11 @@ src/json_logs_viewer/
 │   Footer (keybindings)                       │
 └──────────────────────────────────────────────┘
 ```
+
+The search bar is on its own layer (`MainScreen { layers: default search
+_loading _toastrack _tooltips }` in styles.tcss), so showing it never
+resizes or moves the list. Textual's internal layers are listed after it:
+a layer missing from the list sorts to the bottom, under the bar.
 
 The default screen is `MainScreen`, whose `AUTO_FOCUS = "#logs"` starts
 with the list focused. Textual otherwise focuses the first focusable widget

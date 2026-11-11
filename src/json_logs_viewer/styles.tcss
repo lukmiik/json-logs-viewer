@@ -2,7 +2,17 @@ Screen {
     layout: vertical;
 }
 
+/* The search bar floats on its own layer over the top of the list.
+   Docked in the normal layout it pushed the list down and shrank it
+   whenever it opened, so the log lines jumped. Textual's own layers are
+   listed too: a layer missing from this list sorts to the bottom, which
+   would put toasts and tooltips under the search bar. */
+MainScreen {
+    layers: default search _loading _toastrack _tooltips;
+}
+
 #search {
+    layer: search;
     height: 3;
     border: solid $primary;
     dock: top;

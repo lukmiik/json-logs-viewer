@@ -362,3 +362,36 @@ async def test_search_bar_visible_again_when_terminal_regains_focus(
         assert search_bar.has_focus
         assert search_bar.display is True
         assert search_bar.value == "lev"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cursor_keys", [["g"], ["g", *"j" * 12], ["G"]])
+async def test_opening_search_bar_does_not_move_the_list(
+    tmp_path: Path, cursor_keys: list[str]
+) -> None:
+    """The bar floats over the list (own layer), so no line shifts.
+
+    Docked in the layout, it pushed the list down and shrank it, and the
+    cursor-margin scroll then moved lines on open or on close.
+    """
+    log_file = tmp_path / "app.jsonl"
+    log_file.write_text("".join(f'{{"i": {i}}}\n' for i in range(100)))
+    app = LogViewerApp(file=str(log_file))
+    async with app.run_test(size=(80, 30)) as pilot:
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+        await pilot.press(*cursor_keys)
+        await pilot.pause()
+
+        def layout() -> tuple[object, float]:
+            return log_list.region, log_list.scroll_y
+
+        closed = layout()
+        await pilot.press("slash")
+        await pilot.pause()
+        assert app.query_one(SearchBar).display
+        assert layout() == closed
+
+        await pilot.press("escape")
+        await pilot.pause()
+        assert layout() == closed
