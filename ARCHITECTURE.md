@@ -255,7 +255,8 @@ when the query uses `last:<duration>`.
    the same precedence as `AND`. Each bare word is its own `FullText` term;
    quotes make a phrase.
 3. AST nodes:
-   - `FieldMatch`: substring match on `str(value)` of the field.
+   - `FieldMatch`: substring match on the field's value as JSON text
+     (`true`, `null`, `[1, 2]`; strings as they are), as the list shows it.
    - `FieldExists`: the field path reaches at least one value.
    - `FullText`: substring match on `LogEntry.search_text`: the JSON line
      as shown, with `\u` escapes decoded (cached per entry).

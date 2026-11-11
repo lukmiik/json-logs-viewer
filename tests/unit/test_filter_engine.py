@@ -744,3 +744,34 @@ class TestUnclosedQuote:
     def test_matches_what_was_typed(self) -> None:
         assert not parse_filter(query='"abc')(make_log(m="abx"))
         assert parse_filter(query='"abc')(make_log(m="xabcx"))
+
+
+class TestFieldValuesAsJson:
+    """Field values compare as JSON text, as shown in the list."""
+
+    @pytest.mark.parametrize("case_sensitive", [False, True])
+    @pytest.mark.parametrize(
+        ("query", "data"),
+        [
+            ("active:true", {"active": True}),
+            ("active:false", {"active": False}),
+            ("parent:null", {"parent": None}),
+            ("a.b:true", {"a": {"b": True}}),
+            ("tags:x", {"tags": ["x", "y"]}),
+            ("code:502", {"code": 502}),
+        ],
+    )
+    def test_matches(
+        self, query: str, data: dict[str, object], case_sensitive: bool
+    ) -> None:
+        log = LogEntry(line_number=1, data=data)
+        assert parse_filter(query=query, case_sensitive=case_sensitive)(log)
+
+    def test_python_spellings_no_longer_match(self) -> None:
+        assert not parse_filter(query="active:True", case_sensitive=True)(
+            make_log(active=True)
+        )
+        assert not parse_filter(query="parent:None")(make_log(parent=None))
+
+    def test_missing_field_still_doesnt_match(self) -> None:
+        assert not parse_filter(query="parent:null")(make_log(other=1))

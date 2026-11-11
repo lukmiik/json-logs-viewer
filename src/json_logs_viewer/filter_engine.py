@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 import operator
 import re
@@ -192,6 +193,21 @@ class ASTNode(ABC):
         pass
 
 
+def _json_text(value: Any) -> str:  # noqa: ANN401
+    """A field value as it reads in the JSON line: true, null, [1, 2].
+
+    Python's str() gave True/None/['a'], so field:true (case-sensitive)
+    and field:null never matched what the list shows.
+    """
+    if isinstance(value, str):
+        return value
+    if value is None or isinstance(value, bool):
+        return json.dumps(value)
+    if isinstance(value, (int, float)):
+        return str(value)
+    return json.dumps(value, ensure_ascii=False)
+
+
 @dataclass
 class FieldMatch(ASTNode):
     field: str
@@ -202,22 +218,22 @@ class FieldMatch(ASTNode):
             # Fast path, the common case: a plain lookup. Matching runs once
             # per log on every filter change, so avoiding resolve_field's
             # generator here keeps top-level fields as fast as before.
-            value = log_entry.data.get(self.field)
-            if value is None:
+            data = log_entry.data
+            if self.field not in data:
                 return False
+            text = _json_text(data[self.field])
             if case_sensitive:
-                return self.value in str(value)
-            return self.value.lower() in str(value).lower()
+                return self.value in text
+            return self.value.lower() in text.lower()
         return any(
             self._contains(value=value, case_sensitive=case_sensitive)
             for value in resolve_field(value=log_entry.data, path=self.field)
-            if value is not None
         )
 
     def _contains(self, *, value: Any, case_sensitive: bool) -> bool:  # noqa: ANN401
         pattern = self.value if case_sensitive else self.value.lower()
-        text = str(value) if case_sensitive else str(value).lower()
-        return pattern in text
+        text = _json_text(value)
+        return pattern in (text if case_sensitive else text.lower())
 
 
 @dataclass
