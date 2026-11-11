@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import IO, Any
 
 from textual.app import App, ComposeResult, SystemCommand
+from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import Screen
 
@@ -27,6 +28,13 @@ from json_logs_viewer.widgets.status_bar import StatusBar
 
 class LogViewerApp(App):
     CSS_PATH = "styles.tcss"
+
+    class FollowedFileReset(Message):
+        """The followed file was truncated or rotated (posted by the watcher).
+
+        Sent with post_message, which is thread-safe and doesn't wait, so the
+        watcher thread can exit before the app joins it.
+        """
 
     BINDINGS = [
         ("/", "focus_search", "Search"),
@@ -354,8 +362,10 @@ class LogViewerApp(App):
         self._watcher = get_watcher()
         self._watcher.watch(
             fileno=self._watch_file.fileno(),
+            path=self.filepath,
             callback=self._on_watcher_data,
             error_callback=self._on_watcher_error,
+            reset_callback=self._on_watcher_reset,
         )
         self._watcher.start()
 
@@ -377,6 +387,21 @@ class LogViewerApp(App):
         """Called from watcher thread on error."""
         self.call_from_thread(self.notify, str(error), severity="error")
         self.call_from_thread(self._stop_follow_and_update)
+
+    def _on_watcher_reset(self) -> None:
+        """Called from watcher thread when the file was truncated/rotated."""
+        self.post_message(self.FollowedFileReset())
+
+    def on_log_viewer_app_followed_file_reset(
+        self, _: LogViewerApp.FollowedFileReset
+    ) -> None:
+        """Reload the file so the list mirrors what is on disk again."""
+        if not self.follow_mode or self.filepath is None:
+            return
+        self._stop_follow()
+        self.load_file(filepath=self.filepath)
+        self._start_follow()
+        self.notify("File was truncated or rotated; reloaded")
 
     def _stop_follow_and_update(self) -> None:
         self.follow_mode = False

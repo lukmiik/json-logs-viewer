@@ -161,6 +161,20 @@ complete ones and appends them to `logs`. If the cursor was on the last
 entry, it follows the new tail. On stop the current offset is saved so
 resuming continues where it left off.
 
+When a read returns no data, the watcher checks whether the file was reset:
+
+- **Truncated**: `fstat(fd).st_size` is below the fd's read offset (the
+  kernel keeps the offset when another process truncates the file).
+- **Rotated**: `stat(path)` names a different device/inode than the open fd
+  (e.g. logrotate renamed it and created a new file). If the path is missing
+  (mid-rotation) it keeps waiting.
+
+On a reset the watcher stops itself and calls `reset_callback`, which posts
+`LogViewerApp.FollowedFileReset` (`post_message` is thread-safe and doesn't
+block). The app then reloads the file with `load_file` and restarts follow
+mode, so `logs`, line numbers and the partial-line buffer match the new
+file.
+
 ## Command palette
 
 `get_system_commands` adds: Open file, Toggle line wrap, Toggle

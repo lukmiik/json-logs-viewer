@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -34,6 +35,8 @@ def test_poll_watcher_detects_new_bytes(
 
     watcher.watch(
         fileno=read_fd,
+        path=str(filepath),
+        reset_callback=MagicMock(),
         callback=received.append,
         error_callback=MagicMock(),
     )
@@ -64,6 +67,8 @@ def test_poll_watcher_no_callback_when_idle(
 
     watcher.watch(
         fileno=read_fd,
+        path=str(filepath),
+        reset_callback=MagicMock(),
         callback=callback,
         error_callback=MagicMock(),
     )
@@ -92,6 +97,8 @@ def test_callback_receives_only_new_content(
 
     watcher.watch(
         fileno=read_fd,
+        path=str(filepath),
+        reset_callback=MagicMock(),
         callback=received.append,
         error_callback=MagicMock(),
     )
@@ -122,6 +129,8 @@ def test_close_stops_thread(
 
     watcher.watch(
         fileno=read_fd,
+        path=str(filepath),
+        reset_callback=MagicMock(),
         callback=MagicMock(),
         error_callback=MagicMock(),
     )
@@ -152,6 +161,8 @@ def test_error_callback_on_bad_fd() -> None:
 
     watcher.watch(
         fileno=bad_fd,
+        path="/dev/null",
+        reset_callback=MagicMock(),
         callback=MagicMock(),
         error_callback=error_callback,
     )
@@ -176,3 +187,102 @@ def test_get_watcher_returns_poll_on_linux() -> None:
         assert isinstance(watcher, SelectorWatcher)
     else:
         assert isinstance(watcher, PollWatcher)
+
+
+def _wait_for(*, predicate: Callable[[], bool], timeout: float = 1.0) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline and not predicate():
+        time.sleep(0.02)
+
+
+def _start_watcher_at_end(
+    *, filepath: Path
+) -> tuple[PollWatcher, int, MagicMock, MagicMock]:
+    """Start a PollWatcher on filepath positioned at its end."""
+    read_fd = os.open(str(filepath), os.O_RDONLY)
+    os.lseek(read_fd, 0, os.SEEK_END)
+    callback = MagicMock()
+    reset_callback = MagicMock()
+    watcher = PollWatcher()
+    watcher.watch(
+        fileno=read_fd,
+        path=str(filepath),
+        callback=callback,
+        error_callback=MagicMock(),
+        reset_callback=reset_callback,
+    )
+    watcher.start()
+    return watcher, read_fd, callback, reset_callback
+
+
+def test_reset_callback_on_truncation(tmp_path: Path) -> None:
+    """Truncating the file (e.g. `> app.log`) reports a reset."""
+    filepath = tmp_path / "app.log"
+    filepath.write_text('{"msg":"old"}\n' * 50)
+    watcher, read_fd, _, reset_callback = _start_watcher_at_end(
+        filepath=filepath
+    )
+    try:
+        filepath.write_text('{"msg":"new"}\n')
+        _wait_for(predicate=lambda: reset_callback.called)
+    finally:
+        watcher.close()
+        os.close(read_fd)
+
+    reset_callback.assert_called_once()
+
+
+def test_reset_callback_on_rotation(tmp_path: Path) -> None:
+    """Renaming the file and creating a new one reports a reset."""
+    filepath = tmp_path / "app.log"
+    filepath.write_text('{"msg":"old"}\n')
+    watcher, read_fd, _, reset_callback = _start_watcher_at_end(
+        filepath=filepath
+    )
+    try:
+        filepath.rename(tmp_path / "app.log.1")
+        filepath.write_text('{"msg":"new"}\n')
+        _wait_for(predicate=lambda: reset_callback.called)
+    finally:
+        watcher.close()
+        os.close(read_fd)
+
+    reset_callback.assert_called_once()
+
+
+def test_no_reset_while_file_is_missing(tmp_path: Path) -> None:
+    """Mid-rotation (old file renamed, new not yet created) keeps waiting."""
+    filepath = tmp_path / "app.log"
+    filepath.write_text('{"msg":"old"}\n')
+    watcher, read_fd, _, reset_callback = _start_watcher_at_end(
+        filepath=filepath
+    )
+    try:
+        filepath.rename(tmp_path / "app.log.1")
+        time.sleep(0.2)
+        assert not reset_callback.called
+        assert watcher._thread is not None
+        assert watcher._thread.is_alive()
+    finally:
+        watcher.close()
+        os.close(read_fd)
+
+
+def test_no_reset_on_normal_append(tmp_path: Path) -> None:
+    """Plain appends are delivered as data, never as a reset."""
+    filepath = tmp_path / "app.log"
+    filepath.write_text('{"msg":"old"}\n')
+    watcher, read_fd, callback, reset_callback = _start_watcher_at_end(
+        filepath=filepath
+    )
+    try:
+        with filepath.open("a") as f:
+            f.write('{"msg":"new"}\n')
+        _wait_for(predicate=lambda: callback.called)
+        time.sleep(0.15)
+    finally:
+        watcher.close()
+        os.close(read_fd)
+
+    callback.assert_called_once_with(b'{"msg":"new"}\n')
+    assert not reset_callback.called

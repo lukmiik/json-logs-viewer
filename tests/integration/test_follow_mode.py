@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -241,3 +243,72 @@ async def test_auto_scroll_with_filter_active(
         assert len(app.filtered_logs) > filtered_count
         assert app.selected_index == len(app.filtered_logs) - 1
         assert app.filtered_logs[-1].message == "new error"
+
+
+async def _wait_for_logs(
+    *, app: LogViewerApp, pilot: object, predicate: Callable[[], bool]
+) -> None:
+    """Let the watcher thread and the app's message loop catch up."""
+    for _ in range(40):
+        await asyncio.sleep(0.05)
+        if predicate():
+            break
+    await pilot.pause()  # type: ignore[attr-defined]
+
+
+def _write_lines(*, path: Path, tag: str, count: int, mode: str) -> None:
+    with path.open(mode, encoding="utf-8") as f:
+        for i in range(count):
+            f.write(json.dumps({"tag": tag, "i": i}) + "\n")
+
+
+@pytest.mark.asyncio
+async def test_follow_reloads_after_truncation(tmp_path: Path) -> None:
+    """After `> app.log`, the list shows only the new file's lines."""
+    path = tmp_path / "app.log"
+    _write_lines(path=path, tag="old", count=50, mode="w")
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert len(app.logs) == 50
+
+        _write_lines(path=path, tag="new", count=3, mode="w")
+        await _wait_for_logs(
+            app=app,
+            pilot=pilot,
+            predicate=lambda: [log.data["tag"] for log in app.logs]
+            == ["new"] * 3,
+        )
+
+        assert [log.data["i"] for log in app.logs] == [0, 1, 2]
+        assert [log.line_number for log in app.logs] == [1, 2, 3]
+        assert app.follow_mode is True
+
+        # Following continues on the new file.
+        _write_lines(path=path, tag="new", count=1, mode="a")
+        await _wait_for_logs(
+            app=app, pilot=pilot, predicate=lambda: len(app.logs) == 4
+        )
+        assert len(app.logs) == 4
+
+
+@pytest.mark.asyncio
+async def test_follow_reloads_after_rotation(tmp_path: Path) -> None:
+    """After logrotate-style rename + create, the new file is followed."""
+    path = tmp_path / "app.log"
+    _write_lines(path=path, tag="old", count=50, mode="w")
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+
+        path.rename(tmp_path / "app.log.1")
+        _write_lines(path=path, tag="new", count=3, mode="w")
+        await _wait_for_logs(
+            app=app,
+            pilot=pilot,
+            predicate=lambda: [log.data["tag"] for log in app.logs]
+            == ["new"] * 3,
+        )
+
+        assert [log.data["tag"] for log in app.logs] == ["new"] * 3
+        assert app.follow_mode is True

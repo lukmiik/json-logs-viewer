@@ -17,7 +17,8 @@ An interactive terminal viewer for JSONL log files, built with
   copies it plus up to 5 entries before and after as raw JSONL.
 - Columns: show any of the 20 most common top-level fields as aligned columns
   in front of each line.
-- Follow mode (`tail -f`) for files that are still being written.
+- Follow mode (like `tail -F`) for files that are still being written. If
+  the file is truncated or rotated (e.g. by logrotate), it is reloaded.
 - File picker to open another file without restarting.
 - In-memory search history.
 - Can be served in a browser via `textual-serve`.
