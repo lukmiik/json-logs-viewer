@@ -926,6 +926,15 @@ class LogViewerApp(App):
         """
         if source is None:
             source = self._sources[0]
+        if source.awaiting_newline and chunk:
+            # The line before was counted when the file was loaded; its
+            # newline arriving now ends it, it isn't an empty line.
+            source.awaiting_newline = False
+            for ending in (b"\r\n", b"\n"):
+                if chunk.startswith(ending):
+                    chunk = chunk[len(ending) :]
+                    source.offset += len(ending)
+                    break
         *lines, source.buffer = (source.buffer + chunk).split(b"\n")
         source.offset += sum(len(line) + 1 for line in lines)
 

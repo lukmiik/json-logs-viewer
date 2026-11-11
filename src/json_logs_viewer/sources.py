@@ -41,6 +41,9 @@ class SourceFile:
     watcher: WatcherBase | None = None
     # gzip/bzip2/xz: read whole once; it can't be followed.
     compressed: bool = False
+    # The unterminated last line was counted as complete at load; the
+    # writer's newline for it is still to come and must not count again.
+    awaiting_newline: bool = False
 
     @property
     def name(self) -> str:
@@ -119,11 +122,18 @@ def read_source(*, path: str) -> tuple[list[LogEntry], SourceFile]:
             logs.append(log)
     logs.reverse()
     offset, line_count = find_line_boundary(filepath=file_path, size=size)
+    awaiting_newline = False
     if offset < size and logs and logs[-1].line_number == line_count + 1:
         # The unterminated last line parsed as JSON, so it is complete (a
         # half-written JSON object can't parse): count it as consumed.
         offset, line_count = size, line_count + 1
-    return logs, SourceFile(path=path, offset=offset, line_count=line_count)
+        awaiting_newline = True
+    return logs, SourceFile(
+        path=path,
+        offset=offset,
+        line_count=line_count,
+        awaiting_newline=awaiting_newline,
+    )
 
 
 _BEFORE_ANY_TIME = datetime.min.replace(tzinfo=UTC)

@@ -654,3 +654,30 @@ async def test_appends_update_state_like_a_full_recompute(
             assert flags == log_list._match_flags
             assert wrapped == log_list._wrapped_lines
             assert counts == dict(app._field_counts)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n"])
+@pytest.mark.parametrize("split", [False, True])
+async def test_line_numbers_after_an_unterminated_last_line(
+    tmp_path: Path, newline: bytes, split: bool
+) -> None:
+    """The writer's late newline closes line 1; it isn't an extra line."""
+    path = tmp_path / "app.jsonl"
+    path.write_bytes(b'{"n": 1}')
+    app = LogViewerApp(file=str(path))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        rest = newline + b'{"n": 2}' + newline + b'{"n": 3}' + newline
+        if split:  # the newline arrives on its own
+            app._process_chunk(rest[: len(newline)])
+            app._process_chunk(rest[len(newline) :])
+        else:
+            app._process_chunk(rest)
+        await pilot.pause()
+
+        assert [(log.data["n"], log.line_number) for log in app.logs] == [
+            (1, 1),
+            (2, 2),
+            (3, 3),
+        ]
