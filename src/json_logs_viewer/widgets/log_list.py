@@ -277,6 +277,18 @@ class LogList(ScrollView):
         self._scroll_cursor_into_view()
         self.refresh()
 
+    def _widen_columns(self, *, entries: list[LogEntry]) -> None:
+        """Widen columns for appended entries (follow mode), never narrow."""
+        widths = self._column_widths
+        for col in self._app.columns:
+            for log in entries:
+                value = column_text(
+                    data=log.data, column=col, source=log.source
+                )
+                widths[col] = max(
+                    widths.get(col, len(col)), min(len(value), MAX_COL_WIDTH)
+                )
+
     def _calculate_column_widths(self) -> dict[str, int]:
         """Calculate column widths from all rows, with early termination.
 
@@ -350,8 +362,11 @@ class LogList(ScrollView):
         columns = self._app.columns
         column_width = 0
         if columns:
-            col_widths = self._calculate_column_widths()
-            column_width = sum(col_widths.values()) + len(
+            # The same widths render_line draws with: wrapping with other
+            # widths gave each entry too few rows and cut lines off.
+            if not self._column_widths:
+                self._column_widths = self._calculate_column_widths()
+            column_width = sum(self._column_widths.values()) + len(
                 COLUMN_SEPARATOR
             ) * len(columns)
 
@@ -429,6 +444,13 @@ class LogList(ScrollView):
             self._recompute_match_flags()
         else:
             self._match_flags.extend(self._flags_for(entries=appended))
+        # Column widths fit the lines shown, so they change with the list
+        # (filter, follow, clear); stale widths cut values or lines off.
+        if self._app.columns:
+            if appended is None or not self._column_widths:
+                self._column_widths = self._calculate_column_widths()
+            else:
+                self._widen_columns(entries=appended)
         self._update_max_width_for_visible_range()
 
         if self._wrap_mode:

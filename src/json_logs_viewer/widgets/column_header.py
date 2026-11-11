@@ -34,6 +34,8 @@ class ColumnHeader(Widget):
         self._log_list = app.query_one("#logs", LogList)
         self.watch(app, "columns", self._on_columns_changed)
         self.watch(self._log_list, "scroll_x", self._on_scroll_x_changed)
+        # Column widths follow the lines shown, so redraw when they change.
+        self.watch(app, "filtered_logs", self._on_scroll_x_changed)
 
     def _on_columns_changed(self, columns: list[str]) -> None:
         self.display = bool(columns)

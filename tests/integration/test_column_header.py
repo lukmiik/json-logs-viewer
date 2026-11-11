@@ -155,3 +155,78 @@ async def test_detected_columns_render_whatever_the_field_name(
         row = _text(app.query_one("#logs", LogList))
         assert header.startswith("@level | @message         | ")
         assert row.startswith("WARN   | disk almost full | ")
+
+
+@pytest.fixture
+def mixed_widths(tmp_path: Path) -> Path:
+    path = tmp_path / "mixed.jsonl"
+    path.write_text(
+        "".join(
+            json.dumps(
+                {
+                    "message": "short" if i % 2 else "a much longer message",
+                    "i": i,
+                }
+            )
+            + "\n"
+            for i in range(6)
+        )
+    )
+    return path
+
+
+def _rows(log_list: LogList) -> list[str]:
+    return [_text(log_list, y).rstrip() for y in range(log_list.size.height)]
+
+
+@pytest.mark.asyncio
+async def test_column_widths_follow_the_filter(mixed_widths: Path) -> None:
+    """Widths come from the lines shown, and the header agrees."""
+    app = LogViewerApp(file=str(mixed_widths))
+    async with app.run_test(size=(100, 12)) as pilot:
+        await pilot.pause()
+        app.columns = ["message"]
+        await pilot.pause()
+        app.filter_query = "message:short"
+        await pilot.pause()
+
+        header = _text(app.query_one(ColumnHeader))
+        assert header.startswith("message | ")
+        assert _rows(app.query_one("#logs", LogList))[0].startswith(
+            "short   | "
+        )
+
+
+@pytest.mark.asyncio
+async def test_wrapped_lines_are_complete_after_filtering(
+    mixed_widths: Path,
+) -> None:
+    """Every wrapped entry ends with its closing brace (nothing cut off)."""
+    app = LogViewerApp(file=str(mixed_widths))
+    async with app.run_test(size=(40, 30)) as pilot:
+        await pilot.pause()
+        app.columns = ["message"]
+        await pilot.press("w")
+        app.filter_query = "message:short"
+        await pilot.pause()
+
+        rows = [row for row in _rows(app.query_one("#logs", LogList)) if row]
+        assert sum(row.endswith("}") for row in rows) == 3
+
+
+@pytest.mark.asyncio
+async def test_a_wider_appended_value_widens_its_column(
+    mixed_widths: Path,
+) -> None:
+    app = LogViewerApp(file=str(mixed_widths))
+    async with app.run_test(size=(120, 14)) as pilot:
+        await pilot.pause()
+        app.columns = ["message"]
+        await pilot.pause()
+
+        app._process_chunk((json.dumps({"message": "x" * 25}) + "\n").encode())
+        await pilot.pause()
+
+        log_list = app.query_one("#logs", LogList)
+        assert log_list._column_widths["message"] == 25
+        assert _text(app.query_one(ColumnHeader)).index("| ") == 26
