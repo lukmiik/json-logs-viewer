@@ -17,6 +17,7 @@ src/json_logs_viewer/
 ├── log_reader.py          mmap-based backward line reader
 ├── log_watcher.py         follow-mode watcher threads
 ├── clipboard.py           formatting helpers for copy actions
+├── export.py              default_export_path, write_jsonl (atomic)
 ├── selection_copier.py    SelectionCopier: copy a selection once it settles
 ├── constants.py           history limit, copy context size, column width,
 │                          selection copy delay
@@ -32,6 +33,7 @@ src/json_logs_viewer/
     ├── history_modal.py   HistoryModal: OptionList of past queries
     ├── columns_modal.py   ColumnsModal: SelectionList of field paths
     ├── file_picker_modal.py   FilePickerModal: DirectoryTree
+    ├── export_modal.py    ExportModal: target path, overwrite confirm
     └── help_modal.py      HelpModal: key reference (`?`)
 ```
 
@@ -61,6 +63,12 @@ by screen position, which would be the search bar.
 
 Modals are pushed with `push_screen(..., callback=...)`. Their result is
 handled in an `_on_*_selected` callback on the app.
+
+Export (`e`) takes `_matching_logs()`: `filtered_logs` in filter mode,
+the query's matches in highlight mode. `ExportModal` returns a path
+(an existing file needs a second Enter) and `write_jsonl` writes each
+entry's `raw_json` to a temp file in the same directory, then
+`os.replace`s it, so a failed export never leaves a partial file.
 
 The search bar's visibility follows its focus (`on_focus` shows it,
 `on_blur` hides it). After `enter` the filter stays applied, focus returns

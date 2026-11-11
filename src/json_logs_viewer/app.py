@@ -21,6 +21,7 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import Screen
 
+from json_logs_viewer.export import default_export_path, write_jsonl
 from json_logs_viewer.field_paths import leaf_paths
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import (
@@ -30,6 +31,7 @@ from json_logs_viewer.log_reader import (
 from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
+from json_logs_viewer.modals.export_modal import ExportModal
 from json_logs_viewer.modals.file_picker_modal import FilePickerModal
 from json_logs_viewer.modals.help_modal import HelpModal
 from json_logs_viewer.modals.history_modal import HistoryModal
@@ -110,6 +112,7 @@ class LogViewerApp(App):
         ("H", "show_history", "History"),
         ("c", "show_columns", "Columns"),
         ("o", "open_file", "Open"),
+        ("e", "export", "Export"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -382,6 +385,54 @@ class LogViewerApp(App):
             return
         self.push_screen(HelpModal())
 
+    def _matching_logs(self) -> list[LogEntry]:
+        """The logs the query matches, whether filtering or highlighting.
+
+        In filter mode that is filtered_logs. Highlight mode shows every
+        log, so its matches are computed here (an invalid query matches
+        everything, as in filter mode).
+        """
+        if not (self.highlight_matches and self.filter_query.strip()):
+            return self.filtered_logs
+        try:
+            matcher = parse_filter(
+                query=self.filter_query, case_sensitive=self.case_sensitive
+            )
+        except FilterError:
+            return self.logs
+        return [log for log in self.logs if matcher(log)]
+
+    def action_export(self) -> None:
+        if isinstance(self.screen, ExportModal):
+            return
+        entries = self._matching_logs()
+        if not entries:
+            self.notify("Nothing to export", severity="warning")
+            return
+        source = Path(self.filepath) if self.filepath else None
+        self.push_screen(
+            ExportModal(
+                default_path=default_export_path(source=source),
+                count=len(entries),
+            ),
+            # The entries are taken now, so what is written matches the
+            # count shown even if follow mode appends meanwhile.
+            callback=partial(self._on_export_path, entries=entries),
+        )
+
+    def _on_export_path(
+        self, path: Path | None, *, entries: list[LogEntry]
+    ) -> None:
+        if path is None:
+            return
+        try:
+            write_jsonl(path=path, entries=entries)
+        except OSError as error:
+            self.notify(f"Export failed: {error}", severity="error")
+            return
+        noun = "line" if len(entries) == 1 else "lines"
+        self.notify(f"Exported {len(entries)} {noun} to {path}")
+
     def action_show_history(self) -> None:
         if isinstance(self.screen, HistoryModal):
             return
@@ -620,6 +671,11 @@ class LogViewerApp(App):
             "Show help",
             "Open a modal with a summary of app features",
             self.action_show_help,
+        )
+        yield SystemCommand(
+            "Export matching logs",
+            "Save the logs the query matches to a JSONL file",
+            self.action_export,
         )
         yield SystemCommand(
             "Configure columns",

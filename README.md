@@ -20,6 +20,9 @@ An interactive terminal viewer for JSONL log files, built with
   second, in the detail view, the help screen and the search bar.
 - Copy to the clipboard via OSC 52: `y` copies the log as pretty JSON, `Y`
   copies it plus up to 5 entries before and after as raw JSONL.
+- Export (`e`): save the lines the query matches (in filter or highlight
+  mode) to a JSONL file, `<name>.filtered.jsonl` by default. An existing
+  file is only replaced after confirming.
 - Columns: show any of the 20 most common fields as aligned columns in front
   of each line, under a header row with their names. Nested fields are
   offered by their dotted path (`attributes.level`, `http.status_code`).
@@ -112,6 +115,7 @@ Press `?` in the app for the full list.
 | `m`                 | toggle highlight mode                        |
 | `w`                 | toggle soft wrap                             |
 | `y` / `Y`           | copy log / copy log with context             |
+| `e`                 | export matching lines to a JSONL file        |
 | `c`                 | configure columns                            |
 | `H`                 | search history                               |
 | `f`                 | toggle follow mode                           |
