@@ -41,3 +41,13 @@ jobs:
 
       - name: Run pytest
         run: uv run pytest
+
+      # A failed snapshot test writes an HTML report with the expected and
+      # actual screens side by side; keep it so the diff can be inspected.
+      - name: Upload snapshot report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-report
+          path: snapshot_report.html
+          if-no-files-found: ignore

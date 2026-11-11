@@ -170,6 +170,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-.todo
-
 .notes/
+
+# pytest-textual-snapshot diff report (written on failures)
+snapshot_report.html

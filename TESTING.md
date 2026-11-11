@@ -40,6 +40,11 @@ tests/
 │   ├── test_file_picker_modal.py
 │   ├── test_help_modal.py
 │   └── test_follow_mode.py
+├── snapshots/                 SVG screenshots of the whole app
+│   ├── test_snapshots.py      main screen, filter, highlight, wrap,
+│   │                          columns, detail, help, narrow terminal
+│   ├── data/app.jsonl         fixed input, separate from test_files/
+│   └── __snapshots__/         approved SVGs (open them in a browser)
 └── performance/
     └── test_performance.py    load time, virtual rendering, line cache
 ```
@@ -77,6 +82,22 @@ Guidelines:
   than rendered output.
 - Follow-mode tests append to the file and wait for the watcher thread, so
   they need short polling loops or pauses.
+
+## Snapshot tests
+
+`snap_compare` (from `pytest-textual-snapshot`) runs the app, applies key
+presses or a `run_before` coroutine, and compares the screen with the
+approved SVG in `__snapshots__/`. They catch layout and styling changes that
+assertions on state miss (CSS, status bar clipping, modal size).
+
+- Missing snapshot or intended change: `uv run pytest tests/snapshots
+  --snapshot-update`, then open the changed SVGs and check them before
+  committing. An approved snapshot that is wrong makes the test useless.
+- Failure: open `snapshot_report.html` for the before/after diff. CI uploads
+  it as the `snapshot-report` artifact.
+- Keep them deterministic: fixed terminal size, input from
+  `tests/snapshots/data/`, and a bare file name (the status bar shows the
+  path as given), which the `app` fixture handles with `chdir`.
 
 ## Manual testing
 
