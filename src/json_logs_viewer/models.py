@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from functools import cached_property
 from typing import Any
 
 from pydantic import BaseModel, model_validator
@@ -55,3 +57,16 @@ class LogEntry(BaseModel):
             if candidate in data:
                 return data[candidate]
         return None
+
+    @cached_property
+    def search_text(self) -> str:
+        r"""Text that full-text search looks in: the line as shown.
+
+        A line with backslashes may hold \u escapes (non-ASCII text in many
+        loggers), so it is re-encoded with the characters themselves and
+        "łódź" finds "\u0142\u00f3d\u017a". That costs a json.dumps,
+        so it is computed once per entry and cached.
+        """
+        if self.raw_json and "\\" not in self.raw_json:
+            return self.raw_json
+        return json.dumps(self.data, ensure_ascii=False)

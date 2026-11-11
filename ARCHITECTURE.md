@@ -149,7 +149,8 @@ and history first.
 3. AST nodes:
    - `FieldMatch`: substring match on `str(value)` of the field.
    - `FieldExists`: the field path reaches at least one value.
-   - `FullText`: substring match on `"k=v k=v ..."` built from `data`.
+   - `FullText`: substring match on `LogEntry.search_text`: the JSON line
+     as shown, with `\u` escapes decoded (cached per entry).
    - `And`, `Or`, `Not`, `Group`.
 
 Field paths: a name without `.` is a plain `data.get(name)` (fast path, the

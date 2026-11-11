@@ -1,5 +1,7 @@
 """Unit tests for filter engine."""
 
+import json
+
 import pytest
 
 from json_logs_viewer.filter_engine import (
@@ -284,7 +286,7 @@ class TestFullText:
         assert node.match(log, case_sensitive=False) is True
 
     def test_match_in_field_name(self) -> None:
-        """Test matching text in field name (serialized as key=value)."""
+        """Test matching text in a field name."""
         log = make_log(level="ERROR")
         node = FullText(value="level")
 
@@ -310,6 +312,23 @@ class TestFullText:
         node = FullText(value="ERROR")
 
         assert node.match(log, case_sensitive=False) is False
+
+    def test_searches_json_as_shown(self) -> None:
+        """Null is found as null, not as Python's None."""
+        line = '{"user": null, "ok": true}'
+        log = LogEntry(line_number=1, data=json.loads(line), raw_json=line)
+
+        assert FullText(value="null").match(log, case_sensitive=True)
+        assert FullText(value="true").match(log, case_sensitive=True)
+        assert not FullText(value="None").match(log, case_sensitive=False)
+
+    def test_unicode_escapes_are_decoded(self) -> None:
+        r"""Text written as \u escapes is found by its characters."""
+        line = '{"city": "\\u0141\\u00f3d\\u017a"}'
+        log = LogEntry(line_number=1, data=json.loads(line), raw_json=line)
+
+        assert FullText(value="łódź").match(log, case_sensitive=False)
+        assert FullText(value="Łódź").match(log, case_sensitive=True)
 
 
 class TestAnd:

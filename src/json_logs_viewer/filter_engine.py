@@ -193,11 +193,14 @@ class FieldExists(ASTNode):
 class FullText(ASTNode):
     value: str
 
+    def __post_init__(self) -> None:
+        # Lowered once per query, not once per log entry.
+        self._lowered = self.value.lower()
+
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
-        search_text = self.value if case_sensitive else self.value.lower()
-        serialized = _serialize_log_entry(log_entry)
-        search_target = serialized if case_sensitive else serialized.lower()
-        return search_text in search_target
+        if case_sensitive:
+            return self.value in log_entry.search_text
+        return self._lowered in log_entry.search_text.lower()
 
 
 @dataclass
@@ -236,11 +239,6 @@ class Group(ASTNode):
 
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
         return self.child.match(log_entry, case_sensitive)
-
-
-def _serialize_log_entry(log_entry: LogEntry) -> str:
-    parts = [f"{k}={v}" for k, v in log_entry.data.items()]
-    return " ".join(parts)
 
 
 class Parser:
