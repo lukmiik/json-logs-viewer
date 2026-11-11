@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import sys
 import threading
+from bisect import bisect_left
 from collections import Counter
 from collections.abc import Iterable
 from contextlib import ExitStack
@@ -34,6 +35,10 @@ from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
+
+
+def _line_number(entry: LogEntry) -> int:
+    return entry.line_number
 
 
 class LogViewerApp(App):
@@ -237,39 +242,26 @@ class LogViewerApp(App):
     def _restore_selected_log_entry(
         self, *, log_entry: LogEntry | None
     ) -> None:
-        if log_entry is None:
+        """Keep the cursor on `log_entry`, or the nearest line still shown.
+
+        filtered_logs is a subsequence of logs in file order, so it is sorted
+        by line_number: a binary search finds the spot in O(log n) instead of
+        scanning every entry (this runs on every filter change).
+        """
+        filtered = self.filtered_logs
+        if log_entry is None or not filtered:
             return
-
-        logs_index_by_id = {
-            id(candidate): index for index, candidate in enumerate(self.logs)
-        }
-
-        for index, candidate in enumerate(self.filtered_logs):
-            if candidate is log_entry:
-                self.selected_index = index
-                return
-
-        if not self.filtered_logs:
+        target = log_entry.line_number
+        pos = bisect_left(filtered, target, key=_line_number)
+        if pos < len(filtered) and filtered[pos] is log_entry:
+            self.selected_index = pos
             return
-
-        selected_log_index = logs_index_by_id.get(id(log_entry))
-        if selected_log_index is None:
-            return
-
-        def filtered_distance(*, filtered_index: int) -> int:
-            filtered_entry = self.filtered_logs[filtered_index]
-            filtered_log_index = logs_index_by_id.get(
-                id(filtered_entry), selected_log_index
-            )
-            return abs(filtered_log_index - selected_log_index)
-
-        closest_filtered_index = min(
-            range(len(self.filtered_logs)),
-            key=lambda filtered_index: filtered_distance(
-                filtered_index=filtered_index
-            ),
+        # Filtered out: the nearest line is a neighbour of the insertion
+        # point. min() keeps the first on a tie, i.e. the earlier line.
+        neighbours = [i for i in (pos - 1, pos) if 0 <= i < len(filtered)]
+        self.selected_index = min(
+            neighbours, key=lambda i: abs(filtered[i].line_number - target)
         )
-        self.selected_index = closest_filtered_index
 
     def load_file(self, *, filepath: str) -> None:
         """Read and parse JSONL file."""

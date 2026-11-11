@@ -84,7 +84,9 @@ highlight mode `filtered_logs` is `logs` and LogList computes per-row match
 flags itself to dim non-matches and drive `n`/`N`.
 
 After each filter change `_restore_selected_log_entry` keeps the cursor on the
-same entry, or on the nearest surviving entry in file order.
+same entry, or moves it to the nearest surviving line by line number. Because
+`filtered_logs` is a subsequence of `logs` in file order, it is sorted by
+`line_number`, so this is a binary search (`bisect_left`) rather than a scan.
 
 Lists are always replaced, never mutated in place, so the reactive watchers
 fire (e.g. follow mode does `self.logs = [*self.logs, *new_logs]`).
