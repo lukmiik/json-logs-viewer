@@ -1463,3 +1463,22 @@ class TestCopyLog:
             await pilot.pause()
 
             assert len(copied_text) == 0
+
+
+@pytest.mark.asyncio
+async def test_max_width_follows_filter(
+    varying_width_logs_file: Path,
+) -> None:
+    """After a filter change the width comes from the visible matches."""
+    app = LogViewerApp(file=str(varying_width_logs_file))
+    async with app.run_test(size=(80, 5)) as pilot:
+        log_list = app.query_one("#logs", LogList)
+
+        app.filter_query = "very_long_field_name:"
+        await pilot.pause()
+        long_width = len(log_list._log_entries[0].raw_json)
+        assert log_list._max_content_width == long_width
+
+        app.filter_query = "short:"
+        await pilot.pause()
+        assert log_list._max_content_width == len('{"short": "a"}')

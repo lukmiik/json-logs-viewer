@@ -152,7 +152,6 @@ class LogList(ScrollView):
         super().__init__(**kwargs)
         self._log_entries: list[LogEntry] = []
         self._line_cache: LRUCache[int, str] = LRUCache(maxsize=2000)
-        self._line_width_cache: dict[int, int] = {}
         self._cursor_index: int = 0
         self._max_content_width: int = 0
         self._pending_scroll: bool = False
@@ -317,25 +316,17 @@ class LogList(ScrollView):
             start_idx = 0
             end_idx = min(len(self._log_entries), visible_height)
 
-        max_width = 0
-        for idx in range(start_idx, end_idx):
-            if idx in self._line_width_cache:
-                max_width = max(max_width, self._line_width_cache[idx])
-            elif idx in self._line_cache:
-                max_width = max(max_width, len(self._line_cache[idx]))
-
-        self._max_content_width = max_width
+        # len() of a str is O(1) (the length is stored in the object), so
+        # widths are read directly instead of cached per entry.
+        self._max_content_width = max(
+            len(log.raw_json) for log in self._log_entries[start_idx:end_idx]
+        )
 
     def set_logs(self, *, logs: list[LogEntry]) -> None:
         """Update the log entries and recalculate virtual size."""
         self._log_entries = logs
         self._line_cache = LRUCache(maxsize=2000)
-        self._line_width_cache = {}
         self._recompute_match_flags()
-
-        for idx, log in enumerate(logs):
-            self._line_width_cache[idx] = len(log.raw_json)
-
         self._update_max_width_for_visible_range()
 
         if self._wrap_mode:
