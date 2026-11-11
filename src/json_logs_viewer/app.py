@@ -69,7 +69,7 @@ from json_logs_viewer.stdin_pipe import (
 from json_logs_viewer.widgets.column_header import ColumnHeader
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.new_lines_badge import NewLinesBadge
-from json_logs_viewer.widgets.search_bar import SearchBar
+from json_logs_viewer.widgets.search_bar import SearchBar, add_to_history
 from json_logs_viewer.widgets.status_bar import StatusBar
 
 
@@ -667,6 +667,25 @@ class LogViewerApp(App):
     def watch_search_history(self, history: list[str]) -> None:
         if self._history_path is None:
             return
+        if history:
+            # Merge into the file rather than overwrite it: another jlv may
+            # have saved queries since this one loaded (last writer used to
+            # win). Keep the file's queries, add this window's that it
+            # lacks, and put the newest last; this window then offers the
+            # others' queries too.
+            on_disk = load_history(
+                path=self._history_path, limit=SEARCH_HISTORY_LIMIT
+            )
+            mine = [query for query in history[:-1] if query not in on_disk]
+            merged = add_to_history(
+                history=[*on_disk, *mine],
+                query=history[-1],
+                limit=SEARCH_HISTORY_LIMIT,
+            )
+            if merged != history:
+                # Without re-running this watcher.
+                self.set_reactive(LogViewerApp.search_history, merged)
+            history = merged
         try:
             save_history(path=self._history_path, history=history)
         except OSError as error:

@@ -130,7 +130,9 @@ the real file). It is loaded in `on_mount` and saved by
 `watch_search_history` on every change: versioned JSON, written through
 `atomic_open` (temp file + `os.replace`, mode 0600 since queries can hold
 user IDs or tokens). A missing or damaged file loads as empty; a failed save
-warns once.
+warns once. Saves merge rather than overwrite, so several jlv windows keep
+each other's queries: the file's list, plus this window's queries it lacks,
+with the newest last (clearing still writes an empty list).
 
 `logs`, `filter_query`, `case_sensitive` and `highlight_matches` all trigger
 `apply_filter()`. In filter mode `filtered_logs` is the matching subset. In

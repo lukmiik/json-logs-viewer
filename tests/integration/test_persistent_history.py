@@ -116,3 +116,27 @@ async def test_save_error_warns_and_keeps_working(
             if "search history" in n.message
         ]
         assert len(warnings) == 1  # warned once, not on every query
+
+
+@pytest.mark.asyncio
+async def test_two_windows_keep_each_others_queries(
+    sample_jsonl_file: Path, tmp_path: Path
+) -> None:
+    """Each save merges into the file instead of overwriting it."""
+    history_file = tmp_path / "history.json"
+    first = LogViewerApp(
+        file=str(sample_jsonl_file), history_path=history_file
+    )
+    second = LogViewerApp(
+        file=str(sample_jsonl_file), history_path=history_file
+    )
+    async with first.run_test() as pilot_a, second.run_test() as pilot_b:
+        await pilot_a.pause()
+        await pilot_b.pause()
+
+        await _search(pilot_a, "alpha")
+        await _search(pilot_b, "beta")
+
+        assert load_history(path=history_file, limit=100) == ["alpha", "beta"]
+        # The second window now offers the first one's query too.
+        assert second.search_history == ["alpha", "beta"]
