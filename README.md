@@ -55,6 +55,8 @@ JSON are skipped.
 ## Filter queries
 
 Press `/` to open the search bar, type a query and press `enter` to apply it.
+The bar then hides and the status bar shows the active query
+(`Filter: level:error`); `/` reopens it with the query, ready to edit.
 Submit an empty query to clear the filter.
 
 | Query                                          | Matches                                    |

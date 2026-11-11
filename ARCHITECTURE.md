@@ -38,11 +38,12 @@ src/json_logs_viewer/
 │ LogList (#logs)                     1fr      │
 │   [col1 | col2 | ] {"raw": "json line"}      │
 ├──────────────────────────────────────────────┤
-│ SearchBar (#search)    hidden unless focused │
-│                        or a query is active  │
+│ SearchBar (#search)    shown only while      │
+│                        focused               │
 ├──────────────────────────────────────────────┤
 │ StatusBar (#status)                          │
 │   File: x  Total: n  Filtered: m  ⏺ FOLLOW   │
+│   Filter: <active query>                     │
 │                [Follow] [Aa] [Highlight] [History]
 │   Footer (keybindings)                       │
 └──────────────────────────────────────────────┘
@@ -50,6 +51,12 @@ src/json_logs_viewer/
 
 Modals are pushed with `push_screen(..., callback=...)`. Their result is
 handled in an `_on_*_selected` callback on the app.
+
+The search bar's visibility follows its focus (`on_focus` shows it,
+`on_blur` hides it). After `enter` the filter stays applied, focus returns
+to the list and the bar hides. `StatusInfo` then shows the active query as
+`Filter: …` (or `Highlight: …` in highlight mode), and `/` reopens the bar
+with the query still in it.
 
 ## State (`LogViewerApp` reactives)
 

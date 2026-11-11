@@ -325,9 +325,13 @@ class LogViewerApp(App):
     def _update_search_bar_visibility(
         self, *, force_visible: bool = False
     ) -> None:
-        """Show search bar when query is active or explicitly requested."""
+        """Show the search bar only while it is being used.
+
+        An applied filter doesn't keep it open: the status bar shows the
+        active query instead, and `/` reopens the bar with it.
+        """
         search_bar = self.query_one("#search", SearchBar)
-        search_bar.display = force_visible or bool(self.filter_query.strip())
+        search_bar.display = force_visible or search_bar.has_focus
 
     def action_focus_search(self) -> None:
         self._update_search_bar_visibility(force_visible=True)

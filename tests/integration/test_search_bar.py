@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from textual import events
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.widgets import search_bar as search_bar_module
@@ -284,3 +285,80 @@ async def test_submit_notifies_search_history_watchers(
         await pilot.pause()
 
         assert seen == [["error"]]
+
+
+async def _submit(*, app: LogViewerApp, pilot: object, query: str) -> None:
+    app.action_focus_search()
+    await pilot.pause()  # type: ignore[attr-defined]
+    app.query_one("#search", SearchBar).value = query
+    await pilot.press("enter")  # type: ignore[attr-defined]
+    await pilot.pause()  # type: ignore[attr-defined]
+
+
+@pytest.mark.asyncio
+async def test_submit_hides_search_bar_but_keeps_filter(
+    sample_jsonl_file: Path,
+) -> None:
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await _submit(app=app, pilot=pilot, query="level:error")
+
+        search_bar = app.query_one("#search", SearchBar)
+        assert search_bar.display is False
+        assert app.filter_query == "level:error"
+        assert app.query_one("#logs", LogList).has_focus
+
+
+@pytest.mark.asyncio
+async def test_slash_reopens_search_bar_with_active_query(
+    sample_jsonl_file: Path,
+) -> None:
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await _submit(app=app, pilot=pilot, query="level:error")
+
+        await pilot.press("/")
+        await pilot.pause()
+
+        search_bar = app.query_one("#search", SearchBar)
+        assert search_bar.display is True
+        assert search_bar.has_focus
+        assert search_bar.value == "level:error"
+
+
+@pytest.mark.asyncio
+async def test_escape_hides_search_bar_and_keeps_filter(
+    sample_jsonl_file: Path,
+) -> None:
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await _submit(app=app, pilot=pilot, query="level:error")
+        await pilot.press("/")
+        await pilot.pause()
+
+        await pilot.press("escape")
+        await pilot.pause()
+
+        assert app.query_one("#search", SearchBar).display is False
+        assert app.filter_query == "level:error"
+
+
+@pytest.mark.asyncio
+async def test_search_bar_visible_again_when_terminal_regains_focus(
+    sample_jsonl_file: Path,
+) -> None:
+    """Focus returning to the input must never leave it invisible."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.press("/", *"lev")
+        await pilot.pause()
+
+        app.post_message(events.AppBlur())
+        await pilot.pause()
+        app.post_message(events.AppFocus())
+        await pilot.pause()
+
+        search_bar = app.query_one("#search", SearchBar)
+        assert search_bar.has_focus
+        assert search_bar.display is True
+        assert search_bar.value == "lev"

@@ -33,6 +33,17 @@ class StatusInfo(Horizontal):
     #status-left Label {
         margin: 0 1 0 0;
     }
+    /* When space runs out the file name shrinks (with an ellipsis) so the
+       counts and the active query stay readable. */
+    #status-filename {
+        width: 1fr;
+        text-wrap: nowrap;
+        text-overflow: ellipsis;
+    }
+    #status-total, #status-filtered, #status-follow, #status-query {
+        width: auto;
+        text-wrap: nowrap;
+    }
     #status-right Button {
         min-width: 4;
         width: auto;
@@ -55,6 +66,7 @@ class StatusInfo(Horizontal):
     case_sensitive: reactive[bool] = reactive(False)
     highlight_matches: reactive[bool] = reactive(False)
     follow_mode: reactive[bool] = reactive(False)
+    query: reactive[str] = reactive("")
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="status-left"):
@@ -62,6 +74,7 @@ class StatusInfo(Horizontal):
             yield Label(id="status-total")
             yield Label(id="status-filtered")
             yield Label(id="status-follow")
+            yield Label(id="status-query")
         with Horizontal(id="status-right"):
             yield Button("Follow", id="status-follow-toggle")
             yield Button("Aa", id="status-case-sensitive")
@@ -77,6 +90,12 @@ class StatusInfo(Horizontal):
         filtered_label.update(f"Filtered: {self.filtered}")
         follow_label = self.query_one("#status-follow", Label)
         follow_label.update("⏺ FOLLOW" if self.follow_mode else "")
+        query_label = self.query_one("#status-query", Label)
+        if self.query:
+            mode = "Highlight" if self.highlight_matches else "Filter"
+            query_label.update(f"{mode}: {self.query}")
+        else:
+            query_label.update("")
 
     def watch_filename(self) -> None:
         if self.is_mounted:
@@ -96,7 +115,12 @@ class StatusInfo(Horizontal):
 
     def watch_highlight_matches(self) -> None:
         if self.is_mounted:
+            self._update_labels()
             self._update_toggles()
+
+    def watch_query(self) -> None:
+        if self.is_mounted:
+            self._update_labels()
 
     def watch_follow_mode(self) -> None:
         if self.is_mounted:
@@ -166,6 +190,7 @@ class StatusBar(Widget):
             self.watch(self.app, "case_sensitive", self._update_status)
             self.watch(self.app, "highlight_matches", self._update_status)
             self.watch(self.app, "follow_mode", self._update_status)
+            self.watch(self.app, "filter_query", self._update_status)
 
     def _update_status(self) -> None:
         if not self.app:
@@ -178,3 +203,4 @@ class StatusBar(Widget):
         info.case_sensitive = app.case_sensitive
         info.highlight_matches = app.highlight_matches
         info.follow_mode = app.follow_mode
+        info.query = app.filter_query.strip()

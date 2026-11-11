@@ -153,3 +153,28 @@ async def test_status_bar_toggle_keybinds_update_state_and_buttons() -> None:
         await pilot.pause()
         assert app.highlight_matches is True
         assert "-active-toggle" in highlight_button.classes
+
+
+def _query_label_text(*, app: LogViewerApp) -> str:
+    return str(app.query_one("#status-query", Label).render())
+
+
+@pytest.mark.asyncio
+async def test_status_bar_shows_active_query(sample_jsonl_file: Path) -> None:
+    """With the search bar hidden, the status bar shows the active filter."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert _query_label_text(app=app) == ""
+
+        app.filter_query = "level:error"
+        await pilot.pause()
+        assert _query_label_text(app=app) == "Filter: level:error"
+
+        app.highlight_matches = True
+        await pilot.pause()
+        assert _query_label_text(app=app) == "Highlight: level:error"
+
+        app.filter_query = ""
+        await pilot.pause()
+        assert _query_label_text(app=app) == ""

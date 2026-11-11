@@ -75,10 +75,15 @@ class SearchBar(Input):
         self.app.query_one("#logs", LogList).focus()
 
     def on_blur(self) -> None:
-        """Hide search bar when leaving it with no active query."""
-        if not self.app:
-            return
+        """Hide the search bar when focus leaves it.
 
-        app = cast("LogViewerApp", self.app)
-        if not self.value.strip() and not app.filter_query.strip():
-            self.display = False
+        The input keeps its text, so `/` reopens it with the active query,
+        and the status bar shows that query meanwhile.
+        """
+        self.display = False
+
+    def on_focus(self) -> None:
+        # Visibility follows focus: Textual can hand focus back (e.g. when
+        # the terminal window is refocused), which must not leave the input
+        # focused but invisible.
+        self.display = True
