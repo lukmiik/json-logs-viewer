@@ -9,16 +9,16 @@ from textual.widgets.text_area import Selection
 from json_logs_viewer.selection_copier import SelectionCopier
 
 
-class FeatureSummaryModal(ModalScreen[None]):
+class HelpModal(ModalScreen[None]):
     """Modal with a quick summary of app features."""
 
     DEFAULT_CSS = """
-    FeatureSummaryModal {
+    HelpModal {
         align: center middle;
         background: $background 70%;
     }
 
-    FeatureSummaryModal TextArea {
+    HelpModal TextArea {
         background: $surface;
         width: 80;
         height: 80%;
@@ -26,7 +26,7 @@ class FeatureSummaryModal(ModalScreen[None]):
         scrollbar-size: 1 1;
     }
     
-    FeatureSummaryModal TextArea:focus {
+    HelpModal TextArea:focus {
         border: heavy $block-cursor-background;
     }
     """

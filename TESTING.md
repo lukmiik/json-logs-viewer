@@ -18,23 +18,28 @@ uv run pytest --cov=json_logs_viewer
 tests/
 ├── unit/                      pure functions and classes, no app
 │   ├── test_filter_engine.py  tokenizer, parser, matchers, errors
-│   ├── test_log_entry.py      LogEntry field auto-detection
+│   ├── test_log_entry.py      LogEntry fields, appended_entries
 │   ├── test_log_reader.py     read_lines_backward edge cases
 │   ├── test_log_watcher.py    PollWatcher / SelectorWatcher
 │   ├── test_clipboard.py      copy formatting and context window
-│   └── test_columns.py        field discovery / counting
+│   ├── test_columns.py        field discovery / counting
+│   ├── test_search_history.py add_to_history
+│   ├── test_serve_command.py  --serve command quoting
+│   └── test_wrap.py           fast wrap vs Rich (differential fuzzing)
 ├── integration/               full app driven through Pilot
 │   ├── conftest.py            temp JSONL fixtures
 │   ├── test_app.py
 │   ├── test_log_list.py       navigation, scrolling, wrap, highlight, copy
 │   ├── test_search_bar.py
 │   ├── test_status_bar.py
+│   ├── test_selection_restore.py  cursor kept after filter changes
+│   ├── test_copy_on_select.py     debounced copy of selected text
 │   ├── test_detail_modal.py
 │   ├── test_history_modal.py
 │   ├── test_columns_modal.py
 │   ├── test_file_picker_modal.py
-│   ├── test_follow_mode.py
-│   └── test_feature_summary_modal.py
+│   ├── test_help_modal.py
+│   └── test_follow_mode.py
 └── performance/
     └── test_performance.py    load time, virtual rendering, line cache
 ```

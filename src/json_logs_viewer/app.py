@@ -29,9 +29,9 @@ from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.file_picker_modal import FilePickerModal
+from json_logs_viewer.modals.help_modal import HelpModal
 from json_logs_viewer.modals.history_modal import HistoryModal
 from json_logs_viewer.models import LogEntry, appended_entries
-from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
@@ -88,7 +88,7 @@ class LogViewerApp(App):
         ("C", "toggle_case_sensitive", "Case"),
         ("m", "toggle_highlight_matches", "Highlight"),
         ("f", "toggle_follow", "Follow"),
-        ("question_mark", "show_feature_summary", "Help"),
+        ("question_mark", "show_help", "Help"),
         ("H", "show_history", "History"),
         ("c", "show_columns", "Columns"),
         ("o", "open_file", "Open"),
@@ -352,10 +352,10 @@ class LogViewerApp(App):
     def action_toggle_highlight_matches(self) -> None:
         self.highlight_matches = not self.highlight_matches
 
-    def action_show_feature_summary(self) -> None:
-        if isinstance(self.screen, FeatureSummaryModal):
+    def action_show_help(self) -> None:
+        if isinstance(self.screen, HelpModal):
             return
-        self.push_screen(FeatureSummaryModal())
+        self.push_screen(HelpModal())
 
     def action_show_history(self) -> None:
         if isinstance(self.screen, HistoryModal):
@@ -599,7 +599,7 @@ class LogViewerApp(App):
         yield SystemCommand(
             "Show help",
             "Open a modal with a summary of app features",
-            self.action_show_feature_summary,
+            self.action_show_help,
         )
         yield SystemCommand(
             "Configure columns",

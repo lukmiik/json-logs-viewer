@@ -23,14 +23,14 @@ src/json_logs_viewer/
 ├── widgets/
 │   ├── log_list.py        LogList: virtual ScrollView, the main list
 │   ├── search_bar.py      SearchBar: Input bound to filter_query
-│   ├── status_bar.py      StatusBar: file/count labels, toggle buttons,
-│   │                      Footer
-│   └── feature_summary_modal.py   help modal (`?`)
+│   └── status_bar.py      StatusBar: file/count labels, toggle buttons,
+│                          Footer
 └── modals/
     ├── detail_modal.py    DetailModal: pretty JSON of one entry
     ├── history_modal.py   HistoryModal: OptionList of past queries
     ├── columns_modal.py   ColumnsModal: SelectionList of fields
-    └── file_picker_modal.py   FilePickerModal: DirectoryTree
+    ├── file_picker_modal.py   FilePickerModal: DirectoryTree
+    └── help_modal.py      HelpModal: key reference (`?`)
 ```
 
 ## Screen

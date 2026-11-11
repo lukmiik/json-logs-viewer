@@ -1,4 +1,4 @@
-"""Integration tests for feature summary modal."""
+"""Integration tests for help modal."""
 
 from pathlib import Path
 
@@ -6,14 +6,14 @@ import pytest
 from textual.widgets import TextArea
 
 from json_logs_viewer.app import LogViewerApp
-from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
+from json_logs_viewer.modals.help_modal import HelpModal
 
 
 @pytest.mark.asyncio
-async def test_question_mark_opens_feature_summary_modal(
+async def test_question_mark_opens_help_modal(
     sample_jsonl_file: Path,
 ) -> None:
-    """Test that pressing '?' opens the feature summary modal."""
+    """Test that pressing '?' opens the help modal."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         await pilot.pause()
@@ -25,29 +25,29 @@ async def test_question_mark_opens_feature_summary_modal(
         await pilot.press("?")
         await pilot.pause()
 
-        assert isinstance(app.screen, FeatureSummaryModal)
+        assert isinstance(app.screen, HelpModal)
 
 
 @pytest.mark.asyncio
-async def test_escape_closes_feature_summary_modal(
+async def test_escape_closes_help_modal(
     sample_jsonl_file: Path,
 ) -> None:
-    """Test that Escape closes the feature summary modal."""
+    """Test that Escape closes the help modal."""
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         await pilot.pause()
-        app.action_show_feature_summary()
+        app.action_show_help()
         await pilot.pause()
-        assert isinstance(app.screen, FeatureSummaryModal)
+        assert isinstance(app.screen, HelpModal)
 
         await pilot.press("escape")
         await pilot.pause()
 
-        assert not isinstance(app.screen, FeatureSummaryModal)
+        assert not isinstance(app.screen, HelpModal)
 
 
 @pytest.mark.asyncio
-async def test_system_command_opens_feature_summary_modal(
+async def test_system_command_opens_help_modal(
     sample_jsonl_file: Path,
 ) -> None:
     """Test that command palette command exists and opens the modal."""
@@ -63,7 +63,7 @@ async def test_system_command_opens_feature_summary_modal(
         command.callback()
         await pilot.pause()
 
-        assert isinstance(app.screen, FeatureSummaryModal)
+        assert isinstance(app.screen, HelpModal)
 
 
 @pytest.mark.asyncio
@@ -74,11 +74,11 @@ async def test_modal_displays_expected_content_and_metadata(
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
         await pilot.pause()
-        app.action_show_feature_summary()
+        app.action_show_help()
         await pilot.pause()
 
         modal = app.screen
-        assert isinstance(modal, FeatureSummaryModal)
+        assert isinstance(modal, HelpModal)
 
         dialog = modal.query_one("#feature-summary-content", TextArea)
 
@@ -87,3 +87,14 @@ async def test_modal_displays_expected_content_and_metadata(
         assert str(dialog.border_title) == "Help"
         assert str(dialog.border_subtitle) == "ESCAPE to dismiss"
         assert "JSON Logs Viewer" in str(dialog.text)
+
+
+@pytest.mark.asyncio
+async def test_help_modal_css_applies(sample_jsonl_file: Path) -> None:
+    """DEFAULT_CSS selects by class name, so a rename must keep it working."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test(size=(120, 40)) as pilot:
+        app.action_show_help()
+        await pilot.pause()
+        text_area = app.screen.query_one(TextArea)
+        assert text_area.outer_size.width == 80

@@ -23,8 +23,7 @@ Run lint, format, types and tests before calling a change done. CI runs
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:` ...).
 - Screens pushed with `push_screen` go in `modals/`, widgets composed into the
-  main screen go in `widgets/`. (`widgets/feature_summary_modal.py` is a known
-  exception, not a pattern to copy.)
+  main screen go in `widgets/`.
 - Test features through the app with Textual's `run_test()`/Pilot in
   `tests/integration/`; pure logic goes in `tests/unit/`.
 
@@ -36,6 +35,6 @@ Run lint, format, types and tests before calling a change done. CI runs
 - In filter queries a space means AND (bare words are separate terms; quotes
   make a phrase), and dotted fields reach nested objects and lists.
 - When behaviour or keybindings change, update `README.md`,
-  `ARCHITECTURE.md` and the help text in `feature_summary_modal.py`.
+  `ARCHITECTURE.md` and the help text in `modals/help_modal.py`.
 - `.notes/` and `.todo` are the owner's gitignored notes (known bugs in
   `.notes/analysis/`). Don't commit them.
