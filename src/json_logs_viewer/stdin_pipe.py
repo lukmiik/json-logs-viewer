@@ -76,8 +76,11 @@ class StdinCopy:
         try:
             while data := os.read(self._fd, 65536):
                 self._out.write(data)
-        except OSError:
-            pass  # the pipe broke; what arrived is kept
+        except (OSError, ValueError):
+            # OSError: the pipe broke; what arrived is kept. ValueError:
+            # close() closed the copy while data was still arriving (jlv is
+            # quitting), which used to print a traceback on exit.
+            pass
         finally:
             self.finished.set()
 
