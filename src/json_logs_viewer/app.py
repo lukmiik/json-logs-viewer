@@ -25,10 +25,11 @@ from textual.screen import Screen
 
 from json_logs_viewer.constants import SEARCH_HISTORY_LIMIT
 from json_logs_viewer.export import default_export_path, write_jsonl
-from json_logs_viewer.field_paths import leaf_paths
+from json_logs_viewer.field_paths import leaf_paths, resolve_field
 from json_logs_viewer.filter_engine import (
     FilterError,
     Matcher,
+    Tokenizer,
     as_utc,
     parse_filter,
 )
@@ -72,6 +73,12 @@ from json_logs_viewer.widgets.status_bar import StatusBar
 
 def _seq(entry: LogEntry) -> int:
     return entry.seq
+
+
+_is_word_char = Tokenizer._is_word_char
+
+# More different values than this and a field gets no value suggestions.
+_MAX_SUGGESTED_VALUES = 50
 
 
 class MainScreen(Screen[None]):
@@ -190,6 +197,8 @@ class LogViewerApp(App):
         self._field_counts: Counter[str] = Counter()
         self._detected_counts: Counter[str] = Counter()
         self._counted_logs: int = 0
+        # Search suggestions: values per field, see field_values().
+        self._value_cache: dict[str, list[str]] = {}
         # The matcher behind filtered_logs; None means every log is shown
         # (no query, highlight mode, or an invalid query).
         self._active_matcher: Matcher | None = None
@@ -238,6 +247,7 @@ class LogViewerApp(App):
             self._field_counts = Counter()
             self._detected_counts = Counter()
             self._counted_logs = 0
+            self._value_cache = {}
         if appended is None:
             self.apply_filter()
         else:
@@ -334,14 +344,8 @@ class LogViewerApp(App):
         if selected_log_entry is not None:
             self._last_selected_log_entry = selected_log_entry
 
-    def discover_fields(self) -> list[str]:
-        """Return the 20 most common field paths, nested ones dotted.
-
-        Counting walks every object in every log (~0.3 s for 100k nested
-        logs), and only the columns modal needs it, so it happens here on
-        demand instead of on every load. Logs counted before stay counted:
-        a follow-mode append only counts the new ones.
-        """
+    def _count_fields(self) -> None:
+        """Count field paths of the logs not counted yet (see discover)."""
         for log in islice(self.logs, self._counted_logs, None):
             self._field_counts.update(leaf_paths(value=log.data))
             for name, candidates in DETECTED_COLUMNS.items():
@@ -351,6 +355,55 @@ class LogViewerApp(App):
                 ):
                     self._detected_counts[name] += 1
         self._counted_logs = len(self.logs)
+
+    def query_fields(self) -> list[str]:
+        """Field paths a query can name, most common first.
+
+        Used for search suggestions. Paths the query language can't express
+        are left out: a word can't start with "@" or hold spaces or quotes.
+        """
+        self._count_fields()
+        return [
+            path
+            for path, _ in self._field_counts.most_common()
+            if path[:1] != "@" and all(_is_word_char(c) for c in path)
+        ]
+
+    def field_values(self, field: str) -> list[str]:
+        """Common values of a field, most common first ([] if too varied).
+
+        Counted on first use and cached until the logs are replaced (not on
+        follow appends, so typing stays fast while following). A field with
+        more than _MAX_SUGGESTED_VALUES different values (IDs, times) gets
+        none: suggesting one of thousands is noise.
+        """
+        if field in self._value_cache:
+            return self._value_cache[field]
+        counts: Counter[str] = Counter()
+        for log in self.logs:
+            for value in resolve_field(value=log.data, path=field):
+                if isinstance(value, str):
+                    counts[value] += 1
+                elif isinstance(value, (int, float)) and not isinstance(
+                    value, bool
+                ):
+                    counts[str(value)] += 1
+            if len(counts) > _MAX_SUGGESTED_VALUES:
+                counts.clear()
+                break
+        values = [value for value, _ in counts.most_common()]
+        self._value_cache[field] = values
+        return values
+
+    def discover_fields(self) -> list[str]:
+        """Return the 20 most common field paths, nested ones dotted.
+
+        Counting walks every object in every log (~0.3 s for 100k nested
+        logs), and only the columns modal needs it, so it happens here on
+        demand instead of on every load. Logs counted before stay counted:
+        a follow-mode append only counts the new ones.
+        """
+        self._count_fields()
         # @timestamp/@level/@message first (when any log has them), then the
         # most common real fields.
         detected = [n for n in DETECTED_COLUMNS if self._detected_counts[n]]

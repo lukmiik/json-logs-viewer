@@ -59,6 +59,8 @@ class HelpModal(ModalScreen[None]):
             "  q            Quit\n\n"
             "Search & Filter\n"
             "  /            Focus search bar, Enter applies\n"
+            "  → / Tab      Accept the grey suggestion (fields,\n"
+            "               values, keywords, past queries)\n"
             "  text         Full-text match\n"
             "  field:val    Field-specific match\n"
             "  field:       Field existence check\n"

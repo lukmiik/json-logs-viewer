@@ -8,6 +8,9 @@ An interactive terminal viewer for JSONL log files, built with
 - Virtual-scrolling log list that stays fast on 100k+ line files.
 - Vim-style navigation: `j`/`k`, `g`/`G`, `ctrl+d`/`ctrl+u`, `h`/`l`, `0`/`$`.
 - Filter queries with field matching, full-text search and `AND`/`OR`/`NOT`.
+- Inline suggestions while typing a query: field names, values seen in a
+  field, `AND`/`OR`/`NOT` and past queries appear in grey; `→` or `Tab`
+  accepts.
 - Filter mode (hide non-matches) or highlight mode (dim non-matches, jump
   between matches with `n`/`N`).
 - Rows coloured by log level: errors red, warnings yellow, debug/trace

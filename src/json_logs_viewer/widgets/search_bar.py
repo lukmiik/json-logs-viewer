@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
+from textual.binding import Binding
 from textual.widgets import Input
 
 from json_logs_viewer.constants import SEARCH_HISTORY_LIMIT
+from json_logs_viewer.query_suggester import QuerySuggester
 from json_logs_viewer.selection_copier import SelectionCopier
 from json_logs_viewer.widgets.log_list import LogList
 
@@ -25,9 +27,21 @@ def add_to_history(*, history: list[str], query: str, limit: int) -> list[str]:
 class SearchBar(Input):
     """Search input for filter queries."""
 
-    BINDINGS = [("escape", "focus_log_list", "Focus Log List")]
+    BINDINGS = [
+        ("escape", "focus_log_list", "Focus Log List"),
+        # Like a shell: Tab completes (the right arrow does too).
+        Binding("tab", "accept_suggestion", "Complete", show=False),
+    ]
 
     def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
+        kwargs.setdefault(
+            "suggester",
+            QuerySuggester(
+                history=lambda: self._app.search_history,
+                fields=lambda: self._app.query_fields(),
+                values=lambda field: self._app.field_values(field),
+            ),
+        )
         super().__init__(**kwargs)
         self.placeholder = "Filter logs... (/: focus)"
         self._selection_copier = SelectionCopier(
@@ -42,6 +56,15 @@ class SearchBar(Input):
 
     def _clear_selection(self) -> None:
         self.cursor_position = self.cursor_position
+
+    @property
+    def _app(self) -> LogViewerApp:
+        return cast("LogViewerApp", self.app)
+
+    def action_accept_suggestion(self) -> None:
+        """Take the grey suggestion, if any; Tab never leaves the bar."""
+        self.cursor_position = len(self.value)
+        self.action_cursor_right()
 
     def on_input_submitted(self) -> None:
         """Apply filter when Enter pressed."""

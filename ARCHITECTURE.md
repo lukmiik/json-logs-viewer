@@ -14,6 +14,7 @@ src/json_logs_viewer/
 ├── models.py              LogEntry (pydantic), parse_log_line, level_category
 ├── field_paths.py         resolve_field, leaf_paths: dotted paths in JSON
 ├── filter_engine.py       query tokenizer, parser, AST matchers
+├── query_suggester.py     inline search suggestions (suggest, QuerySuggester)
 ├── log_reader.py          mmap-based backward line reader
 ├── log_watcher.py         follow-mode watcher threads
 ├── clipboard.py           formatting helpers for copy actions
@@ -110,6 +111,16 @@ with the query still in it.
 `SearchBar` sets `filter_query` on `enter` and appends the query to
 `search_history` (skipping an immediate repeat). `HistoryModal` shows the
 history newest first.
+
+`SearchBar` has a `QuerySuggester` (Textual `Suggester`): `query_suggester.
+suggest()` returns the grey inline completion, first match wins: a past
+query continuing the text, then for the current term a keyword (from a
+capital letter), a value of `field:` (`app.field_values`, counted on first
+use, cached until the logs are replaced, none above 50 distinct values) or
+a field path (`app.query_fields`, from the same lazy counting as the
+columns modal). Matching ignores case but the suggestion always starts with
+the exact typed text, since Textual draws only the part after it and
+accepting replaces the value. `→` at the end or `Tab` accepts.
 
 The history is global and persistent when the app gets a `history_path`
 (`main()` passes `history_store.default_history_path()`, from
