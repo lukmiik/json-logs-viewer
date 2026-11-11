@@ -573,3 +573,69 @@ class TestImplicitAnd:
     def test_dangling_operators_still_error(self, query: str) -> None:
         with pytest.raises(FilterError):
             parse_filter(query=query, case_sensitive=False)
+
+
+NESTED_LOG = LogEntry(
+    line_number=1,
+    data={
+        "SeverityText": "ERROR",
+        "Resource": {"service.name": "checkout"},
+        "Attributes": {"http": {"status_code": 502}, "user": {"id": 42}},
+        "events": [{"name": "retry", "attempt": 1}, {"name": "give_up"}],
+        "user.id": "flat-7",
+        "tags": ["prod", "eu"],
+    },
+)
+
+
+class TestNestedFields:
+    """Dotted field paths reach into nested objects and lists."""
+
+    @pytest.mark.parametrize(
+        ("query", "expected"),
+        [
+            ("Attributes.http.status_code:502", True),
+            ("Attributes.http.status_code:404", False),
+            ("Attributes.user.id:42", True),
+            # A key that itself contains dots (OpenTelemetry style).
+            ("Resource.service.name:checkout", True),
+            # Lists: any element can match.
+            ("events.name:give_up", True),
+            ("events.name:missing", False),
+            ("events.attempt:1", True),
+            # A literal top-level dotted key still works.
+            ("user.id:flat-7", True),
+            ("tags:eu", True),
+            ("Attributes.nope:1", False),
+            ("SeverityText.x:ERROR", False),
+        ],
+    )
+    def test_field_match(self, query: str, expected: bool) -> None:
+        assert parse_filter(query=query)(NESTED_LOG) is expected
+
+    @pytest.mark.parametrize(
+        ("query", "expected"),
+        [
+            ("Attributes.user:", True),
+            ("Attributes.user.id:", True),
+            ("Resource.service.name:", True),
+            ("events.attempt:", True),
+            ("Attributes.user.email:", False),
+            ("events.nope:", False),
+        ],
+    )
+    def test_field_exists(self, query: str, expected: bool) -> None:
+        assert parse_filter(query=query)(NESTED_LOG) is expected
+
+    def test_combines_with_boolean_logic(self) -> None:
+        matcher = parse_filter(
+            query="Attributes.http.status_code:5 NOT events.name:retry"
+        )
+
+        assert matcher(NESTED_LOG) is False
+
+    def test_case_sensitivity_applies_to_values(self) -> None:
+        assert parse_filter(query="Resource.service.name:CHECKOUT")(NESTED_LOG)
+        assert not parse_filter(
+            query="Resource.service.name:CHECKOUT", case_sensitive=True
+        )(NESTED_LOG)

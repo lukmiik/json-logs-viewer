@@ -65,6 +65,7 @@ Submit an empty query to clear the filter.
 | `level:error`                                  | field `level` contains `error`             |
 | `message:"connection refused"`                 | quoted value with spaces                   |
 | `level:`                                       | entries that have a `level` field          |
+| `http.status_code:502`                         | nested field `{"http": {"status_code": …}}` |
 | `level:error service:api`                      | both conditions (space means AND)          |
 | `level:error AND service:api`                  | the same, with explicit `AND`              |
 | `level:error OR level:warn`                    | either condition                           |
@@ -77,8 +78,10 @@ Rules:
 - Precedence: `NOT` > `AND` > `OR`. Operators are case-insensitive.
 - A space between terms means `AND`, at the same precedence as `AND`:
   `a OR b c` is `a OR (b AND c)`. Quote words to match them as a phrase.
-- Field names match top-level keys only. `user.id:42` looks for a key literally
-  named `user.id`, not for `id` nested inside `user`.
+- Dotted field names reach into nested objects: `user.id:42` matches
+  `{"user": {"id": 42}}`, a top-level key named `user.id`, or a nested key
+  with dots like `Resource.service.name` in `{"Resource": {"service.name": …}}`.
+  On a list, any element can match: `events.name:retry`.
 - An invalid query shows an error toast and leaves the list unfiltered.
 
 ## Keybindings

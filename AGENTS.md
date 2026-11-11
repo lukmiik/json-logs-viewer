@@ -34,7 +34,7 @@ Run lint, format, types and tests before calling a change done. CI runs
   (`self.logs = [*self.logs, *new]`), never mutate in place, or watchers
   won't fire.
 - In filter queries a space means AND (bare words are separate terms; quotes
-  make a phrase), and fields are top-level keys only.
+  make a phrase), and dotted fields reach nested objects and lists.
 - When behaviour or keybindings change, update `README.md`,
   `ARCHITECTURE.md` and the help text in `feature_summary_modal.py`.
 - `.notes/` and `.todo` are the owner's gitignored notes (known bugs in

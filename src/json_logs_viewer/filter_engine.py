@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import Any
 
 from .models import LogEntry
 
@@ -124,18 +125,55 @@ class ASTNode(ABC):
         pass
 
 
+def resolve_field(*, value: Any, path: str) -> Iterator[Any]:  # noqa: ANN401
+    """Yield every value a dotted field path can reach inside `value`.
+
+    "a.b.c" can mean nested keys or keys that contain dots ("service.name"
+    in OpenTelemetry), so every reading is tried: the whole rest of the path
+    as one key, then each split point. A list applies the path to each
+    element. Callers match if any yielded value matches.
+    """
+    if isinstance(value, list):
+        for item in value:
+            yield from resolve_field(value=item, path=path)
+        return
+    if not isinstance(value, dict):
+        return
+    if path in value:
+        yield value[path]
+    dot = path.find(".")
+    while dot != -1:
+        head = path[:dot]
+        if head in value:
+            yield from resolve_field(value=value[head], path=path[dot + 1 :])
+        dot = path.find(".", dot + 1)
+
+
 @dataclass
 class FieldMatch(ASTNode):
     field: str
     value: str
 
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
-        field_value = log_entry.data.get(self.field)
-        if field_value is None:
-            return False
-        field_str = str(field_value)
+        if "." not in self.field:
+            # Fast path, the common case: a plain lookup. Matching runs once
+            # per log on every filter change, so avoiding resolve_field's
+            # generator here keeps top-level fields as fast as before.
+            value = log_entry.data.get(self.field)
+            if value is None:
+                return False
+            if case_sensitive:
+                return self.value in str(value)
+            return self.value.lower() in str(value).lower()
+        return any(
+            self._contains(value=value, case_sensitive=case_sensitive)
+            for value in resolve_field(value=log_entry.data, path=self.field)
+            if value is not None
+        )
+
+    def _contains(self, *, value: Any, case_sensitive: bool) -> bool:  # noqa: ANN401
         pattern = self.value if case_sensitive else self.value.lower()
-        text = field_str if case_sensitive else field_str.lower()
+        text = str(value) if case_sensitive else str(value).lower()
         return pattern in text
 
 
@@ -144,7 +182,11 @@ class FieldExists(ASTNode):
     field: str
 
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
-        return self.field in log_entry.data
+        if "." not in self.field:
+            return self.field in log_entry.data
+        return any(
+            True for _ in resolve_field(value=log_entry.data, path=self.field)
+        )
 
 
 @dataclass

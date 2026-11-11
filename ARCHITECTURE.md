@@ -138,12 +138,16 @@ and history first.
    the same precedence as `AND`. Each bare word is its own `FullText` term;
    quotes make a phrase.
 3. AST nodes:
-   - `FieldMatch`: substring match on `str(data[field])`.
-   - `FieldExists`: `field in data`.
+   - `FieldMatch`: substring match on `str(value)` of the field.
+   - `FieldExists`: the field path reaches at least one value.
    - `FullText`: substring match on `"k=v k=v ..."` built from `data`.
    - `And`, `Or`, `Not`, `Group`.
 
-Field lookup is top-level only.
+Field paths: a name without `.` is a plain `data.get(name)` (fast path, the
+common case). A dotted name goes through `resolve_field`. It yields every
+value the path can reach, trying the rest of the path as one key (keys like
+`"service.name"`) and then each split point, and fanning out over list
+elements. A node matches if any yielded value does.
 
 ## LogList (virtual scrolling)
 
