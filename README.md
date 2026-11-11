@@ -92,6 +92,10 @@ Full-text terms search the JSON line as shown (`null`, `true`), with
 | `level:error OR level:warn`                    | either condition                           |
 | `NOT level:debug`                              | negation                                   |
 | `(level:error OR level:warn) AND service:api`  | grouping                                   |
+| `http.status_code>=500`                        | numbers: `<`, `<=`, `>`, `>=`              |
+| `timestamp>=2024-01-15T10:00`                  | times (no zone given: UTC)                 |
+| `timestamp >= 2024-01-15 timestamp < 2024-01-16` | a day; spaces around the operator are fine |
+| `last:15m`                                     | the 15 min before the newest log (s/m/h/d) |
 
 Rules:
 

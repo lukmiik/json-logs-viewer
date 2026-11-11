@@ -63,6 +63,9 @@ class HelpModal(ModalScreen[None]):
             "  field:val    Field-specific match\n"
             "  field:       Field existence check\n"
             "  a.b:val      Nested field (also lists)\n"
+            "  f>=500       Compare numbers: < <= > >=\n"
+            "  ts>=2024-01-15T10:00   Compare times (UTC)\n"
+            "  last:15m     Last 15 min before the newest log\n"
             "  a b          Both terms (space means AND)\n"
             '  "a b"        Exact phrase\n'
             "  AND/OR/NOT   Boolean operators\n"

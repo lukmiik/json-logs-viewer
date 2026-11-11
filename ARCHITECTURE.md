@@ -178,20 +178,23 @@ columns first. The search history is kept (it's shared by all files).
 
 ## Filtering
 
-`filter_engine.parse_filter(query=..., case_sensitive=...)` returns a
-`Callable[[LogEntry], bool]`.
+`filter_engine.parse_filter(query=..., case_sensitive=..., newest_timestamp=...)`
+returns a `Matcher`: call it with a `LogEntry`. `matcher.relative` is True
+when the query uses `last:<duration>`.
 
 1. `Tokenizer` produces `FIELD`, `VALUE`, `QUOTED`, `AND`, `OR`, `NOT`,
    `LPAREN`, `RPAREN`, `EOF`. A word directly followed by `:` is a field.
    Its value may follow after spaces (`level: error`), but a keyword or
    another `field:` there is never taken as the value: `level: AND x`
-   is an existence check followed by a term.
+   is an existence check followed by a term. A word followed by `<`, `<=`,
+   `>` or `>=` (spaces allowed) is a `FIELD`, an `OP` and its value.
 2. `Parser` is recursive descent:
    ```
    expr    := term (OR term)*
    term    := factor ([AND] factor)*
    factor  := NOT factor | primary
-   primary := "(" expr ")" | FIELD [VALUE|QUOTED] | VALUE | QUOTED
+   primary := "(" expr ")" | FIELD [VALUE|QUOTED] | FIELD OP value
+            | VALUE | QUOTED
    ```
    `AND` is optional: in `_term`, a token that can start a term (`FIELD`,
    `VALUE`, `QUOTED`, `NOT`, `(`) right after a term means implicit AND, at
@@ -202,6 +205,15 @@ columns first. The search history is kept (it's shared by all files).
    - `FieldExists`: the field path reaches at least one value.
    - `FullText`: substring match on `LogEntry.search_text`: the JSON line
      as shown, with `\u` escapes decoded (cached per entry).
+   - `Compare`: `field<op>value`. The value is parsed once: a number
+     (compares numeric values and numeric strings) or an ISO date/time via
+     `datetime.fromisoformat` (compares ISO strings and epoch s/ms; naive
+     times are UTC). Anything else is a `FilterError`.
+   - `Last`: `last:<n>[smhd]` matches logs whose detected `timestamp` is
+     within the window before the newest one. The parser asks
+     `newest_timestamp()` (an O(n) scan) only when the query uses it.
+     Because the window moves, follow mode re-filters everything for a
+     relative query instead of only the appended logs (app and LogList).
    - `And`, `Or`, `Not`, `Group`.
 
 Field paths: a name without `.` is a plain `data.get(name)` (fast path, the

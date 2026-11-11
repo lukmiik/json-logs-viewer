@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, cast
 
 from rich.console import Console
@@ -27,7 +26,7 @@ from json_logs_viewer.constants import (
     MAX_COL_WIDTH,
 )
 from json_logs_viewer.field_paths import resolve_field
-from json_logs_viewer.filter_engine import FilterError, parse_filter
+from json_logs_viewer.filter_engine import FilterError, Matcher, parse_filter
 from json_logs_viewer.models import (
     LogEntry,
     appended_entries,
@@ -203,7 +202,7 @@ class LogList(ScrollView):
         self._match_flags: list[bool] = []
         # How _match_flags were computed, so appended entries get the same
         # treatment: a matcher, or one flag for all (no matcher).
-        self._flag_matcher: Callable[[LogEntry], bool] | None = None
+        self._flag_matcher: Matcher | None = None
         self._flag_default: bool = True
         # Width the wrapped rows were computed for, or None when a new
         # entry could change it (see _recalculate_wrap).
@@ -409,7 +408,11 @@ class LogList(ScrollView):
         appended = appended_entries(old=self._log_entries, new=logs)
         self._log_entries = logs
         self._line_cache = LRUCache(maxsize=2000)
-        if appended is None:
+        relative = (
+            self._flag_matcher is not None and self._flag_matcher.relative
+        )
+        if appended is None or relative:
+            # A last:<duration> window moves with new logs: flag them all.
             self._recompute_match_flags()
         else:
             self._match_flags.extend(self._flags_for(entries=appended))
@@ -453,6 +456,7 @@ class LogList(ScrollView):
                     self._flag_matcher = parse_filter(
                         query=self._active_query,
                         case_sensitive=app.case_sensitive,
+                        newest_timestamp=app.newest_timestamp,
                     )
                 except FilterError:
                     self._flag_default = False

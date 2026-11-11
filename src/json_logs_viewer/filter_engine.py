@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import math
+import operator
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from enum import Enum, auto
 from typing import Any
 
@@ -25,6 +29,7 @@ class TokenType(Enum):
     NOT = auto()
     LPAREN = auto()
     RPAREN = auto()
+    OP = auto()
     EOF = auto()
 
 
@@ -93,11 +98,49 @@ class Tokenizer:
             self.tokens.append(Token(TokenType.FIELD, value, start))
             self.pos += 1
             self._read_value_after_colon()
+        elif value.upper() not in self.KEYWORDS and (
+            found := self._operator_at(self.pos)
+        ):
+            # "code>=500" or "code >= 500": a comparison.
+            op, end = found
+            self.tokens.append(Token(TokenType.FIELD, value, start))
+            self.tokens.append(Token(TokenType.OP, op, end - len(op)))
+            self.pos = end
+            self._read_value_after_operator()
         elif value.upper() in self.KEYWORDS:
             keyword_type = TokenType[value.upper()]
             self.tokens.append(Token(keyword_type, value.upper(), start))
         else:
             self.tokens.append(Token(TokenType.VALUE, value, start))
+
+    _OPERATORS = (">=", "<=", ">", "<")
+
+    def _operator_at(self, pos: int) -> tuple[str, int] | None:
+        """The comparison operator at `pos` (after spaces) and its end."""
+        while pos < len(self.query) and self.query[pos].isspace():
+            pos += 1
+        for op in self._OPERATORS:
+            if self.query.startswith(op, pos):
+                return op, pos + len(op)
+        return None
+
+    def _read_value_after_operator(self) -> None:
+        self._skip_whitespace()
+        if self.pos >= len(self.query):
+            return
+        if self.query[self.pos] == '"':
+            self._read_quoted()
+            return
+        start = self.pos
+        while (
+            self.pos < len(self.query)
+            and not self.query[self.pos].isspace()
+            and self.query[self.pos] not in ("(", ")")
+        ):
+            self.pos += 1
+        self.tokens.append(
+            Token(TokenType.VALUE, self.query[start : self.pos], start)
+        )
 
     @staticmethod
     def _is_word_char(char: str) -> bool:
@@ -112,6 +155,8 @@ class Tokenizer:
         if not word:
             return False
         if end < len(self.query) and self.query[end] == ":":
+            return True
+        if word.upper() not in self.KEYWORDS and self._operator_at(end):
             return True
         return word.upper() in self.KEYWORDS
 
@@ -238,10 +283,143 @@ class Group(ASTNode):
         return self.child.match(log_entry, case_sensitive)
 
 
+def as_utc(moment: datetime) -> datetime:
+    """A timezone-aware datetime; a naive one is taken as UTC."""
+    return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
+
+
+def parse_moment(value: Any) -> datetime | None:  # noqa: ANN401
+    """A log value as a datetime: ISO 8601 text or epoch seconds/ms.
+
+    Naive times are UTC. Anything else gives None (never matches).
+    """
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        # Above 1e11 seconds is year 5138: it must be milliseconds.
+        seconds = value / 1000 if abs(value) > 1e11 else value
+        try:
+            return datetime.fromtimestamp(seconds, UTC)
+        except (OverflowError, OSError, ValueError):
+            return None
+    if isinstance(value, str):
+        try:
+            return as_utc(datetime.fromisoformat(value.strip()))
+        except ValueError:
+            return None
+    return None
+
+
+def _as_number(value: Any) -> float | None:  # noqa: ANN401
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            number = float(value)
+        except ValueError:
+            return None
+        return number if math.isfinite(number) else None
+    return None
+
+
+_COMPARISONS: dict[str, Callable[[Any, Any], bool]] = {
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+}
+
+
+@dataclass
+class Compare(ASTNode):
+    """A comparison such as code>=500 or ts<2024-01-16.
+
+    Compares as numbers, or as times if the value is an ISO date/time; any
+    other value is a FilterError.
+    """
+
+    field: str
+    op: str
+    value: str
+    _number: float | None = field(init=False, repr=False, compare=False)
+    _moment: datetime | None = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        self._compare = _COMPARISONS[self.op]
+        self._number = _as_number(self.value)
+        self._moment = None
+        if self._number is None:
+            self._moment = parse_moment(self.value)
+            if self._moment is None:
+                raise FilterError(
+                    f"{self.field}{self.op}{self.value}: compare with a "
+                    "number or a date/time like 2024-01-15T10:00"
+                )
+
+    def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
+        data = log_entry.data
+        if self.field in data:
+            values: Any = (data[self.field],)
+        elif "." in self.field:
+            values = resolve_field(value=data, path=self.field)
+        else:
+            return False
+        for value in values:
+            if self._number is not None:
+                number = _as_number(value)
+                if number is not None and self._compare(number, self._number):
+                    return True
+            else:
+                moment = parse_moment(value)
+                if moment is not None and self._compare(moment, self._moment):
+                    return True
+        return False
+
+
+_DURATION = re.compile(r"(\d+)([smhd])")
+_UNITS = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days"}
+
+
+def _parse_duration(text: str) -> timedelta | None:
+    found = _DURATION.fullmatch(text)
+    if found is None:
+        return None
+    return timedelta(**{_UNITS[found[2]]: int(found[1])})
+
+
+@dataclass
+class Last(ASTNode):
+    """last:<duration>: logs at most `window` older than the newest one.
+
+    `since` is None when no log has a timestamp; then nothing matches.
+    """
+
+    window: timedelta
+    since: datetime | None
+
+    def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
+        timestamp = log_entry.timestamp
+        if timestamp is None or self.since is None:
+            return False
+        return as_utc(timestamp) >= self.since
+
+
 class Parser:
-    def __init__(self, tokens: list[Token]) -> None:
+    def __init__(
+        self,
+        tokens: list[Token],
+        newest_timestamp: Callable[[], datetime | None] | None = None,
+    ) -> None:
         self.tokens = tokens
         self.pos = 0
+        # last:<duration> needs the newest log's timestamp; it's looked up
+        # only if the query uses it (it scans every log).
+        self._newest_timestamp = newest_timestamp
+        self._newest: datetime | None = None
+        self._newest_resolved = False
+        self.relative = False
 
     def parse(self) -> ASTNode:
         node = self._expr()
@@ -328,12 +506,30 @@ class Parser:
         field_token = self._expect(TokenType.FIELD)
         field = field_token.value
 
+        if self._current().type == TokenType.OP:
+            op = self._advance().value
+            if self._current().type not in (TokenType.VALUE, TokenType.QUOTED):
+                raise FilterError(f"Expected a value after {op}")
+            return Compare(field=field, op=op, value=self._advance().value)
+
         if self._current().type in (TokenType.VALUE, TokenType.QUOTED):
             value_token = self._advance()
             value = value_token.value
+            if field == "last" and (window := _parse_duration(value)):
+                return self._last(window=window)
             return FieldMatch(field=field, value=value)
 
         return FieldExists(field=field)
+
+    def _last(self, *, window: timedelta) -> Last:
+        """last:<duration>, anchored at the newest log's timestamp."""
+        self.relative = True
+        if not self._newest_resolved:
+            self._newest_resolved = True
+            if self._newest_timestamp is not None:
+                self._newest = self._newest_timestamp()
+        since = None if self._newest is None else as_utc(self._newest) - window
+        return Last(window=window, since=since)
 
     def _fulltext(self) -> ASTNode:
         # One word or one quoted phrase. Adjacent words become separate
@@ -341,20 +537,45 @@ class Parser:
         return FullText(value=self._advance().value)
 
 
+class Matcher:
+    """A parsed query: call it with a log entry to test it.
+
+    `relative` is True when the query uses last:<duration>, whose window
+    moves as newer logs arrive, so callers must re-filter everything
+    instead of only new logs.
+    """
+
+    def __init__(
+        self, *, ast: ASTNode | None, case_sensitive: bool, relative: bool
+    ) -> None:
+        self._ast = ast
+        self._case_sensitive = case_sensitive
+        self.relative = relative
+
+    def __call__(self, log_entry: LogEntry) -> bool:
+        if self._ast is None:
+            return True
+        return self._ast.match(log_entry, self._case_sensitive)
+
+
 def parse_filter(
     *,
     query: str,
     case_sensitive: bool = False,
-) -> Callable[[LogEntry], bool]:
+    newest_timestamp: Callable[[], datetime | None] | None = None,
+) -> Matcher:
+    """Parse `query`; raises FilterError for invalid syntax.
+
+    Args:
+        newest_timestamp: Returns the newest log timestamp, the anchor of
+            last:<duration>. Only called if the query uses it.
+    """
     if not query or not query.strip():
-        return lambda _: True
+        return Matcher(ast=None, case_sensitive=case_sensitive, relative=False)
 
-    tokenizer = Tokenizer(query)
-    tokens = tokenizer.tokenize()
-    parser = Parser(tokens)
+    tokens = Tokenizer(query).tokenize()
+    parser = Parser(tokens, newest_timestamp)
     ast = parser.parse()
-
-    def matcher(log_entry: LogEntry) -> bool:
-        return ast.match(log_entry, case_sensitive)
-
-    return matcher
+    return Matcher(
+        ast=ast, case_sensitive=case_sensitive, relative=parser.relative
+    )

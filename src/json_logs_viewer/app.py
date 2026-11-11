@@ -8,8 +8,9 @@ import sys
 import threading
 from bisect import bisect_left
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from contextlib import ExitStack
+from datetime import datetime
 from functools import partial
 from itertools import islice
 from pathlib import Path
@@ -24,7 +25,12 @@ from textual.screen import Screen
 from json_logs_viewer.constants import SEARCH_HISTORY_LIMIT
 from json_logs_viewer.export import default_export_path, write_jsonl
 from json_logs_viewer.field_paths import leaf_paths
-from json_logs_viewer.filter_engine import FilterError, parse_filter
+from json_logs_viewer.filter_engine import (
+    FilterError,
+    Matcher,
+    as_utc,
+    parse_filter,
+)
 from json_logs_viewer.history_store import (
     default_history_path,
     load_history,
@@ -160,7 +166,7 @@ class LogViewerApp(App):
         self._counted_logs: int = 0
         # The matcher behind filtered_logs; None means every log is shown
         # (no query, highlight mode, or an invalid query).
-        self._active_matcher: Callable[[LogEntry], bool] | None = None
+        self._active_matcher: Matcher | None = None
         self._watcher: WatcherBase | None = None
         self._watch_file: IO[bytes] | None = None
         # Follow position invariant: _follow_offset is the byte where the
@@ -248,6 +254,7 @@ class LogViewerApp(App):
             matcher = parse_filter(
                 query=self.filter_query,
                 case_sensitive=self.case_sensitive,
+                newest_timestamp=self.newest_timestamp,
             )
 
             if self.highlight_matches:
@@ -273,9 +280,21 @@ class LogViewerApp(App):
         if self._active_matcher is None:
             self.filtered_logs = self.logs
             return
+        if self._active_matcher.relative:
+            # last:<duration> is anchored at the newest log, so new logs
+            # move the window and older ones may drop out: re-filter all.
+            self.apply_filter()
+            return
         matching = [log for log in appended if self._active_matcher(log)]
         if matching:
             self.filtered_logs = [*self.filtered_logs, *matching]
+
+    def newest_timestamp(self) -> datetime | None:
+        """The newest detected timestamp: the anchor of last:<duration>."""
+        return max(
+            (as_utc(log.timestamp) for log in self.logs if log.timestamp),
+            default=None,
+        )
 
     def _get_selected_log_entry(self) -> LogEntry | None:
         if 0 <= self.selected_index < len(self.filtered_logs):
@@ -414,7 +433,9 @@ class LogViewerApp(App):
             return self.filtered_logs
         try:
             matcher = parse_filter(
-                query=self.filter_query, case_sensitive=self.case_sensitive
+                query=self.filter_query,
+                case_sensitive=self.case_sensitive,
+                newest_timestamp=self.newest_timestamp,
             )
         except FilterError:
             return self.logs
