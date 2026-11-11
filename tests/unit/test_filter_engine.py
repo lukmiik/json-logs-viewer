@@ -607,6 +607,53 @@ NESTED_LOG = LogEntry(
 )
 
 
+class TestSpaceAfterColon:
+    """A space after `field:` never makes a keyword or field the value."""
+
+    @pytest.mark.parametrize(
+        ("query", "expected"),
+        [
+            ("level: error", FieldMatch(field="level", value="error")),
+            ('level: "a b"', FieldMatch(field="level", value="a b")),
+            (
+                "level: AND service:api",
+                And(
+                    left=FieldExists(field="level"),
+                    right=FieldMatch(field="service", value="api"),
+                ),
+            ),
+            (
+                "level: service:api",
+                And(
+                    left=FieldExists(field="level"),
+                    right=FieldMatch(field="service", value="api"),
+                ),
+            ),
+            (
+                "level: NOT debug",
+                And(
+                    left=FieldExists(field="level"),
+                    right=Not(child=FullText(value="debug")),
+                ),
+            ),
+            (
+                "level: or service:",
+                Or(
+                    left=FieldExists(field="level"),
+                    right=FieldExists(field="service"),
+                ),
+            ),
+            # Without a space the value is taken literally.
+            ("url:http://x", FieldMatch(field="url", value="http://x")),
+            ("msg:AND", FieldMatch(field="msg", value="AND")),
+            # A word that only starts like a keyword is a value.
+            ("level: notice", FieldMatch(field="level", value="notice")),
+        ],
+    )
+    def test_ast(self, query: str, expected: object) -> None:
+        assert Parser(Tokenizer(query).tokenize()).parse() == expected
+
+
 class TestNestedFields:
     """Dotted field paths reach into nested objects and lists."""
 

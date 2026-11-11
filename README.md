@@ -69,6 +69,7 @@ Full-text terms search the JSON line as shown (`null`, `true`), with
 | `level:error`                                  | field `level` contains `error`             |
 | `message:"connection refused"`                 | quoted value with spaces                   |
 | `level:`                                       | entries that have a `level` field          |
+| `level: service:api`                           | has `level`, and `service` contains `api`  |
 | `http.status_code:502`                         | nested field `{"http": {"status_code": …}}` |
 | `level:error service:api`                      | both conditions (space means AND)          |
 | `level:error AND service:api`                  | the same, with explicit `AND`              |

@@ -82,9 +82,8 @@ class Tokenizer:
 
     def _read_word_or_field(self) -> None:
         start = self.pos
-        while self.pos < len(self.query) and (
-            self.query[self.pos].isalnum()
-            or self.query[self.pos] in ("-", "_", ".", "@")
+        while self.pos < len(self.query) and self._is_word_char(
+            self.query[self.pos]
         ):
             self.pos += 1
         value = self.query[start : self.pos]
@@ -99,9 +98,30 @@ class Tokenizer:
         else:
             self.tokens.append(Token(TokenType.VALUE, value, start))
 
+    @staticmethod
+    def _is_word_char(char: str) -> bool:
+        return char.isalnum() or char in ("-", "_", ".", "@")
+
+    def _next_starts_term(self) -> bool:
+        """Whether the word at `pos` is a keyword or a `field:`."""
+        end = self.pos
+        while end < len(self.query) and self._is_word_char(self.query[end]):
+            end += 1
+        word = self.query[self.pos : end]
+        if not word:
+            return False
+        if end < len(self.query) and self.query[end] == ":":
+            return True
+        return word.upper() in self.KEYWORDS
+
     def _read_value_after_colon(self) -> None:
+        after_colon = self.pos
         self._skip_whitespace()
         if self.pos >= len(self.query):
+            return
+        if self.pos > after_colon and self._next_starts_term():
+            # "level: AND x" or "level: service:api": the space ended an
+            # existence check; the next word is a term, not the value.
             return
 
         if self.query[self.pos] == '"':

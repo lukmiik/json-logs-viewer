@@ -135,6 +135,9 @@ and history first.
 
 1. `Tokenizer` produces `FIELD`, `VALUE`, `QUOTED`, `AND`, `OR`, `NOT`,
    `LPAREN`, `RPAREN`, `EOF`. A word directly followed by `:` is a field.
+   Its value may follow after spaces (`level: error`), but a keyword or
+   another `field:` there is never taken as the value: `level: AND x`
+   is an existence check followed by a term.
 2. `Parser` is recursive descent:
    ```
    expr    := term (OR term)*
