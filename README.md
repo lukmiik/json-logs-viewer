@@ -23,6 +23,9 @@ An interactive terminal viewer for JSONL log files, built with
 - Export (`e`): save the lines the query matches (in filter or highlight
   mode) to a JSONL file, `<name>.filtered.jsonl` by default. An existing
   file is only replaced after confirming.
+- Clear the view (`x`, after a y/n confirmation): hides the loaded
+  lines without touching the file. In follow mode only lines written after
+  the clear appear; open the file again (`o`) to see everything.
 - Columns: show any of the 20 most common fields as aligned columns in front
   of each line, under a header row with their names. Nested fields are
   offered by their dotted path (`attributes.level`, `http.status_code`).
@@ -116,6 +119,7 @@ Press `?` in the app for the full list.
 | `w`                 | toggle soft wrap                             |
 | `y` / `Y`           | copy log / copy log with context             |
 | `e`                 | export matching lines to a JSONL file        |
+| `x`                 | clear the view (the file isn't changed)      |
 | `c`                 | configure columns                            |
 | `H`                 | search history                               |
 | `f`                 | toggle follow mode                           |

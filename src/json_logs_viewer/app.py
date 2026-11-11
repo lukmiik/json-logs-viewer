@@ -30,6 +30,7 @@ from json_logs_viewer.log_reader import (
 )
 from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
+from json_logs_viewer.modals.confirm_modal import ConfirmModal
 from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.export_modal import ExportModal
 from json_logs_viewer.modals.file_picker_modal import FilePickerModal
@@ -113,6 +114,8 @@ class LogViewerApp(App):
         ("c", "show_columns", "Columns"),
         ("o", "open_file", "Open"),
         ("e", "export", "Export"),
+        # A plain letter: terminals, editors and browsers often take ctrl+l.
+        ("x", "clear_view", "Clear"),
     ]
 
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
@@ -433,6 +436,36 @@ class LogViewerApp(App):
         noun = "line" if len(entries) == 1 else "lines"
         self.notify(f"Exported {len(entries)} {noun} to {path}")
 
+    def action_clear_view(self) -> None:
+        if isinstance(self.screen, ConfirmModal):
+            return
+        if not self.logs:
+            self.notify("Nothing to clear", severity="warning")
+            return
+        count = len(self.logs)
+        noun = "line" if count == 1 else "lines"
+        self.push_screen(
+            ConfirmModal(
+                title="Clear view",
+                question=(
+                    f"Clear {count} {noun} from the view?\n"
+                    "The file isn't changed; open it again (o) to reload."
+                ),
+            ),
+            callback=self._on_clear_confirmed,
+        )
+
+    def _on_clear_confirmed(self, confirmed: bool | None) -> None:
+        """Drop the loaded logs; the file and the follow offset stay.
+
+        Follow mode keeps reading from where it was, so only lines written
+        after the clear appear, with their real line numbers.
+        """
+        if not confirmed:
+            return
+        self.logs = []
+        self.selected_index = 0
+
     def action_show_history(self) -> None:
         if isinstance(self.screen, HistoryModal):
             return
@@ -637,7 +670,12 @@ class LogViewerApp(App):
             new_logs.append(log)
 
         if new_logs:
-            was_on_last = self.selected_index == len(self.filtered_logs) - 1
+            # An empty view (new file, or just cleared) counts as being at
+            # the end, so the cursor follows the first lines that arrive.
+            was_on_last = (
+                not self.filtered_logs
+                or self.selected_index == len(self.filtered_logs) - 1
+            )
             self.logs = [*self.logs, *new_logs]
             if self.follow_mode and was_on_last:
                 self.selected_index = len(self.filtered_logs) - 1
@@ -676,6 +714,11 @@ class LogViewerApp(App):
             "Export matching logs",
             "Save the logs the query matches to a JSONL file",
             self.action_export,
+        )
+        yield SystemCommand(
+            "Clear view",
+            "Hide the loaded logs; the file isn't changed",
+            self.action_clear_view,
         )
         yield SystemCommand(
             "Configure columns",

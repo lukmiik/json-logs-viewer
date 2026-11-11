@@ -34,6 +34,7 @@ src/json_logs_viewer/
     ├── columns_modal.py   ColumnsModal: SelectionList of field paths
     ├── file_picker_modal.py   FilePickerModal: DirectoryTree
     ├── export_modal.py    ExportModal: target path, overwrite confirm
+    ├── confirm_modal.py   ConfirmModal: yes/no question (y/Enter, n/Esc)
     └── help_modal.py      HelpModal: key reference (`?`)
 ```
 
@@ -69,6 +70,11 @@ the query's matches in highlight mode. `ExportModal` returns a path
 (an existing file needs a second Enter) and `write_jsonl` writes each
 entry's `raw_json` to a temp file in the same directory, then
 `os.replace`s it, so a failed export never leaves a partial file.
+
+Clear view (`x`, confirmed with `ConfirmModal`) sets `logs = []`. The
+follow offset and `_last_line_number` are kept, so follow mode continues
+with only new lines, numbered as in the file. An empty view counts as
+"cursor on the last line", so the cursor follows the first new lines.
 
 The search bar's visibility follows its focus (`on_focus` shows it,
 `on_blur` hides it). After `enter` the filter stays applied, focus returns
