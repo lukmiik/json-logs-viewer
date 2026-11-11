@@ -80,7 +80,9 @@ Export (`e`) takes `_matching_logs()`: `filtered_logs` in filter mode,
 the query's matches in highlight mode. `ExportModal` returns a path
 (an existing file needs a second Enter) and `write_jsonl` writes each
 entry's `raw_json` to a temp file in the same directory, then
-`os.replace`s it, so a failed export never leaves a partial file.
+`os.replace`s it, so a failed export never leaves a partial file. Writes go
+through a symlink to its target, and an overwritten file keeps its
+permissions (a new one gets the umask default).
 
 Clear view (`x`, confirmed with `ConfirmModal`) sets `logs = []`. Each
 file's follow `offset` and `line_count` are kept, so follow mode continues
@@ -128,7 +130,7 @@ The history is global and persistent when the app gets a `history_path`
 `platformdirs`, unless `--no-history`; tests pass none, so they never touch
 the real file). It is loaded in `on_mount` and saved by
 `watch_search_history` on every change: versioned JSON, written through
-`atomic_open` (temp file + `os.replace`, mode 0600 since queries can hold
+`atomic_open` (temp file + `os.replace`; a new file is 0600 since queries can hold
 user IDs or tokens). A missing or damaged file loads as empty; a failed save
 warns once. Saves merge rather than overwrite, so several jlv windows keep
 each other's queries: the file's list, plus this window's queries it lacks,

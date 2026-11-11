@@ -47,7 +47,8 @@ def save_history(*, path: Path, history: list[str]) -> None:
         OSError: The folder can't be created or written.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    with atomic_open(path=path) as file:
+    # 0600 for a new file: queries can hold user IDs or tokens.
+    with atomic_open(path=path, new_file_mode=0o600) as file:
         json.dump(
             {"version": _VERSION, "queries": history},
             file,
