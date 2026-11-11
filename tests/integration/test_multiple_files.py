@@ -197,3 +197,32 @@ async def test_one_file_under_two_names_opens_once(
 
         assert app.filepaths == [str(api)]
         assert any("Already open" in n.message for n in app._notifications)
+
+
+@pytest.mark.asyncio
+async def test_follow_failing_on_one_file_doesnt_freeze(
+    api: Path, worker: Path
+) -> None:
+    """A later file failing to open must not freeze the UI for 1 s.
+
+    A watcher already waiting with data is released, not joined until its
+    timeout.
+    """
+    import time
+
+    app = LogViewerApp(files=[str(api), str(worker)])
+    async with app.run_test(notifications=True) as pilot:
+        await pilot.pause()
+        with api.open("a") as file:
+            file.write('{"msg": "pending"}\n')
+        worker.unlink()
+
+        started = time.perf_counter()
+        app.follow_mode = True
+        await pilot.pause()
+        elapsed = time.perf_counter() - started
+
+        assert not app.follow_mode
+        assert all(source.watcher is None for source in app._sources)
+        assert elapsed < 0.5
+        assert any("Can't follow" in n.message for n in app._notifications)

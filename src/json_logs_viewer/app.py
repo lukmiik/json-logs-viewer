@@ -826,6 +826,11 @@ class LogViewerApp(App):
                     watch_file.seek(source.offset)
                     watcher = get_watcher()
                     stack.callback(watcher.close)
+                    # Unwinding runs callbacks in reverse, so this runs
+                    # before watcher.close: it releases a watcher waiting
+                    # for its chunk to be consumed, which the main thread
+                    # (busy joining it) never would: a 1 s freeze per file.
+                    stack.callback(session.set)
                     watcher.watch(
                         fileno=watch_file.fileno(),
                         path=source.path,
