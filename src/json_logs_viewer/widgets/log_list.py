@@ -28,8 +28,10 @@ from json_logs_viewer.constants import (
 from json_logs_viewer.field_paths import resolve_field
 from json_logs_viewer.filter_engine import FilterError, Matcher, parse_filter
 from json_logs_viewer.models import (
+    DETECTED_COLUMNS,
     LogEntry,
     appended_entries,
+    find_first,
     level_category,
 )
 
@@ -114,6 +116,10 @@ def column_text(*, data: dict[str, Any], column: str) -> str:
     """
     if column in data:
         value = data[column]
+    elif column in DETECTED_COLUMNS:
+        # @level etc.: the detected field, whatever this log calls it.
+        found = find_first(data=data, candidates=DETECTED_COLUMNS[column])
+        value = _MISSING if found is None else found
     elif "." in column:
         value = next(resolve_field(value=data, path=column), _MISSING)
     else:

@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from json_logs_viewer.field_paths import leaf_paths
+from json_logs_viewer.models import LogEntry
 from json_logs_viewer.widgets.log_list import column_text
 
 
@@ -42,3 +43,28 @@ def test_leaf_paths_descend_into_objects() -> None:
 )
 def test_column_text(data: dict[str, Any], column: str, text: str) -> None:
     assert column_text(data=data, column=column) == text
+
+
+@pytest.mark.parametrize(
+    ("data", "column", "text"),
+    [
+        ({"msg": "hi"}, "@message", "hi"),
+        ({"severity": "WARN", "level": "INFO"}, "@level", "WARN"),
+        ({"attributes": {"level": "error"}}, "@level", "error"),
+        ({"ts": 1705312800}, "@timestamp", "1705312800"),
+        ({"@l": "Warning"}, "@level", "Warning"),  # Serilog compact
+        ({"other": 1}, "@message", ""),
+    ],
+)
+def test_detected_columns(
+    data: dict[str, Any], column: str, text: str
+) -> None:
+    """@level etc. show the detected field's value, whatever its name."""
+    assert column_text(data=data, column=column) == text
+
+
+def test_real_at_timestamp_field_is_the_detected_one() -> None:
+    """ECS logs have a real @timestamp; it's also what gets detected."""
+    data = {"@timestamp": "2024-01-15T10:00:00Z", "message": "m"}
+    assert column_text(data=data, column="@timestamp") == data["@timestamp"]
+    assert LogEntry(line_number=1, data=data).timestamp is not None

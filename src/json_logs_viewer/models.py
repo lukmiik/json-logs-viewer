@@ -8,7 +8,16 @@ from pydantic import BaseModel, TypeAdapter, ValidationError, model_validator
 
 from json_logs_viewer.field_paths import resolve_field
 
-TIMESTAMP_FIELDS = ["Timestamp", "timestamp", "time", "ts", "Time", "@t"]
+# "@timestamp" is the Elastic Common Schema / Logstash name.
+TIMESTAMP_FIELDS = [
+    "Timestamp",
+    "timestamp",
+    "time",
+    "ts",
+    "Time",
+    "@t",
+    "@timestamp",
+]
 LEVEL_FIELDS = [
     "SeverityText",
     "severity",
@@ -16,6 +25,7 @@ LEVEL_FIELDS = [
     "log_level",
     "Level",
     "loglevel",
+    "@l",  # Serilog's compact JSON (it omits it for Information)
     # Nested, checked after the top-level names: OpenTelemetry-style
     # attributes and Elastic Common Schema ("log.level", nested or dotted).
     "attributes.level",
@@ -23,6 +33,28 @@ LEVEL_FIELDS = [
     "log.level",
 ]
 MESSAGE_FIELDS = ["message", "msg", "Message", "body", "event", "@m"]
+
+# Column names that show a detected field, whatever it's called in a log.
+DETECTED_COLUMNS = {
+    "@timestamp": TIMESTAMP_FIELDS,
+    "@level": LEVEL_FIELDS,
+    "@message": MESSAGE_FIELDS,
+}
+
+
+def find_first(*, data: dict[str, Any], candidates: list[str]) -> Any | None:  # noqa: ANN401
+    """The value of the first candidate field present in `data`, or None.
+
+    Dotted candidates (attributes.level) reach into nested objects.
+    """
+    for candidate in candidates:
+        if candidate in data:
+            return data[candidate]
+        if "." in candidate:
+            found = next(resolve_field(value=data, path=candidate), None)
+            if found is not None:
+                return found
+    return None
 
 
 _DATETIME = TypeAdapter(datetime)
@@ -91,15 +123,7 @@ class LogEntry(BaseModel):
     def _find_first(
         *, data: dict[str, Any], candidates: list[str]
     ) -> Any | None:  # noqa: ANN401
-        for candidate in candidates:
-            if candidate in data:
-                return data[candidate]
-            if "." in candidate:
-                # Nested path: first value it reaches, like a field query.
-                found = next(resolve_field(value=data, path=candidate), None)
-                if found is not None:
-                    return found
-        return None
+        return find_first(data=data, candidates=candidates)
 
     @cached_property
     def search_text(self) -> str:

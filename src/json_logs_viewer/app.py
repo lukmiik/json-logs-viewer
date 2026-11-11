@@ -49,8 +49,10 @@ from json_logs_viewer.modals.file_picker_modal import FilePickerModal
 from json_logs_viewer.modals.help_modal import HelpModal
 from json_logs_viewer.modals.history_modal import HistoryModal
 from json_logs_viewer.models import (
+    DETECTED_COLUMNS,
     LogEntry,
     appended_entries,
+    find_first,
     parse_log_line,
 )
 from json_logs_viewer.widgets.column_header import ColumnHeader
@@ -163,6 +165,7 @@ class LogViewerApp(App):
         # Field path counts for the columns modal, filled lazily by
         # discover_fields: logs[:_counted_logs] are already counted.
         self._field_counts: Counter[str] = Counter()
+        self._detected_counts: Counter[str] = Counter()
         self._counted_logs: int = 0
         # The matcher behind filtered_logs; None means every log is shown
         # (no query, highlight mode, or an invalid query).
@@ -213,6 +216,7 @@ class LogViewerApp(App):
         if appended is None:
             # Not an append: the old counts belong to other logs.
             self._field_counts = Counter()
+            self._detected_counts = Counter()
             self._counted_logs = 0
         if appended is None:
             self.apply_filter()
@@ -316,8 +320,22 @@ class LogViewerApp(App):
         """
         for log in islice(self.logs, self._counted_logs, None):
             self._field_counts.update(leaf_paths(value=log.data))
+            for name, candidates in DETECTED_COLUMNS.items():
+                if (
+                    find_first(data=log.data, candidates=candidates)
+                    is not None
+                ):
+                    self._detected_counts[name] += 1
         self._counted_logs = len(self.logs)
-        return [f for f, _ in self._field_counts.most_common(20)]
+        # @timestamp/@level/@message first (when any log has them), then the
+        # most common real fields.
+        detected = [n for n in DETECTED_COLUMNS if self._detected_counts[n]]
+        common = [
+            f
+            for f, _ in self._field_counts.most_common(20 + len(detected))
+            if f not in detected
+        ]
+        return detected + common[:20]
 
     def _restore_selected_log_entry(
         self, *, log_entry: LogEntry | None

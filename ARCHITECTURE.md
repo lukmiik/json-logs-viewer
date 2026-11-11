@@ -231,6 +231,11 @@ Only visible rows are rendered, so file size does not affect drawing cost.
   capped at `MAX_COL_WIDTH`) followed by `raw_json`. `column_text` reads a
   column, dotted paths through `resolve_field`, and shows non-strings as
   JSON (`null`, `true`).
+- `@timestamp`, `@level` and `@message` (`DETECTED_COLUMNS`) show the raw
+  value of the detected field via `models.find_first`, the same lookup that
+  fills `LogEntry.timestamp/level/message`. A real field of that name wins
+  (ECS logs have a real `@timestamp`, which is also a detected name).
+  `discover_fields()` lists them first when any log has them.
 - The columns modal offers `discover_fields()`: the 20 most common
   `leaf_paths` (dotted paths to values; objects are descended, lists are
   values). Counting walks every object, so it runs lazily when the modal

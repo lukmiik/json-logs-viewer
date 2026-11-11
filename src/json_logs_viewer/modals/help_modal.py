@@ -94,7 +94,8 @@ class HelpModal(ModalScreen[None]):
             "               Select a past query to reapply it\n"
             "               Saved across runs (--no-history: off)\n"
             "  c            Open column configuration modal\n"
-            "               Select fields (a.b for nested) as columns"
+            "               Select fields (a.b for nested) as columns\n"
+            "               @level/@message/@timestamp: detected fields"
         )
         yield TextArea(text, id="feature-summary-content", read_only=True)
 

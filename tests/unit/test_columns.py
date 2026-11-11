@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from json_logs_viewer.app import LogViewerApp
-from json_logs_viewer.models import LogEntry
+from json_logs_viewer.models import DETECTED_COLUMNS, LogEntry
 from json_logs_viewer.widgets.log_list import LogList
 
 
@@ -55,9 +55,11 @@ async def test_discover_fields_sorted_by_frequency() -> None:
         for log in logs:
             field_counts.update(log.data.keys())
 
-        assert fields[0] == "level"
-        assert fields[1] == "timestamp"
-        assert "extra" in fields
+        # Detected @ columns come first; real fields follow by frequency.
+        real = [f for f in fields if f not in DETECTED_COLUMNS]
+        assert real[0] == "level"
+        assert real[1] == "timestamp"
+        assert "extra" in real
 
 
 @pytest.mark.asyncio
@@ -209,3 +211,20 @@ async def test_nested_column_is_rendered(tmp_path: Path) -> None:
 
         assert row(0).startswith("504         | ")
         assert row(1).startswith("            | ")
+
+
+@pytest.mark.asyncio
+async def test_detected_columns_come_first_when_present() -> None:
+    app = LogViewerApp()
+    async with app.run_test():
+        app.logs = [
+            LogEntry(line_number=1, data={"ts": "2024-01-15", "msg": "a"}),
+            LogEntry(line_number=2, data={"msg": "b", "extra": 1}),
+        ]
+
+        fields = app.discover_fields()
+
+        # No level in these logs, so no @level.
+        assert fields[:2] == ["@timestamp", "@message"]
+        assert "@level" not in fields
+        assert {"ts", "msg", "extra"} <= set(fields)

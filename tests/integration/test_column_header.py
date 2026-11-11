@@ -137,3 +137,21 @@ async def test_applying_columns_scrolls_back_to_show_them(
         assert app.columns
         assert log_list.scroll_offset.x == 0
         assert _text(app.query_one(ColumnHeader)).startswith(app.columns[0])
+
+
+@pytest.mark.asyncio
+async def test_detected_columns_render_whatever_the_field_name(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "app.jsonl"
+    path.write_text('{"severity": "WARN", "msg": "disk almost full"}\n')
+    app = LogViewerApp(file=str(path))
+    async with app.run_test(size=(100, 10)) as pilot:
+        await pilot.pause()
+        app.columns = ["@level", "@message"]
+        await pilot.pause()
+
+        header = _text(app.query_one(ColumnHeader))
+        row = _text(app.query_one("#logs", LogList))
+        assert header.startswith("@level | @message         | ")
+        assert row.startswith("WARN   | disk almost full | ")

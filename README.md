@@ -29,6 +29,8 @@ An interactive terminal viewer for JSONL log files, built with
 - Columns: show any of the 20 most common fields as aligned columns in front
   of each line, under a header row with their names. Nested fields are
   offered by their dotted path (`attributes.level`, `http.status_code`).
+  `@timestamp`, `@level` and `@message` show the detected field whatever a
+  log calls it (`ts`, `severity`, `msg`, `attributes.level`, ...).
 - Follow mode (like `tail -F`) for files that are still being written. If
   the file is truncated or rotated (e.g. by logrotate), it is reloaded.
 - File picker to open another file without restarting.

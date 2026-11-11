@@ -10,6 +10,10 @@ from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.widgets.log_list import LogList
 
 
+def _prompt(selection_list: SelectionList[str], index: int) -> str:
+    return str(selection_list.get_option_at_index(index).prompt)
+
+
 @pytest.mark.asyncio
 async def test_keybinding_opens_modal(sample_jsonl_file: Path) -> None:
     """Test that C (uppercase) opens the columns modal."""
@@ -40,7 +44,11 @@ async def test_selection_list_displays_available_fields(
         assert isinstance(app.screen, ColumnsModal)
         selection_list = app.screen.query_one("#column-list", SelectionList)
 
+        # Detected fields come first, then real fields by frequency.
         expected_fields = [
+            "@timestamp (detected)",
+            "@level (detected)",
+            "@message (detected)",
             "timestamp",
             "level",
             "message",
@@ -73,7 +81,7 @@ async def test_selecting_fields_and_applying(
         await pilot.pause()
 
         assert not isinstance(app.screen, ColumnsModal)
-        assert app.columns == ["timestamp"]
+        assert app.columns == ["@timestamp"]
 
 
 @pytest.mark.asyncio
@@ -179,22 +187,22 @@ async def test_jk_navigates_selection_list(
         selection_list = app.screen.query_one("#column-list", SelectionList)
 
         assert selection_list.highlighted == 0
-        assert str(selection_list.get_option_at_index(0).prompt) == "timestamp"
+        assert _prompt(selection_list, 0) == "@timestamp (detected)"
 
         await pilot.press("j")
         await pilot.pause()
         assert selection_list.highlighted == 1
-        assert str(selection_list.get_option_at_index(1).prompt) == "level"
+        assert _prompt(selection_list, 1) == "@level (detected)"
 
         await pilot.press("j")
         await pilot.pause()
         assert selection_list.highlighted == 2
-        assert str(selection_list.get_option_at_index(2).prompt) == "message"
+        assert _prompt(selection_list, 2) == "@message (detected)"
 
         await pilot.press("k")
         await pilot.pause()
         assert selection_list.highlighted == 1
-        assert str(selection_list.get_option_at_index(1).prompt) == "level"
+        assert _prompt(selection_list, 1) == "@level (detected)"
 
 
 @pytest.mark.asyncio
@@ -213,14 +221,14 @@ async def test_arrow_keys_navigate_selection_list(
         selection_list = app.screen.query_one("#column-list", SelectionList)
 
         assert selection_list.highlighted == 0
-        assert str(selection_list.get_option_at_index(0).prompt) == "timestamp"
+        assert _prompt(selection_list, 0) == "@timestamp (detected)"
 
         await pilot.press("down")
         await pilot.pause()
         assert selection_list.highlighted == 1
-        assert str(selection_list.get_option_at_index(1).prompt) == "level"
+        assert _prompt(selection_list, 1) == "@level (detected)"
 
         await pilot.press("up")
         await pilot.pause()
         assert selection_list.highlighted == 0
-        assert str(selection_list.get_option_at_index(0).prompt) == "timestamp"
+        assert _prompt(selection_list, 0) == "@timestamp (detected)"
