@@ -232,3 +232,23 @@ async def test_arrow_keys_navigate_selection_list(
         await pilot.pause()
         assert selection_list.highlighted == 0
         assert _prompt(selection_list, 0) == "@timestamp (detected)"
+
+
+@pytest.mark.asyncio
+async def test_field_names_with_brackets_are_plain_text(
+    tmp_path: Path,
+) -> None:
+    """Field names come from the logs; [/x] must not be read as markup."""
+    path = tmp_path / "odd.jsonl"
+    path.write_text('{"[/x]": 1, "[b]bold": 2}\n')
+    app = LogViewerApp(file=str(path))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("c")
+        await pilot.pause()
+
+        selection_list = app.screen.query_one("#column-list", SelectionList)
+        assert {_prompt(selection_list, i) for i in range(2)} == {
+            "[/x]",
+            "[b]bold",
+        }

@@ -20,6 +20,7 @@ from typing import IO, Any
 from textual.app import App, ComposeResult, SystemCommand
 from textual.containers import Vertical
 from textual.message import Message
+from textual.notifications import SeverityLevel
 from textual.reactive import reactive
 from textual.screen import Screen
 
@@ -210,6 +211,29 @@ class LogViewerApp(App):
         # Identifies the running follow session (all files' watchers share
         # it); set when it stops.
         self._follow_session: threading.Event | None = None
+
+    def notify(
+        self,
+        message: str,
+        *,
+        title: str = "",
+        severity: SeverityLevel = "information",
+        timeout: float | None = None,
+        markup: bool = False,
+    ) -> None:
+        """Show a toast. Unlike Textual's default, not parsed as markup.
+
+        Messages quote file paths, errors and queries, and "[/x]" in them
+        is a closing tag with nothing to close: Textual raised MarkupError
+        and the app crashed. jlv's own messages use no markup.
+        """
+        super().notify(
+            message,
+            title=title,
+            severity=severity,
+            timeout=timeout,
+            markup=markup,
+        )
 
     def get_default_screen(self) -> Screen[None]:
         return MainScreen(id="_default")

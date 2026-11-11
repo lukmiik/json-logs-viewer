@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Label, OptionList
 from textual.widgets.option_list import Option
@@ -59,8 +60,10 @@ class HistoryModal(ModalScreen[str | None]):
         history = list(reversed(self._app.search_history))
         with Vertical(id="history-dialog") as dialog:
             if history:
+                # Content: plain text. A str prompt is parsed as markup, so
+                # a query holding "[/api]" crashed the list (MarkupError).
                 option_list = OptionList(
-                    *[Option(query) for query in history],
+                    *[Option(Content(query)) for query in history],
                     id="history-list",
                 )
                 yield option_list

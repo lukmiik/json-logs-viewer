@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 from textual.binding import Binding
 from textual.containers import VerticalScroll
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Footer, TextArea
 from textual.widgets.text_area import Selection
@@ -107,7 +108,7 @@ class DetailModal(ModalScreen[None]):
                 json_str, id="json-content", read_only=True, language="json"
             )
             yield Footer()
-        dialog.border_title = self._title()
+        dialog.border_title = Content(self._title())
         dialog.border_subtitle = "j/k: nav | ctrl+d/u: scroll | ESC: close"
 
     def action_next_log(self) -> None:
@@ -131,7 +132,7 @@ class DetailModal(ModalScreen[None]):
         return f"Log Detail · {source}:{entry.line_number}"
 
     def _update_content(self) -> None:
-        self.query_one("#detail-dialog").border_title = self._title()
+        self.query_one("#detail-dialog").border_title = Content(self._title())
         json_widget = self.query_one("#json-content", TextArea)
         json_str = json.dumps(
             self.log_entry.data, indent=2, ensure_ascii=False

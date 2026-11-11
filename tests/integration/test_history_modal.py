@@ -356,3 +356,22 @@ async def test_cursor_keys_on_empty_history_do_not_crash(
         await pilot.pause()
 
         assert isinstance(app.screen, HistoryModal)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("query", ['msg:"x [/]"', '"[/api/users]"', "m:[b]x"])
+async def test_queries_with_brackets_are_plain_text(
+    sample_jsonl_file: Path, query: str
+) -> None:
+    """[...] in a saved query is text, not formatting (it used to crash)."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        app.search_history = [query]
+
+        await pilot.press("H")
+        await pilot.pause()
+        await pilot.press("enter")
+        await pilot.pause()
+
+        assert app.filter_query == query

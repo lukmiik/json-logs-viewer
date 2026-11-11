@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, cast
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
+from textual.content import Content
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, Footer, Label
@@ -93,7 +94,9 @@ class StatusInfo(Horizontal):
 
     def _update_labels(self) -> None:
         filename_label = self.query_one("#status-filename", Label)
-        filename_label.update(f"File: {self.filename}")
+        # Content: plain text. File names and queries may hold "[/x]",
+        # which a str would parse as markup (MarkupError).
+        filename_label.update(Content(f"File: {self.filename}"))
         total_label = self.query_one("#status-total", Label)
         total_label.update(f"Total: {self.total}")
         filtered_label = self.query_one("#status-filtered", Label)
@@ -103,7 +106,7 @@ class StatusInfo(Horizontal):
         query_label = self.query_one("#status-query", Label)
         if self.query:
             mode = "Highlight" if self.highlight_matches else "Filter"
-            query_label.update(f"{mode}: {self.query}")
+            query_label.update(Content(f"{mode}: {self.query}"))
         else:
             query_label.update("")
 

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
+from textual.content import Content
 from textual.screen import ModalScreen
 from textual.widgets import Input, Label
 
@@ -65,7 +66,8 @@ class ExportModal(ModalScreen[Path | None]):
         path_input.cursor_position = len(path_input.value)
 
     def _warn(self, text: str) -> None:
-        self.query_one("#export-warning", Label).update(text)
+        # Content: the typed path is plain text, not markup.
+        self.query_one("#export-warning", Label).update(Content(text))
 
     def on_input_changed(self, _: Input.Changed) -> None:
         self._confirmed = None

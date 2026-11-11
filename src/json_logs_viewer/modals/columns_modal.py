@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.content import Content
 from textual.events import Key
 from textual.screen import ModalScreen
 from textual.widgets import SelectionList
@@ -68,7 +69,9 @@ class ColumnsModal(ModalScreen[list[str] | None]):
 
         selections = [
             Selection(
-                _label(field=field),
+                # Content: plain text; field names from logs may hold "[/x]",
+                # which a str prompt would parse as markup.
+                Content(_label(field=field)),
                 field,
                 initial_state=(field in current),
             )
