@@ -125,3 +125,36 @@ def test_serve_without_files_ignores_a_non_terminal_stdin(
     app_module.main()
 
     assert len(servers) == 1
+
+
+def test_serve_session_without_files_ignores_its_piped_stdin(
+    piped: int, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """textual-serve gives each session a pipe as stdin: that isn't logs."""
+    monkeypatch.setenv(app_module.SERVE_FILE_ENV, "[]")
+
+    kwargs = _run(monkeypatch)
+
+    assert kwargs["files"] == []
+    assert kwargs["stdin_path"] is None
+    assert kwargs["show_picker_on_start"] is True
+
+
+def test_serve_marks_its_sessions_even_without_files(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeServer:
+        def __init__(self, command: str, *, title: str) -> None:
+            pass
+
+        def serve(self) -> None:
+            pass
+
+    monkeypatch.delenv(app_module.SERVE_FILE_ENV, raising=False)
+    monkeypatch.setattr(app_module, "stdin_is_piped", lambda: False)
+    monkeypatch.setattr("textual_serve.server.Server", FakeServer)
+    monkeypatch.setattr(sys, "argv", ["jlv", "--serve"])
+
+    app_module.main()
+
+    assert os.environ[app_module.SERVE_FILE_ENV] == "[]"

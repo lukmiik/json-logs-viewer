@@ -1063,13 +1063,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # A --serve browser session gets its files from the environment. Pop
-    # it, so programs started from the app don't inherit it.
+    # A --serve browser session gets its files from the environment (always
+    # set, maybe to []). Pop it, so programs started from the app don't
+    # inherit it.
     served = os.environ.pop(SERVE_FILE_ENV, None)
     files = args.files or (json.loads(served) if served else [])
     # Piped input: "-" among the files, or piping with no files at all
-    # (`kubectl logs pod | jlv`). Not guessed for --serve, which may run
-    # without a terminal (a service): there only an explicit "-" counts.
+    # (`kubectl logs pod | jlv`). Never guessed for --serve, which may run
+    # without a terminal (a service), nor in its sessions, whose stdin is
+    # textual-serve's pipe: there only an explicit "-" counts.
     explicit_stdin = STDIN_ARG in files
     if explicit_stdin and args.serve:
         sys.exit(
@@ -1078,7 +1080,7 @@ def main() -> None:
     if explicit_stdin and not stdin_is_piped():
         sys.exit("jlv: '-' reads piped input, but nothing is piped in")
     wants_stdin = explicit_stdin or (
-        not files and not args.serve and stdin_is_piped()
+        not files and not args.serve and served is None and stdin_is_piped()
     )
 
     if args.serve:
@@ -1092,9 +1094,9 @@ def main() -> None:
                 "  pip install 'json-logs-viewer[serve]'"
             )
 
-        if args.files:
-            # A JSON list: file names can contain any separator character.
-            os.environ[SERVE_FILE_ENV] = json.dumps(args.files)
+        # A JSON list: file names can contain any separator character. Set
+        # even when empty, so each session knows it was started by --serve.
+        os.environ[SERVE_FILE_ENV] = json.dumps(args.files)
         Server(
             build_serve_command(
                 follow=args.follow, no_history=args.no_history
