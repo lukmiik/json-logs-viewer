@@ -518,3 +518,69 @@ async def test_watcher_read_error_stops_follow_without_stall(
         assert app._watch_file is None
         # The poll interval is 50 ms; the old deadlock took the full 1 s.
         assert elapsed < 0.5
+
+
+def _start_heavy_writer(*, path: Path) -> threading.Event:
+    """Append log lines as fast as possible until the event is set."""
+    stop = threading.Event()
+
+    def write() -> None:
+        with path.open("a", encoding="utf-8") as f:
+            while not stop.is_set():
+                f.write(json.dumps({"msg": "x" * 200}) + "\n")
+                f.flush()
+
+    threading.Thread(target=write, daemon=True).start()
+    return stop
+
+
+@pytest.mark.asyncio
+async def test_toggling_follow_off_under_heavy_writes_is_prompt(
+    tmp_path: Path,
+) -> None:
+    """Stopping follow while chunks are in flight doesn't block on join."""
+    path = tmp_path / "app.log"
+    path.write_text("")
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        stop_writer = _start_heavy_writer(path=path)
+        try:
+            worst = 0.0
+            for _ in range(10):
+                await asyncio.sleep(0.1)
+                started = time.monotonic()
+                app.follow_mode = False
+                worst = max(worst, time.monotonic() - started)
+                app.follow_mode = True
+        finally:
+            stop_writer.set()
+
+        assert worst < 0.5
+
+
+@pytest.mark.asyncio
+async def test_no_lines_lost_or_duplicated_across_toggles(
+    tmp_path: Path,
+) -> None:
+    """Chunks queued when follow stops are re-read, not lost or doubled."""
+    path = tmp_path / "app.log"
+    path.write_text("")
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        with path.open("a", encoding="utf-8") as f:
+            for i in range(20_000):
+                f.write(json.dumps({"i": i, "msg": "x" * 50}) + "\n")
+        for _ in range(6):
+            await asyncio.sleep(0.03)
+            app.follow_mode = False
+            app.follow_mode = True
+        await _wait_for_logs(
+            app=app,
+            pilot=pilot,
+            predicate=lambda: len(app.logs) >= 20_000,
+        )
+
+        assert [log.data["i"] for log in app.logs] == list(range(20_000))
+        assert [log.line_number for log in app.logs] == list(range(1, 20_001))

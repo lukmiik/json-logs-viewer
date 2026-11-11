@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import threading
 from collections import Counter
 from collections.abc import Iterable
 from contextlib import ExitStack
+from functools import partial
 from pathlib import Path
 from typing import IO, Any
 
@@ -33,18 +35,43 @@ from json_logs_viewer.widgets.status_bar import StatusBar
 class LogViewerApp(App):
     CSS_PATH = "styles.tcss"
 
-    class FollowedFileReset(Message):
-        """The followed file was truncated or rotated (posted by the watcher).
+    # Follow-mode messages are posted from the watcher thread with
+    # post_message (thread-safe, doesn't wait). Each carries the follow
+    # session it came from; handlers drop messages from a stopped session.
 
-        Sent with post_message, which is thread-safe and doesn't wait, so the
-        watcher thread can exit before the app joins it.
+    class FollowData(Message):
+        """A chunk of newly appended bytes.
+
+        The watcher waits on `consumed` before reading more (back-pressure).
         """
+
+        def __init__(
+            self,
+            *,
+            chunk: bytes,
+            session: threading.Event,
+            consumed: threading.Event,
+        ) -> None:
+            self.chunk = chunk
+            self.session = session
+            self.consumed = consumed
+            super().__init__()
+
+    class FollowedFileReset(Message):
+        """The followed file was truncated or rotated."""
+
+        def __init__(self, *, session: threading.Event) -> None:
+            self.session = session
+            super().__init__()
 
     class FollowError(Message):
         """The watcher stopped because reading the file failed."""
 
-        def __init__(self, error: Exception) -> None:
+        def __init__(
+            self, *, error: Exception, session: threading.Event
+        ) -> None:
             self.error = error
+            self.session = session
             super().__init__()
 
     BINDINGS = [
@@ -93,6 +120,8 @@ class LogViewerApp(App):
         self._follow_buffer: bytes = b""
         self._last_line_number: int = 0
         self._follow_offset: int = 0
+        # Identifies the running follow session; set when it stops.
+        self._follow_session: threading.Event | None = None
 
     def compose(self) -> ComposeResult:
         yield LogList(id="logs")
@@ -382,6 +411,7 @@ class LogViewerApp(App):
         if not self.filepath or self._watcher is not None:
             return
         self._follow_buffer = b""
+        session = threading.Event()
         try:
             # The file must stay open after this method returns, so `with`
             # can't own it. ExitStack closes it if any later step fails;
@@ -394,9 +424,13 @@ class LogViewerApp(App):
                 watcher.watch(
                     fileno=watch_file.fileno(),
                     path=self.filepath,
-                    callback=self._on_watcher_data,
-                    error_callback=self._on_watcher_error,
-                    reset_callback=self._on_watcher_reset,
+                    callback=partial(self._on_watcher_data, session=session),
+                    error_callback=partial(
+                        self._on_watcher_error, session=session
+                    ),
+                    reset_callback=partial(
+                        self._on_watcher_reset, session=session
+                    ),
                 )
                 watcher.start()
                 stack.pop_all()
@@ -407,8 +441,14 @@ class LogViewerApp(App):
         # Only store state once setup fully succeeded.
         self._watch_file = watch_file
         self._watcher = watcher
+        self._follow_session = session
 
     def _stop_follow(self) -> None:
+        if self._follow_session is not None:
+            # Wakes a watcher waiting for a chunk to be consumed, and marks
+            # this session's still-queued messages as stale.
+            self._follow_session.set()
+            self._follow_session = None
         if self._watcher is not None:
             self._watcher.close()  # signals exit and joins thread
             self._watcher = None
@@ -419,11 +459,38 @@ class LogViewerApp(App):
             self._watch_file = None
         self._follow_buffer = b""
 
-    def _on_watcher_data(self, chunk: bytes) -> None:
-        """Called from watcher thread — bridge to main thread."""
-        self.call_from_thread(self._process_chunk, chunk)
+    def _on_watcher_data(
+        self, chunk: bytes, *, session: threading.Event
+    ) -> None:
+        """Called from watcher thread: hand the chunk to the main thread.
 
-    def _on_watcher_error(self, error: Exception) -> None:
+        Waits until the chunk is processed so a fast writer can't make the
+        watcher read unboundedly ahead (back-pressure, one chunk in flight).
+        Unlike call_from_thread, the wait gives up when the session stops,
+        so _stop_follow's join() never waits on this thread.
+        """
+        consumed = threading.Event()
+        self.post_message(
+            self.FollowData(chunk=chunk, session=session, consumed=consumed)
+        )
+        while not consumed.wait(timeout=0.05):
+            if session.is_set():
+                return
+
+    def on_log_viewer_app_follow_data(
+        self, message: LogViewerApp.FollowData
+    ) -> None:
+        try:
+            # A chunk from a stopped session wasn't consumed: _follow_offset
+            # still points before it, so resuming re-reads those bytes.
+            if message.session is self._follow_session:
+                self._process_chunk(message.chunk)
+        finally:
+            message.consumed.set()
+
+    def _on_watcher_error(
+        self, error: Exception, *, session: threading.Event
+    ) -> None:
         """Called from watcher thread on error; the watcher then exits.
 
         post_message, not call_from_thread: call_from_thread blocks this
@@ -431,23 +498,25 @@ class LogViewerApp(App):
         follow mode by joining this thread, so both would wait (deadlock
         broken only by the 1 s join timeout).
         """
-        self.post_message(self.FollowError(error))
+        self.post_message(self.FollowError(error=error, session=session))
 
     def on_log_viewer_app_follow_error(
         self, message: LogViewerApp.FollowError
     ) -> None:
+        if message.session is not self._follow_session:
+            return
         self.notify(str(message.error), severity="error")
         self.follow_mode = False
 
-    def _on_watcher_reset(self) -> None:
+    def _on_watcher_reset(self, *, session: threading.Event) -> None:
         """Called from watcher thread when the file was truncated/rotated."""
-        self.post_message(self.FollowedFileReset())
+        self.post_message(self.FollowedFileReset(session=session))
 
     def on_log_viewer_app_followed_file_reset(
-        self, _: LogViewerApp.FollowedFileReset
+        self, message: LogViewerApp.FollowedFileReset
     ) -> None:
         """Reload the file so the list mirrors what is on disk again."""
-        if not self.follow_mode or self.filepath is None:
+        if message.session is not self._follow_session or not self.filepath:
             return
         self._stop_follow()
         self.load_file(filepath=self.filepath)

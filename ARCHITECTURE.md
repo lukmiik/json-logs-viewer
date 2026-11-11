@@ -162,14 +162,29 @@ Only visible rows are rendered, so file size does not affect drawing cost.
 
 `log_watcher.get_watcher()` returns `PollWatcher` (Linux/Windows: `os.read`
 every 50 ms) or `SelectorWatcher` (macOS: kqueue). The watcher runs in a
-daemon thread on an fd opened at the stored offset. It hands byte chunks back
-with `call_from_thread`. `_process_chunk` splits the bytes on `\n` before
-decoding (so a UTF-8 character cut between reads stays intact), keeps the
-trailing partial line in `_follow_buffer`, counts every line (blank and
-invalid ones too) for `line_number`, and appends the parsed entries to
-`logs`. If the cursor was on the last
-entry, it follows the new tail. On stop the current offset is saved so
-resuming continues where it left off.
+daemon thread on an fd opened at the stored offset. `_process_chunk` splits
+the bytes on `\n` before decoding (so a UTF-8 character cut between reads
+stays intact), keeps the trailing partial line in `_follow_buffer`, counts
+every line (blank and invalid ones too) for `line_number`, and appends the
+parsed entries to `logs`. If the cursor was on the last entry, it follows the
+new tail. `_follow_offset` only advances past consumed lines, so resuming
+re-reads anything not yet processed.
+
+The watcher thread never calls into the app directly. It posts messages
+(`FollowData`, `FollowError`, `FollowedFileReset`) with `post_message`, which
+is thread-safe and doesn't wait:
+
+- **Session token.** Each follow session has a `threading.Event`, passed to
+  the watcher callbacks with `functools.partial` and carried by every message.
+  `_stop_follow` sets it, and handlers ignore messages from any session other
+  than `_follow_session`. A chunk still queued when follow stops is dropped
+  without moving the offset.
+- **Back-pressure.** After posting `FollowData` the watcher waits for the
+  message's `consumed` event, so at most one chunk is in flight and a fast
+  writer can't make it read unboundedly ahead. It waits in 50 ms slices and
+  gives up once the session stops. That way `join()` in `_stop_follow` never
+  waits on it. `call_from_thread` would block until the main thread
+  answered, which can't happen while the main thread is in `join()`.
 
 When a read returns no data, the watcher checks whether the file was reset:
 
