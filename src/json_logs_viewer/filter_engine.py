@@ -66,7 +66,10 @@ class Tokenizer:
                 self.pos += 1
             elif char == '"':
                 self._read_quoted()
-            elif char.isalnum() or char in ("-", "_", "."):
+            elif self._is_word_char(char):
+                # Any word character may start a word, "@" included: ECS
+                # (@timestamp) and Serilog (@l, @t, @m) field names. It
+                # used to be skipped, so @timestamp: queried "timestamp".
                 self._read_word_or_field()
             else:
                 self.pos += 1

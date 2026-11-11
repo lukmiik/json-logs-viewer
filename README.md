@@ -106,6 +106,7 @@ Full-text terms search the JSON line as shown (`null`, `true`), with
 | `level:`                                       | entries that have a `level` field          |
 | `level: service:api`                           | has `level`, and `service` contains `api`  |
 | `http.status_code:502`                         | nested field `{"http": {"status_code": …}}` |
+| `@timestamp:2024-01-15`                        | names starting with `@` (ECS, Serilog)     |
 | `level:error service:api`                      | both conditions (space means AND)          |
 | `level:error AND service:api`                  | the same, with explicit `AND`              |
 | `level:error OR level:warn`                    | either condition                           |

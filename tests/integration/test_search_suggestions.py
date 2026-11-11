@@ -79,3 +79,13 @@ async def test_history_is_suggested(log_file: Path) -> None:
         app.search_history = ["attributes.level:error request_id:req-7"]
         bar = await _type(pilot, "attributes.level:error r")
         assert bar._suggestion == "attributes.level:error request_id:req-7"
+
+
+@pytest.mark.asyncio
+async def test_at_sign_fields_are_suggested(tmp_path: Path) -> None:
+    path = tmp_path / "ecs.jsonl"
+    path.write_text('{"@timestamp": "2024-01-15T10:00:00Z", "message": "m"}\n')
+    app = LogViewerApp(file=str(path))
+    async with app.run_test() as pilot:
+        bar = await _type(pilot, "@t")
+        assert bar._suggestion == "@timestamp:"

@@ -418,13 +418,13 @@ class LogViewerApp(App):
         """Field paths a query can name, most common first.
 
         Used for search suggestions. Paths the query language can't express
-        are left out: a word can't start with "@" or hold spaces or quotes.
+        are left out: a word can't hold spaces, quotes or parentheses.
         """
         self._count_fields()
         return [
             path
             for path, _ in self._field_counts.most_common()
-            if path[:1] != "@" and all(_is_word_char(c) for c in path)
+            if all(_is_word_char(c) for c in path)
         ]
 
     def field_values(self, field: str) -> list[str]:

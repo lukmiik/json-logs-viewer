@@ -775,3 +775,20 @@ class TestFieldValuesAsJson:
 
     def test_missing_field_still_doesnt_match(self) -> None:
         assert not parse_filter(query="parent:null")(make_log(other=1))
+
+
+class TestAtSignFields:
+    """ECS (@timestamp) and Serilog (@l, @t, @m) names start with @."""
+
+    def test_field_starting_with_at(self) -> None:
+        log = LogEntry(
+            line_number=1,
+            data={"@timestamp": "2024-01-15", "timestamp": "zzz"},
+        )
+        assert parse_filter(query="@timestamp:2024")(log)
+        assert parse_filter(query="@timestamp>=2024-01-14")(log)
+        assert not parse_filter(query="@timestamp:zzz")(log)
+
+    def test_full_text_keeps_the_at(self) -> None:
+        tokens = Tokenizer("@alice").tokenize()
+        assert (tokens[0].type, tokens[0].value) == (TokenType.VALUE, "@alice")
