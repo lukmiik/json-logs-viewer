@@ -312,3 +312,112 @@ async def test_follow_reloads_after_rotation(tmp_path: Path) -> None:
 
         assert [log.data["tag"] for log in app.logs] == ["new"] * 3
         assert app.follow_mode is True
+
+
+async def _wait_for_tags(
+    *, app: LogViewerApp, pilot: object, tags: list[str]
+) -> None:
+    await _wait_for_logs(
+        app=app,
+        pilot=pilot,
+        predicate=lambda: [log.data["tag"] for log in app.logs] == tags,
+    )
+
+
+@pytest.mark.asyncio
+async def test_follow_line_numbers_count_blank_and_invalid_lines(
+    tmp_path: Path,
+) -> None:
+    """line_number matches the real file line, skipped lines included."""
+    path = tmp_path / "app.log"
+    path.write_text('{"tag": "a"}\n\nnot json\n{"tag": "b"}\n')
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        with path.open("a") as f:
+            f.write('{"tag": "c"}\n\ngarbage\n{"tag": "d"}\n')
+        await _wait_for_tags(app=app, pilot=pilot, tags=["a", "b", "c", "d"])
+
+        assert [log.line_number for log in app.logs] == [1, 4, 5, 8]
+
+
+@pytest.mark.asyncio
+async def test_half_written_line_at_load_is_completed_by_follow(
+    tmp_path: Path,
+) -> None:
+    """A line still being written when the file is opened isn't lost."""
+    path = tmp_path / "app.log"
+    path.write_text('{"tag": "a"}\n{"tag": "b", "msg": "half wr')
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert [log.data["tag"] for log in app.logs] == ["a"]
+
+        with path.open("a") as f:
+            f.write('itten"}\n{"tag": "c"}\n')
+        await _wait_for_tags(app=app, pilot=pilot, tags=["a", "b", "c"])
+
+        assert [log.line_number for log in app.logs] == [1, 2, 3]
+        assert app.logs[1].data["msg"] == "half written"
+
+
+@pytest.mark.asyncio
+async def test_toggling_follow_keeps_partial_line(tmp_path: Path) -> None:
+    """Turning follow off mid-line and back on doesn't drop that line."""
+    path = tmp_path / "app.log"
+    path.write_text('{"tag": "a"}\n')
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        with path.open("a") as f:
+            f.write('{"tag": "b", "msg": "spl')
+        await _wait_for_logs(
+            app=app, pilot=pilot, predicate=lambda: bool(app._follow_buffer)
+        )
+
+        app.follow_mode = False
+        await pilot.pause()
+        with path.open("a") as f:
+            f.write('it"}\n')
+        app.follow_mode = True
+        await _wait_for_tags(app=app, pilot=pilot, tags=["a", "b"])
+
+        assert app.logs[1].data["msg"] == "split"
+        assert app.logs[1].line_number == 2
+
+
+@pytest.mark.asyncio
+async def test_file_without_trailing_newline_is_not_duplicated(
+    tmp_path: Path,
+) -> None:
+    """A complete last line with no trailing newline is loaded once."""
+    path = tmp_path / "app.log"
+    path.write_text('{"tag": "a"}\n{"tag": "b"}')
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert [log.data["tag"] for log in app.logs] == ["a", "b"]
+        with path.open("a") as f:
+            f.write('{"tag": "c"}\n')
+        await _wait_for_logs(
+            app=app, pilot=pilot, predicate=lambda: len(app.logs) >= 3
+        )
+        assert [log.data["tag"] for log in app.logs][:2] == ["a", "b"]
+        assert app.logs[-1].line_number == 3
+
+
+@pytest.mark.asyncio
+async def test_process_chunk_utf8_char_split_across_chunks(
+    sample_jsonl_file: Path,
+) -> None:
+    """A multi-byte character split between two reads decodes correctly."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        data = '{"message": "caf\u00e9"}\n'.encode()
+        split = data.index(b"\xc3") + 1  # between the 2 bytes of the e-acute
+        app._process_chunk(data[:split])
+        app._process_chunk(data[split:])
+        await pilot.pause()
+
+        assert app.logs[-1].message == "caf\u00e9"

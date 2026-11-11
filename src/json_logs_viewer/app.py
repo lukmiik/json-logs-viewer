@@ -13,7 +13,10 @@ from textual.reactive import reactive
 from textual.screen import Screen
 
 from json_logs_viewer.filter_engine import FilterError, parse_filter
-from json_logs_viewer.log_reader import read_lines_backward
+from json_logs_viewer.log_reader import (
+    find_line_boundary,
+    read_lines_backward,
+)
 from json_logs_viewer.log_watcher import WatcherBase, get_watcher
 from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
@@ -75,7 +78,11 @@ class LogViewerApp(App):
         self._field_counts: Counter[str] = Counter()
         self._watcher: WatcherBase | None = None
         self._watch_file: IO[bytes] | None = None
-        self._follow_buffer: str = ""
+        # Follow position invariant: _follow_offset is the byte where the
+        # first not-yet-consumed line starts, and _last_line_number is the
+        # number of file lines before it. _follow_buffer holds the bytes of
+        # a partial line read past _follow_offset but not yet terminated.
+        self._follow_buffer: bytes = b""
         self._last_line_number: int = 0
         self._follow_offset: int = 0
 
@@ -238,7 +245,12 @@ class LogViewerApp(App):
 
         logs: list[LogEntry] = []
         try:
-            for line_num, line_text in read_lines_backward(filepath=path):
+            # Measure first and read exactly this many bytes, so anything
+            # appended while loading is left for follow mode.
+            size = path.stat().st_size
+            for line_num, line_text in read_lines_backward(
+                filepath=path, size=size
+            ):
                 try:
                     data = json.loads(line_text)
                     log = LogEntry(
@@ -249,6 +261,7 @@ class LogViewerApp(App):
                     self.log.warning(f"Line {line_num}: invalid JSON: {e}")
                     continue
             logs.reverse()
+            offset, line_count = find_line_boundary(filepath=path, size=size)
         except Exception as e:
             log_list.loading = False
             self.notify(f"Error reading file: {e}", severity="error")
@@ -257,7 +270,13 @@ class LogViewerApp(App):
         self.logs = logs
 
         self.filepath = filepath
-        self._follow_offset = path.stat().st_size
+        if offset < size and logs and logs[-1].line_number == line_count + 1:
+            # The unterminated last line parsed as JSON, so it is complete
+            # (a half-written JSON object can't parse): count it as consumed.
+            offset, line_count = size, line_count + 1
+        self._follow_offset = offset
+        self._last_line_number = line_count
+        self._follow_buffer = b""
         self.selected_index = max(0, len(logs) - 1)
         log_list.loading = False
         self.call_after_refresh(log_list._scroll_cursor_into_view)
@@ -354,8 +373,7 @@ class LogViewerApp(App):
     def _start_follow(self) -> None:
         if not self.filepath or self._watcher is not None:
             return
-        self._last_line_number = len(self.logs)
-        self._follow_buffer = ""
+        self._follow_buffer = b""
         self._watch_file = open(self.filepath, "rb")  # noqa: SIM115
         self._watch_file.seek(self._follow_offset)
 
@@ -374,10 +392,11 @@ class LogViewerApp(App):
             self._watcher.close()  # signals exit and joins thread
             self._watcher = None
         if self._watch_file is not None:
-            self._follow_offset = self._watch_file.tell()
+            # _follow_offset already excludes the buffered partial line (see
+            # _process_chunk), so resuming re-reads that line from its start.
             self._watch_file.close()
             self._watch_file = None
-        self._follow_buffer = ""
+        self._follow_buffer = b""
 
     def _on_watcher_data(self, chunk: bytes) -> None:
         """Called from watcher thread — bridge to main thread."""
@@ -407,25 +426,26 @@ class LogViewerApp(App):
         self.follow_mode = False
 
     def _process_chunk(self, chunk: bytes) -> None:
-        """Decode chunk, split lines, parse JSON, append to logs."""
-        text = self._follow_buffer + chunk.decode("utf-8", errors="replace")
+        """Split chunk into lines, parse JSON, append to logs.
 
-        if text.endswith("\n"):
-            lines = text.split("\n")
-            self._follow_buffer = ""
-        else:
-            parts = text.split("\n")
-            lines = parts[:-1]
-            self._follow_buffer = parts[-1]
+        Splits bytes before decoding, so a multi-byte UTF-8 character cut
+        between two chunks stays intact in the buffer.
+        """
+        *lines, self._follow_buffer = (self._follow_buffer + chunk).split(
+            b"\n"
+        )
+        self._follow_offset += sum(len(line) + 1 for line in lines)
 
         new_logs: list[LogEntry] = []
-        for line in lines:
-            line = line.strip()
+        for raw_line in lines:
+            # Every line counts, so line numbers match the file even when
+            # blank or invalid lines are skipped below.
+            self._last_line_number += 1
+            line = raw_line.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
             try:
                 data = json.loads(line)
-                self._last_line_number += 1
                 log = LogEntry(
                     line_number=self._last_line_number,
                     data=data,

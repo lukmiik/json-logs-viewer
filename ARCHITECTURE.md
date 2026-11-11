@@ -106,8 +106,15 @@ file, counts lines forward with `mm.find(b"\n")`, then walks backwards with
 `mm.rfind` to yield `(line_number, text)` pairs. Empty lines and lines that
 are not valid UTF-8 are skipped. Each line is parsed with `json.loads`.
 Invalid JSON is logged and skipped. The list is reversed into file order,
-assigned to `logs`, and the cursor is placed on the last entry. The file size
-is stored as the starting offset for follow mode.
+assigned to `logs`, and the cursor is placed on the last entry.
+
+The size is measured before reading and only that many bytes are read, so
+anything appended meanwhile is left for follow mode. `find_line_boundary`
+then sets the follow position. It keeps one invariant: `_follow_offset` is
+where the first not-yet-consumed line starts, and `_last_line_number` is the
+number of file lines before it. An unterminated last line counts as consumed
+only if it parsed as JSON. A half-written object can't parse, so follow mode
+re-reads it once the writer finishes it.
 
 Opening another file through the picker resets the query, toggles, columns
 and history first.
@@ -156,8 +163,11 @@ Only visible rows are rendered, so file size does not affect drawing cost.
 `log_watcher.get_watcher()` returns `PollWatcher` (Linux/Windows: `os.read`
 every 50 ms) or `SelectorWatcher` (macOS: kqueue). The watcher runs in a
 daemon thread on an fd opened at the stored offset. It hands byte chunks back
-with `call_from_thread`. `_process_chunk` buffers partial lines, parses
-complete ones and appends them to `logs`. If the cursor was on the last
+with `call_from_thread`. `_process_chunk` splits the bytes on `\n` before
+decoding (so a UTF-8 character cut between reads stays intact), keeps the
+trailing partial line in `_follow_buffer`, counts every line (blank and
+invalid ones too) for `line_number`, and appends the parsed entries to
+`logs`. If the cursor was on the last
 entry, it follows the new tail. On stop the current offset is saved so
 resuming continues where it left off.
 

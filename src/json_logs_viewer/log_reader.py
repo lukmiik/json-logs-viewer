@@ -5,20 +5,25 @@ from collections.abc import Iterator
 from pathlib import Path
 
 
-def read_lines_backward(*, filepath: Path) -> Iterator[tuple[int, str]]:
+def read_lines_backward(
+    *, filepath: Path, size: int | None = None
+) -> Iterator[tuple[int, str]]:
     """Yield (line_number, line_text) from end of file to beginning.
 
     Uses mmap + rfind for efficient backward scanning.
 
     Args:
         filepath: Path to the file to read.
+        size: Read only the first `size` bytes. Pass the size measured before
+            reading so bytes appended meanwhile are left for follow mode.
 
     Yields:
         Tuples of (line_number, line_text) starting from the last line.
         Empty lines are skipped.
     """
     with filepath.open("rb") as f:
-        size = f.seek(0, 2)
+        file_size = f.seek(0, 2)
+        size = file_size if size is None else min(size, file_size)
         if size == 0:
             return
 
@@ -62,3 +67,25 @@ def read_lines_backward(*, filepath: Path) -> Iterator[tuple[int, str]]:
                         yield (line_num, line_text)
                     line_num -= 1
                     position = newline_pos + 1
+
+
+def find_line_boundary(*, filepath: Path, size: int) -> tuple[int, int]:
+    """Return (offset just past the last newline, newlines before it).
+
+    Only the first `size` bytes are considered. Bytes after the returned
+    offset form an unterminated line that may still be being written.
+    """
+    with filepath.open("rb") as f:
+        size = min(size, f.seek(0, 2))
+        if size == 0:
+            return 0, 0
+        with mmap.mmap(f.fileno(), size, access=mmap.ACCESS_READ) as mm:
+            offset = mm.rfind(b"\n", 0, size) + 1
+        line_count = 0
+        f.seek(0)
+        remaining = offset
+        while remaining:
+            chunk = f.read(min(remaining, 1 << 20))
+            line_count += chunk.count(b"\n")
+            remaining -= len(chunk)
+    return offset, line_count

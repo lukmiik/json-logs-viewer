@@ -2,7 +2,10 @@
 
 from pathlib import Path
 
-from json_logs_viewer.log_reader import read_lines_backward
+from json_logs_viewer.log_reader import (
+    find_line_boundary,
+    read_lines_backward,
+)
 
 
 class TestReadLinesBackward:
@@ -132,3 +135,48 @@ class TestReadLinesBackward:
         assert result[0] == (3, "third")
         assert result[1] == (2, "second")
         assert result[2] == (1, "first")
+
+
+def test_size_limits_what_is_read(tmp_path: Path) -> None:
+    """Bytes past `size` (appended after the snapshot) are not read."""
+    log_file = tmp_path / "test.jsonl"
+    log_file.write_bytes(b"a\nb\nc\n")
+
+    result = list(read_lines_backward(filepath=log_file, size=4))
+
+    assert result == [(2, "b"), (1, "a")]
+
+
+class TestFindLineBoundary:
+    """find_line_boundary returns (offset after last newline, line count)."""
+
+    def test_trailing_newline(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "test.jsonl"
+        log_file.write_bytes(b"a\n\nb\n")
+
+        assert find_line_boundary(filepath=log_file, size=5) == (5, 3)
+
+    def test_unterminated_tail(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "test.jsonl"
+        log_file.write_bytes(b"a\nb\n{half")
+
+        assert find_line_boundary(filepath=log_file, size=9) == (4, 2)
+
+    def test_no_newline_at_all(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "test.jsonl"
+        log_file.write_bytes(b"{half")
+
+        assert find_line_boundary(filepath=log_file, size=5) == (0, 0)
+
+    def test_size_larger_than_file_is_clamped(self, tmp_path: Path) -> None:
+        """The file may shrink between measuring its size and reading it."""
+        log_file = tmp_path / "test.jsonl"
+        log_file.write_bytes(b"a\n")
+
+        assert find_line_boundary(filepath=log_file, size=100) == (2, 1)
+
+    def test_respects_size(self, tmp_path: Path) -> None:
+        log_file = tmp_path / "test.jsonl"
+        log_file.write_bytes(b"a\nb\nc\n")
+
+        assert find_line_boundary(filepath=log_file, size=3) == (2, 1)
