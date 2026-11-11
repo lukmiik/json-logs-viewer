@@ -386,7 +386,11 @@ def _parse_duration(text: str) -> timedelta | None:
     found = _DURATION.fullmatch(text)
     if found is None:
         return None
-    return timedelta(**{_UNITS[found[2]]: int(found[1])})
+    try:
+        return timedelta(**{_UNITS[found[2]]: int(found[1])})
+    except OverflowError:
+        # Beyond timedelta's ~2.7 million years: an error, not a crash.
+        raise FilterError(f"last:{text}: duration too long") from None
 
 
 @dataclass
@@ -528,7 +532,13 @@ class Parser:
             self._newest_resolved = True
             if self._newest_timestamp is not None:
                 self._newest = self._newest_timestamp()
-        since = None if self._newest is None else as_utc(self._newest) - window
+        since = None
+        if self._newest is not None:
+            try:
+                since = as_utc(self._newest) - window
+            except OverflowError:
+                # Reaches before year 1: every log is in the window.
+                since = datetime.min.replace(tzinfo=UTC)
         return Last(window=window, since=since)
 
     def _fulltext(self) -> ASTNode:

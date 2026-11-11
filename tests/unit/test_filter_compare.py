@@ -163,3 +163,21 @@ class TestLast:
     def test_relative_queries_are_flagged(self) -> None:
         assert self._matcher("level:error last:5m").relative
         assert not self._matcher("level:error").relative
+
+
+class TestLastOutOfRange:
+    NEWEST = datetime(2024, 1, 15, 12, 0, tzinfo=UTC)
+
+    def test_window_reaching_before_year_1_matches_everything(self) -> None:
+        matcher = parse_filter(
+            query="last:999999d", newest_timestamp=lambda: self.NEWEST
+        )
+        log = LogEntry(line_number=1, data={"timestamp": "0001-01-02T00:00Z"})
+        assert matcher(log)
+
+    @pytest.mark.parametrize(
+        "query", ["last:9999999999d", "last:99999999999999999999s"]
+    )
+    def test_absurd_duration_is_a_filter_error(self, query: str) -> None:
+        with pytest.raises(FilterError, match="too long"):
+            parse_filter(query=query, newest_timestamp=lambda: self.NEWEST)
