@@ -719,8 +719,12 @@ class LogList(ScrollView):
         cursor_row = self._get_cursor_row()
         visible_top = self.scroll_offset.y
         visible_bottom = visible_top + self.size.height - 1
-        target_top = cursor_row - self.SCROLLOFF
-        target_bottom = cursor_row + self.SCROLLOFF
+        # The margin must fit on both sides of the cursor: in a list of 3
+        # rows or less a 3-row margin made both checks below true, and
+        # scrolling for the top one left the cursor off-screen.
+        margin = min(self.SCROLLOFF, max(0, (self.size.height - 1) // 2))
+        target_top = cursor_row - margin
+        target_bottom = cursor_row + margin
 
         # force=True: Textual ignores a vertical scroll while the widget has
         # no vertical scrollbar, and the scrollbar only appears on the next

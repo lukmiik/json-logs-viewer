@@ -1547,3 +1547,27 @@ async def test_rows_are_coloured_by_level(sample_jsonl_file: Path) -> None:
         await pilot.press("k")
         assert colour(3) == theme("loglist--level-debug")
         assert colour(2) != theme("loglist--level-warning")  # cursor row
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("height", [5, 6, 7, 8])  # list of 1 to 4 rows
+@pytest.mark.parametrize("wrap", [False, True])
+async def test_cursor_stays_visible_in_a_tiny_list(
+    tmp_path: Path, height: int, wrap: bool
+) -> None:
+    """The 3-row margin shrinks to fit; it used to scroll the cursor away."""
+    path = tmp_path / "app.jsonl"
+    path.write_text("".join(json.dumps({"i": i}) + "\n" for i in range(30)))
+    app = LogViewerApp(file=str(path))
+    async with app.run_test(size=(40, height)) as pilot:
+        await pilot.pause()
+        if wrap:
+            await pilot.press("w")
+        await pilot.press("g")
+        log_list = app.query_one("#logs", LogList)
+        for key in ["j"] * 12 + ["k"] * 6 + ["G"] + ["k"] * 5:
+            await pilot.press(key)
+            await pilot.pause()
+            row = log_list._get_cursor_row()
+            top = int(log_list.scroll_offset.y)
+            assert top <= row < top + log_list.size.height, (key, row, top)
