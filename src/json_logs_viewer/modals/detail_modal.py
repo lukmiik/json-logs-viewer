@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from bisect import bisect_left
 from typing import TYPE_CHECKING, cast
 
 from textual.binding import Binding
@@ -23,6 +24,10 @@ if TYPE_CHECKING:
     from textual.app import ComposeResult
 
     from json_logs_viewer.app import LogViewerApp
+
+
+def _seq(entry: LogEntry) -> int:
+    return entry.seq
 
 
 class DetailModal(ModalScreen[None]):
@@ -86,9 +91,21 @@ class DetailModal(ModalScreen[None]):
     def _app(self) -> LogViewerApp:
         return cast("LogViewerApp", self.app)
 
+    def _position(self) -> tuple[int, bool]:
+        """Where the shown entry is in the list, and whether it's there.
+
+        Not the app's cursor: follow mode moves that to new lines while
+        this is open. The list is sorted by seq, so a binary search finds
+        the entry, or where it was if a filter has since dropped it.
+        """
+        logs = self.logs
+        pos = bisect_left(logs, self.log_entry.seq, key=_seq)
+        return pos, pos < len(logs) and logs[pos] is self.log_entry
+
     @property
     def current_index(self) -> int:
-        return self._app.selected_index
+        pos, _ = self._position()
+        return min(pos, len(self.logs) - 1)
 
     @current_index.setter
     def current_index(self, value: int) -> None:
@@ -111,17 +128,19 @@ class DetailModal(ModalScreen[None]):
         dialog.border_title = Content(self._title())
         dialog.border_subtitle = "j/k: nav | ctrl+d/u: scroll | ESC: close"
 
-    def action_next_log(self) -> None:
-        if self.current_index < len(self.logs) - 1:
-            self.current_index += 1
-            self.log_entry = self.logs[self.current_index]
+    def _show(self, index: int) -> None:
+        if 0 <= index < len(self.logs):
+            self.current_index = index  # the list's cursor follows
+            self.log_entry = self.logs[index]
             self._update_content()
 
+    def action_next_log(self) -> None:
+        pos, found = self._position()
+        self._show(pos + 1 if found else pos)
+
     def action_previous_log(self) -> None:
-        if self.current_index > 0:
-            self.current_index -= 1
-            self.log_entry = self.logs[self.current_index]
-            self._update_content()
+        pos, _ = self._position()
+        self._show(pos - 1)
 
     def _title(self) -> str:
         """Log Detail · <file>:<line>, so merged files stay traceable."""

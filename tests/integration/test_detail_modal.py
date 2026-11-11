@@ -536,3 +536,30 @@ async def test_detail_view_highlights_json(sample_jsonl_file: Path) -> None:
         await pilot.press("k")
         assert text_area.is_syntax_aware
         assert '"level"' in text_area.text
+
+
+@pytest.mark.asyncio
+async def test_navigation_stays_relative_to_the_shown_log_while_following(
+    tmp_path: Path,
+) -> None:
+    """Follow mode moves the app's cursor; j/k must move from what's shown."""
+    path = tmp_path / "app.jsonl"
+    path.write_text("".join(json.dumps({"n": i}) + "\n" for i in range(3)))
+    app = LogViewerApp(file=str(path), follow=True)
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        await pilot.press("enter")  # shows n=2, the last line
+        await pilot.pause()
+        app._process_chunk(b'{"n": 3}\n')
+        await pilot.pause()
+        modal = app.screen
+        assert isinstance(modal, DetailModal)
+
+        await pilot.press("j")
+        await pilot.pause()
+        assert modal.log_entry.data["n"] == 3
+
+        await pilot.press("k", "k")
+        await pilot.pause()
+        assert modal.log_entry.data["n"] == 1
+        assert app.selected_index == 1  # the list follows the detail view
