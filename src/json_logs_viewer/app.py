@@ -79,6 +79,23 @@ def _seq(entry: LogEntry) -> int:
 
 _is_word_char = Tokenizer._is_word_char
 
+
+def _same_file_key(path: str) -> Path:
+    """What identifies a file, so one file opens only once.
+
+    data/../data/a.jsonl, ./a.jsonl and a symlink to it are all the same.
+    """
+    return Path(path).resolve()
+
+
+def _distinct_files(paths: list[str]) -> list[str]:
+    """The paths without repeats of the same file (first spelling kept)."""
+    seen: dict[Path, str] = {}
+    for path in paths:
+        seen.setdefault(_same_file_key(path), path)
+    return list(seen.values())
+
+
 # More different values than this and a field gets no value suggestions.
 _MAX_SUGGESTED_VALUES = 50
 
@@ -501,7 +518,7 @@ class LogViewerApp(App):
         log_list.loading = True
         files: list[list[LogEntry]] = []
         sources: list[SourceFile] = []
-        for filepath in dict.fromkeys(filepaths):  # drop duplicates
+        for filepath in _distinct_files(filepaths):
             path = Path(filepath)
             if not path.exists():
                 self.notify(f"File not found: {filepath}", severity="error")
@@ -715,7 +732,7 @@ class LogViewerApp(App):
         Everything is reloaded and merged again; follow mode restarts so the
         new file is watched too.
         """
-        if filepath in self.filepaths:
+        if _same_file_key(filepath) in map(_same_file_key, self.filepaths):
             self.notify(f"Already open: {filepath}", severity="warning")
             return
         following = self.follow_mode

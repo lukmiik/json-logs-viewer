@@ -177,3 +177,23 @@ async def test_detail_view_shows_file_and_line(
         await pilot.press("k")  # a2
         await pilot.pause()
         assert str(dialog.border_title) == f"Log Detail · {api}:2"
+
+
+@pytest.mark.asyncio
+async def test_one_file_under_two_names_opens_once(
+    api: Path, worker: Path
+) -> None:
+    other_spelling = api.parent / ".." / api.parent.name / api.name
+    link = api.with_name("link.jsonl")
+    link.symlink_to(api)
+    app = LogViewerApp(files=[str(api), str(other_spelling), str(link)])
+    async with app.run_test(notifications=True) as pilot:
+        await pilot.pause()
+        assert app.filepaths == [str(api)]
+        assert _msgs(app) == ["a1", "a2"]
+
+        app._add_file(filepath=str(api.parent / "." / api.name))
+        await pilot.pause()
+
+        assert app.filepaths == [str(api)]
+        assert any("Already open" in n.message for n in app._notifications)
