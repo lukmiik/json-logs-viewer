@@ -27,7 +27,7 @@ src/json_logs_viewer/
 │   └── status_bar.py      StatusBar: file/count labels, toggle buttons,
 │                          Footer
 └── modals/
-    ├── detail_modal.py    DetailModal: pretty JSON of one entry
+    ├── detail_modal.py    DetailModal: pretty, highlighted JSON of one entry
     ├── history_modal.py   HistoryModal: OptionList of past queries
     ├── columns_modal.py   ColumnsModal: SelectionList of fields
     ├── file_picker_modal.py   FilePickerModal: DirectoryTree

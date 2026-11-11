@@ -20,6 +20,12 @@ dependencies = [
     "pydantic>=2.12.5",
     "rich>=14.3.1",
     "textual>=7.3.0",
+    # JSON syntax highlighting in the detail view (TextArea language="json").
+    # Only the JSON grammar, instead of textual[syntax]'s 15 languages.
+    # <0.26: with tree-sitter 0.26.1 and Textual 7.5 the process segfaulted
+    # in most test runs (memory corruption, crash in unrelated code).
+    "tree-sitter>=0.25.0,<0.26",
+    "tree-sitter-json>=0.24.0",
 ]
 
 [project.optional-dependencies]

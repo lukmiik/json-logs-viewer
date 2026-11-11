@@ -103,7 +103,9 @@ class DetailModal(ModalScreen[None]):
         )
 
         with VerticalScroll(id="detail-dialog") as dialog:
-            yield TextArea(json_str, id="json-content", read_only=True)
+            yield TextArea(
+                json_str, id="json-content", read_only=True, language="json"
+            )
             yield Footer()
         dialog.border_title = "Log Detail"
         dialog.border_subtitle = "j/k: nav | ctrl+d/u: scroll | ESC: close"

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
+from textual.widgets import TextArea
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.modals.detail_modal import DetailModal
@@ -520,3 +521,18 @@ class TestCopyInModal:
             parsed_logs = [json.loads(line) for line in lines]
             assert len(parsed_logs) == 4
             assert parsed_logs[-1]["level"] == "DEBUG"
+
+
+@pytest.mark.asyncio
+async def test_detail_view_highlights_json(sample_jsonl_file: Path) -> None:
+    """The JSON is syntax highlighted, also after moving to another log."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.press("enter")
+        text_area = app.screen.query_one("#json-content", TextArea)
+        assert text_area.language == "json"
+        assert text_area.is_syntax_aware
+
+        await pilot.press("k")
+        assert text_area.is_syntax_aware
+        assert '"level"' in text_area.text
