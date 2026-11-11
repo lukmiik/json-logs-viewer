@@ -584,3 +584,69 @@ async def test_no_lines_lost_or_duplicated_across_toggles(
 
         assert [log.data["i"] for log in app.logs] == list(range(20_000))
         assert [log.line_number for log in app.logs] == list(range(1, 20_001))
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "settings",
+    [
+        {},
+        {"filter_query": "level:error"},
+        {"filter_query": "level:error", "highlight_matches": True},
+        {"filter_query": "not a valid query ("},
+        {"wrap_log_lines": True},
+        {"wrap_log_lines": True, "filter_query": "level:error"},
+    ],
+    ids=["plain", "filter", "highlight", "bad-query", "wrap", "wrap-filter"],
+)
+async def test_appends_update_state_like_a_full_recompute(
+    tmp_path: Path, settings: dict[str, Any]
+) -> None:
+    """Follow appends only process new logs, with the same result.
+
+    After each append the incremental state is compared with a recompute
+    from scratch (differential testing).
+    """
+    log_file = tmp_path / "app.log"
+    levels = ["info", "error", "debug"]
+    log_file.write_text(
+        "".join(
+            json.dumps({"level": levels[i % 3], "msg": f"entry {i} " * 4})
+            + "\n"
+            for i in range(30)
+        )
+    )
+    app = LogViewerApp(file=str(log_file))
+    async with app.run_test(size=(40, 8)) as pilot:
+        await pilot.pause()
+        for name, value in settings.items():
+            setattr(app, name, value)
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+
+        for batch in range(4):
+            lines = "".join(
+                json.dumps(
+                    {"level": levels[(batch + i) % 3], "msg": "word " * 20}
+                )
+                + "\n"
+                for i in range(batch + 1)
+            )
+            app._process_chunk(lines.encode())
+            await pilot.pause()
+
+            filtered = list(app.filtered_logs)
+            flags = list(log_list._match_flags)
+            wrapped = list(log_list._wrapped_lines)
+            counts = dict(app._field_counts)
+
+            app.apply_filter()
+            log_list._recompute_match_flags()
+            if log_list._wrap_mode:
+                log_list._recalculate_wrap()
+            app._update_field_counts(logs=app.logs, appended=None)
+
+            assert filtered == app.filtered_logs
+            assert flags == log_list._match_flags
+            assert wrapped == log_list._wrapped_lines
+            assert counts == dict(app._field_counts)

@@ -1,4 +1,5 @@
 import json
+import operator
 from datetime import datetime
 from functools import cached_property
 from typing import Any
@@ -70,3 +71,23 @@ class LogEntry(BaseModel):
         if self.raw_json and "\\" not in self.raw_json:
             return self.raw_json
         return json.dumps(self.data, ensure_ascii=False)
+
+
+def appended_entries(
+    *, old: list[LogEntry], new: list[LogEntry]
+) -> list[LogEntry] | None:
+    """Return the entries `new` adds after `old`, or None.
+
+    None means `new` is not `old` plus more entries at the end (a reload, a
+    filter change), so callers must recompute from scratch. Follow mode
+    appends, and this lets them process only the new tail.
+
+    Compares by identity: a reloaded file has equal but new entries, which
+    must not count as the same ones, and Pydantic's == would compare every
+    field (about 40x slower).
+    """
+    if not old or len(new) < len(old):
+        return None
+    if not all(map(operator.is_, old, new)):
+        return None
+    return new[len(old) :]

@@ -9,7 +9,7 @@ import sys
 import threading
 from bisect import bisect_left
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from contextlib import ExitStack
 from functools import partial
 from pathlib import Path
@@ -30,7 +30,7 @@ from json_logs_viewer.modals.columns_modal import ColumnsModal
 from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.file_picker_modal import FilePickerModal
 from json_logs_viewer.modals.history_modal import HistoryModal
-from json_logs_viewer.models import LogEntry
+from json_logs_viewer.models import LogEntry, appended_entries
 from json_logs_viewer.widgets.feature_summary_modal import FeatureSummaryModal
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
@@ -120,6 +120,9 @@ class LogViewerApp(App):
         self._show_picker_on_start = show_picker_on_start
         self._last_selected_log_entry: LogEntry | None = None
         self._field_counts: Counter[str] = Counter()
+        # The matcher behind filtered_logs; None means every log is shown
+        # (no query, highlight mode, or an invalid query).
+        self._active_matcher: Callable[[LogEntry], bool] | None = None
         self._watcher: WatcherBase | None = None
         self._watch_file: IO[bytes] | None = None
         # Follow position invariant: _follow_offset is the byte where the
@@ -152,8 +155,12 @@ class LogViewerApp(App):
     def watch_logs(
         self, old_logs: list[LogEntry], logs: list[LogEntry]
     ) -> None:
-        self._rebuild_field_counts(old_logs=old_logs, new_logs=logs)
-        self.apply_filter()
+        appended = appended_entries(old=old_logs, new=logs)
+        self._update_field_counts(logs=logs, appended=appended)
+        if appended is None:
+            self.apply_filter()
+        else:
+            self._filter_appended(appended=appended)
 
     def watch_filter_query(self) -> None:
         """Recompute filtered logs when query changes."""
@@ -180,6 +187,7 @@ class LogViewerApp(App):
             self._get_selected_log_entry() or self._last_selected_log_entry
         )
 
+        self._active_matcher = None
         if not self.filter_query:
             self.filtered_logs = self.logs
             self._restore_selected_log_entry(log_entry=selected_log_entry)
@@ -195,6 +203,7 @@ class LogViewerApp(App):
                 next_filtered_logs = self.logs
             else:
                 next_filtered_logs = [log for log in self.logs if matcher(log)]
+                self._active_matcher = matcher
 
             self.filtered_logs = next_filtered_logs
             self._restore_selected_log_entry(log_entry=selected_log_entry)
@@ -202,6 +211,20 @@ class LogViewerApp(App):
             self.notify(str(e), severity="error")
             self.filtered_logs = self.logs
             self._restore_selected_log_entry(log_entry=selected_log_entry)
+
+    def _filter_appended(self, *, appended: list[LogEntry]) -> None:
+        """Follow-mode fast path: filter only the newly appended logs.
+
+        Every query or setting change runs apply_filter, so filtered_logs
+        and _active_matcher already match the current query; re-filtering
+        the whole file on every batch would cost O(n).
+        """
+        if self._active_matcher is None:
+            self.filtered_logs = self.logs
+            return
+        matching = [log for log in appended if self._active_matcher(log)]
+        if matching:
+            self.filtered_logs = [*self.filtered_logs, *matching]
 
     def _get_selected_log_entry(self) -> LogEntry | None:
         if 0 <= self.selected_index < len(self.filtered_logs):
@@ -213,27 +236,15 @@ class LogViewerApp(App):
         if selected_log_entry is not None:
             self._last_selected_log_entry = selected_log_entry
 
-    def _rebuild_field_counts(
-        self, *, old_logs: list[LogEntry], new_logs: list[LogEntry]
+    def _update_field_counts(
+        self, *, logs: list[LogEntry], appended: list[LogEntry] | None
     ) -> None:
-        """Rebuild or incrementally update the field frequency counter.
-
-        If new_logs starts with old_logs (follow-mode append), only count the
-        new entries. Otherwise, recount from scratch.
-        """
-        old_len = len(old_logs)
-        new_len = len(new_logs)
-        # `==`, not `is`: a slice is always a new list, so `is` never matched.
-        # List equality checks element identity first, so this is fast.
-        if new_len >= old_len > 0 and new_logs[:old_len] == old_logs:
-            # Incremental append (follow mode): only count new entries.
-            for log in new_logs[old_len:]:
-                self._field_counts.update(log.data.keys())
-        else:
-            # Full replacement: recount everything.
+        """Count field names: only the appended logs, or all of them."""
+        if appended is None:
             self._field_counts = Counter()
-            for log in new_logs:
-                self._field_counts.update(log.data.keys())
+            appended = logs
+        for log in appended:
+            self._field_counts.update(log.data.keys())
 
     def discover_fields(self) -> list[str]:
         """Return top 20 fields by frequency."""

@@ -190,6 +190,15 @@ parsed entries to `logs`. If the cursor was on the last entry, it follows the
 new tail. `_follow_offset` only advances past consumed lines, so resuming
 re-reads anything not yet processed.
 
+Appends are incremental. `models.appended_entries` detects that a new list is
+the old one plus a tail, comparing by identity so a reload with equal content
+still counts as new. Then `watch_logs` counts fields and filters only the
+tail with the cached `_active_matcher`, and `LogList.set_logs` extends the
+highlight flags and wrapped rows. Wrap does a full pass instead when the
+new entries could change the wrap width: no scrollbar yet, or columns
+shown. A follow batch costs ~2 ms at 100k lines instead of re-filtering
+everything (18 ms; 61 ms with wrap).
+
 The watcher thread never calls into the app directly. It posts messages
 (`FollowData`, `FollowError`, `FollowedFileReset`) with `post_message`, which
 is thread-safe and doesn't wait:

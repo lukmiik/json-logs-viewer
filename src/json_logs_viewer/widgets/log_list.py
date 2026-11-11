@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, cast
 
 from rich.console import Console
@@ -25,7 +26,7 @@ from json_logs_viewer.constants import (
     MAX_COL_WIDTH,
 )
 from json_logs_viewer.filter_engine import FilterError, parse_filter
-from json_logs_viewer.models import LogEntry
+from json_logs_viewer.models import LogEntry, appended_entries
 
 if TYPE_CHECKING:
     from json_logs_viewer.app import LogViewerApp
@@ -159,6 +160,14 @@ class LogList(ScrollView):
         self._wrapped_lines: list[tuple[int, int]] = []
         self._entry_start_rows: dict[int, int] = {}
         self._match_flags: list[bool] = []
+        # How _match_flags were computed, so appended entries get the same
+        # treatment: a matcher, or one flag for all (no matcher).
+        self._flag_matcher: Callable[[LogEntry], bool] | None = None
+        self._flag_default: bool = True
+        # Width the wrapped rows were computed for, or None when a new
+        # entry could change it (see _recalculate_wrap).
+        self._wrap_content_width: int | None = None
+        self._wrap_widget_width: int = 0
         self._highlight_mode: bool = False
         self._active_query: str = ""
         self._column_widths: dict[str, int] = {}
@@ -262,6 +271,7 @@ class LogList(ScrollView):
         """Recalculate wrapped line mapping."""
         self._wrapped_lines = []
         self._entry_start_rows = {}
+        self._wrap_content_width = None
 
         width = self.size.width
         if width <= 0:
@@ -291,14 +301,25 @@ class LogList(ScrollView):
         content_width = width - 1 if has_scrollbar else width
         json_content_width = max(1, content_width - column_width)
 
-        current_row = 0
-        for entry_idx in range(len(self._log_entries)):
+        self._wrap_entries(start=0, width=json_content_width)
+        # Appending can only keep a scrollbar, so rows stay valid for new
+        # entries. Without one, or with columns (their widths depend on
+        # every entry), an append may change the width: wrap from scratch.
+        if has_scrollbar and not columns:
+            self._wrap_content_width = json_content_width
+            self._wrap_widget_width = width
+
+    def _wrap_entries(self, *, start: int, width: int) -> None:
+        """Append the wrapped rows of the entries from `start` on."""
+        current_row = len(self._wrapped_lines)
+        for entry_idx in range(start, len(self._log_entries)):
             self._entry_start_rows[entry_idx] = current_row
             text = self._log_entries[entry_idx].raw_json
-            wrapped = _wrap_text(text=text, width=json_content_width)
-            for sub_line in range(len(wrapped)):
-                self._wrapped_lines.append((entry_idx, sub_line))
-            current_row += len(wrapped)
+            row_count = len(_wrap_text(text=text, width=width))
+            self._wrapped_lines.extend(
+                (entry_idx, sub_line) for sub_line in range(row_count)
+            )
+            current_row += row_count
 
     def _update_max_width_for_visible_range(self) -> None:
         """Update max content width based on visible lines in viewport."""
@@ -324,13 +345,29 @@ class LogList(ScrollView):
 
     def set_logs(self, *, logs: list[LogEntry]) -> None:
         """Update the log entries and recalculate virtual size."""
+        # Follow mode appends: then only the new tail needs match flags and
+        # wrapped rows, instead of a pass over every entry per batch.
+        old_count = len(self._log_entries)
+        appended = appended_entries(old=self._log_entries, new=logs)
         self._log_entries = logs
         self._line_cache = LRUCache(maxsize=2000)
-        self._recompute_match_flags()
+        if appended is None:
+            self._recompute_match_flags()
+        else:
+            self._match_flags.extend(self._flags_for(entries=appended))
         self._update_max_width_for_visible_range()
 
         if self._wrap_mode:
-            self._recalculate_wrap()
+            if (
+                appended is not None
+                and self._wrap_content_width is not None
+                and self._wrap_widget_width == self.size.width
+            ):
+                self._wrap_entries(
+                    start=old_count, width=self._wrap_content_width
+                )
+            else:
+                self._recalculate_wrap()
 
         self._update_virtual_size()
 
@@ -344,32 +381,29 @@ class LogList(ScrollView):
         self.refresh()
 
     def _recompute_match_flags(self) -> None:
+        self._flag_matcher = None
+        self._flag_default = True
         if not self.app:
-            self._match_flags = [True] * len(self._log_entries)
             self._highlight_mode = False
             self._active_query = ""
-            return
+        else:
+            app = self._app
+            self._highlight_mode = app.highlight_matches
+            self._active_query = app.filter_query.strip()
+            if self._highlight_mode and self._active_query:
+                try:
+                    self._flag_matcher = parse_filter(
+                        query=self._active_query,
+                        case_sensitive=app.case_sensitive,
+                    )
+                except FilterError:
+                    self._flag_default = False
+        self._match_flags = self._flags_for(entries=self._log_entries)
 
-        app = self._app
-        self._highlight_mode = app.highlight_matches
-        self._active_query = app.filter_query.strip()
-
-        if not self._highlight_mode or not self._active_query:
-            self._match_flags = [True] * len(self._log_entries)
-            return
-
-        try:
-            matcher = parse_filter(
-                query=self._active_query,
-                case_sensitive=app.case_sensitive,
-            )
-        except FilterError:
-            self._match_flags = [False] * len(self._log_entries)
-            return
-
-        self._match_flags = [
-            matcher(log_entry) for log_entry in self._log_entries
-        ]
+    def _flags_for(self, *, entries: list[LogEntry]) -> list[bool]:
+        if self._flag_matcher is None:
+            return [self._flag_default] * len(entries)
+        return [self._flag_matcher(log_entry) for log_entry in entries]
 
     def _style_for_entry(self, *, entry_idx: int, base: Style) -> Style:
         if not self._highlight_mode or not self._active_query:

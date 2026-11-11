@@ -11,6 +11,7 @@ from json_logs_viewer.models import (
     MESSAGE_FIELDS,
     TIMESTAMP_FIELDS,
     LogEntry,
+    appended_entries,
 )
 
 
@@ -316,3 +317,34 @@ class TestFindFirstHelper:
         )
 
         assert result is None
+
+
+class TestAppendedEntries:
+    """appended_entries tells a follow-mode append from a replacement."""
+
+    def _logs(self, count: int) -> list[LogEntry]:
+        return [
+            LogEntry(line_number=i, data={"i": i}, raw_json=f'{{"i": {i}}}')
+            for i in range(count)
+        ]
+
+    def test_append_returns_new_tail(self) -> None:
+        old = self._logs(3)
+        extra = self._logs(2)
+        assert appended_entries(old=old, new=[*old, *extra]) == extra
+
+    def test_same_entries_append_nothing(self) -> None:
+        old = self._logs(3)
+        assert appended_entries(old=old, new=list(old)) == []
+
+    def test_reload_with_equal_entries_is_not_an_append(self) -> None:
+        """Equal content in new objects (a reload) must be recomputed."""
+        assert appended_entries(old=self._logs(3), new=self._logs(4)) is None
+
+    def test_shorter_or_changed_list_is_not_an_append(self) -> None:
+        old = self._logs(3)
+        assert appended_entries(old=old, new=old[:2]) is None
+        assert appended_entries(old=old, new=[old[1], old[0], old[2]]) is None
+
+    def test_empty_old_is_not_an_append(self) -> None:
+        assert appended_entries(old=[], new=self._logs(2)) is None
