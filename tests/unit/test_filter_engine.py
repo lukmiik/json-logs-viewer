@@ -705,3 +705,25 @@ class TestNestedFields:
         assert not parse_filter(
             query="Resource.service.name:CHECKOUT", case_sensitive=True
         )(NESTED_LOG)
+
+
+class TestLongQueries:
+    """Queries far past Python's recursion limit (~1000) must not crash."""
+
+    def test_thousands_of_terms_still_match(self) -> None:
+        words = [f"w{i}" for i in range(5000)]
+        log = make_log(message=" ".join(words))
+        assert parse_filter(query=" ".join(words))(log)
+        assert not parse_filter(query=" ".join([*words, "absent"]))(log)
+
+    def test_thousands_of_alternatives_still_match(self) -> None:
+        query = " OR ".join([f"w{i}" for i in range(5000)])
+        assert parse_filter(query=query)(make_log(message="w4999"))
+        assert not parse_filter(query=query)(make_log(message="none"))
+
+    @pytest.mark.parametrize(
+        "query", ["NOT " * 3000 + "a", "(" * 3000 + "a" + ")" * 3000]
+    )
+    def test_extreme_nesting_is_a_filter_error(self, query: str) -> None:
+        with pytest.raises(FilterError, match="nested"):
+            parse_filter(query=query)

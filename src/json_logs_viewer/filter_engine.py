@@ -8,6 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum, auto
+from functools import cached_property
 from typing import Any
 
 from .field_paths import resolve_field
@@ -245,15 +246,35 @@ class FullText(ASTNode):
         return self._lowered in log_entry.search_text.lower()
 
 
+def _chain(node: ASTNode, kind: type[ASTNode]) -> list[ASTNode]:
+    """The operands of a left-deep chain of `kind`, left to right.
+
+    "a b c" parses to And(And(a, b), c). Walking that chain recursively
+    hit Python's recursion limit around 1000 terms (RecursionError); this
+    collects the operands in a loop instead.
+    """
+    rights: list[ASTNode] = []
+    while isinstance(node, kind):
+        rights.append(node.right)  # type: ignore[attr-defined]
+        node = node.left  # type: ignore[attr-defined]
+    return [node, *reversed(rights)]
+
+
 @dataclass
 class And(ASTNode):
     left: ASTNode
     right: ASTNode
 
+    @cached_property
+    def _operands(self) -> tuple[ASTNode, ...]:
+        # Once per query, not per log: matching runs for every entry.
+        return tuple(_chain(self, And))
+
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
-        return self.left.match(log_entry, case_sensitive) and self.right.match(
-            log_entry, case_sensitive
-        )
+        for operand in self._operands:
+            if not operand.match(log_entry, case_sensitive):
+                return False
+        return True
 
 
 @dataclass
@@ -261,10 +282,15 @@ class Or(ASTNode):
     left: ASTNode
     right: ASTNode
 
+    @cached_property
+    def _operands(self) -> tuple[ASTNode, ...]:
+        return tuple(_chain(self, Or))
+
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
-        return self.left.match(log_entry, case_sensitive) or self.right.match(
-            log_entry, case_sensitive
-        )
+        for operand in self._operands:
+            if operand.match(log_entry, case_sensitive):
+                return True
+        return False
 
 
 @dataclass
@@ -585,7 +611,12 @@ def parse_filter(
 
     tokens = Tokenizer(query).tokenize()
     parser = Parser(tokens, newest_timestamp)
-    ast = parser.parse()
+    try:
+        ast = parser.parse()
+    except RecursionError:
+        # Thousands of nested NOTs or parentheses: the recursive-descent
+        # parser runs out of stack. Long flat queries are fine.
+        raise FilterError("Query is too deeply nested") from None
     return Matcher(
         ast=ast, case_sensitive=case_sensitive, relative=parser.relative
     )
