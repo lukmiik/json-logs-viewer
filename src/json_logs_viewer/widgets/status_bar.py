@@ -208,7 +208,9 @@ class StatusBar(Widget):
             return
         app = cast("LogViewerApp", self.app)
         info: StatusInfo = self.query_one(StatusInfo)
-        info.filename = _files_label(paths=app.filepaths)
+        info.filename = _files_label(
+            paths=[app.source_label(path) for path in app.filepaths]
+        )
         info.total = len(app.logs)
         info.filtered = len(app.filtered_logs)
         info.case_sensitive = app.case_sensitive

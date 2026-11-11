@@ -21,6 +21,7 @@ src/json_logs_viewer/
 ├── atomic_file.py         atomic_open: temp file + os.replace
 ├── history_store.py       search history file: path, load, save
 ├── sources.py             SourceFile, read_source, merge_by_time
+├── stdin_pipe.py          piped stdin: take_over_stdin, StdinCopy
 ├── selection_copier.py    SelectionCopier: copy a selection once it settles
 ├── constants.py           history limit, copy context size, column width,
 │                          selection copy delay
@@ -196,6 +197,18 @@ resets the query, toggles and columns first; the search history is kept
 the open ones instead, keeping the query: everything is reloaded and merged
 again, and follow mode restarts so the new file is watched too. On the
 command line, `jlv a.jsonl b.jsonl` opens several at once.
+
+Piped input (`kubectl logs -f pod | jlv`, or `-` among the files) is read in
+`main()`. Textual reads the keyboard from file descriptor 0, which is then
+the pipe, so `stdin_pipe.take_over_stdin()` moves the pipe to a new
+descriptor and `dup2`s `/dev/tty` onto 0 (POSIX only; a clear error
+otherwise). `StdinCopy` copies the pipe in a daemon thread into
+`<mkdtemp 0700>/stdin` (0600), which the app opens with follow mode on, so
+loading, follow, filters, export and merging work unchanged; `main()`
+deletes it when the app exits. The app's `stdin_path` makes the status bar
+and detail view say `stdin`, and export defaults to the current folder.
+Stdin is only guessed (no files, not a terminal) for the normal viewer, not
+for `--serve`, which may run without a terminal.
 
 ## Filtering
 

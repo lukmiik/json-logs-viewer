@@ -57,6 +57,13 @@ from json_logs_viewer.models import (
     parse_log_line,
 )
 from json_logs_viewer.sources import SourceFile, merge_by_time, read_source
+from json_logs_viewer.stdin_pipe import (
+    STDIN_ARG,
+    STDIN_LABEL,
+    StdinCopy,
+    stdin_is_piped,
+    take_over_stdin,
+)
 from json_logs_viewer.widgets.column_header import ColumnHeader
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
@@ -163,6 +170,7 @@ class LogViewerApp(App):
         follow: bool = False,
         show_picker_on_start: bool = False,
         history_path: Path | None = None,
+        stdin_path: str | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
         super().__init__(**kwargs)
@@ -173,6 +181,8 @@ class LogViewerApp(App):
         # Where the search history is kept across runs; None keeps it in
         # memory only (tests, --no-history). main() passes the real path.
         self._history_path = history_path
+        # The temporary copy of piped stdin, shown as "stdin" (main()).
+        self.stdin_path = stdin_path
         self._history_save_warned = False
         self._last_selected_log_entry: LogEntry | None = None
         # Field path counts for the columns modal, filled lazily by
@@ -302,6 +312,10 @@ class LogViewerApp(App):
         matching = [log for log in appended if self._active_matcher(log)]
         if matching:
             self.filtered_logs = [*self.filtered_logs, *matching]
+
+    def source_label(self, path: str) -> str:
+        """How a file is named in the UI: "stdin" for piped input."""
+        return STDIN_LABEL if path == self.stdin_path else path
 
     def newest_timestamp(self) -> datetime | None:
         """The newest detected timestamp: the anchor of last:<duration>."""
@@ -480,6 +494,10 @@ class LogViewerApp(App):
             self.notify("Nothing to export", severity="warning")
             return
         source = Path(self.filepath) if self.filepath else None
+        if self.filepath == self.stdin_path:
+            # The copy lives in a temp folder deleted on exit: export next
+            # to where jlv was started instead.
+            source = Path(STDIN_LABEL).absolute()
         self.push_screen(
             ExportModal(
                 default_path=default_export_path(
@@ -943,7 +961,10 @@ def main() -> None:
         "files",
         nargs="*",
         metavar="file",
-        help="JSONL file(s) to view; several are merged by timestamp",
+        help=(
+            "JSONL file(s) to view; several are merged by timestamp. "
+            "'-' (or piping with no files) reads stdin"
+        ),
     )
     parser.add_argument(
         "-f", "--follow", action="store_true", help="Follow mode"
@@ -957,6 +978,24 @@ def main() -> None:
         help="Don't read or save the search history file",
     )
     args = parser.parse_args()
+
+    # A --serve browser session gets its files from the environment. Pop
+    # it, so programs started from the app don't inherit it.
+    served = os.environ.pop(SERVE_FILE_ENV, None)
+    files = args.files or (json.loads(served) if served else [])
+    # Piped input: "-" among the files, or piping with no files at all
+    # (`kubectl logs pod | jlv`). Not guessed for --serve, which may run
+    # without a terminal (a service): there only an explicit "-" counts.
+    explicit_stdin = STDIN_ARG in files
+    if explicit_stdin and args.serve:
+        sys.exit(
+            "jlv: --serve can't read piped input; save it to a file first"
+        )
+    if explicit_stdin and not stdin_is_piped():
+        sys.exit("jlv: '-' reads piped input, but nothing is piped in")
+    wants_stdin = explicit_stdin or (
+        not files and not args.serve and stdin_is_piped()
+    )
 
     if args.serve:
         try:
@@ -981,16 +1020,30 @@ def main() -> None:
         ).serve()
         return
 
-    # Pop, so programs started from the app don't inherit it.
-    served = os.environ.pop(SERVE_FILE_ENV, None)
-    files = args.files or (json.loads(served) if served else [])
-    app = LogViewerApp(
-        files=files,
-        follow=args.follow,
-        show_picker_on_start=not files,
-        history_path=None if args.no_history else default_history_path(),
-    )
-    app.run()
+    follow = args.follow
+    stdin_copy: StdinCopy | None = None
+    if wants_stdin:
+        try:
+            stdin_copy = StdinCopy(fd=take_over_stdin())
+        except OSError as error:
+            sys.exit(f"jlv: can't read piped input: {error}")
+        stdin_copy.start()
+        files = [
+            stdin_copy.path if file == STDIN_ARG else file for file in files
+        ] or [stdin_copy.path]
+        follow = True  # a pipe keeps delivering lines
+    try:
+        app = LogViewerApp(
+            files=files,
+            follow=follow,
+            show_picker_on_start=not files,
+            history_path=None if args.no_history else default_history_path(),
+            stdin_path=stdin_copy.path if stdin_copy else None,
+        )
+        app.run()
+    finally:
+        if stdin_copy is not None:
+            stdin_copy.close()
 
 
 if __name__ == "__main__":

@@ -138,6 +138,7 @@ def test_main_child_reads_file_from_environment(
             "follow": True,
             "show_picker_on_start": False,
             "history_path": history,
+            "stdin_path": None,
         }
     ]
     # Consumed, so programs started from the app don't inherit it.

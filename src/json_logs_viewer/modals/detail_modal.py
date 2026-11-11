@@ -127,7 +127,8 @@ class DetailModal(ModalScreen[None]):
         entry = self.log_entry
         if not entry.source:
             return "Log Detail"
-        return f"Log Detail · {entry.source}:{entry.line_number}"
+        source = self._app.source_label(entry.source)
+        return f"Log Detail · {source}:{entry.line_number}"
 
     def _update_content(self) -> None:
         self.query_one("#detail-dialog").border_title = self._title()
