@@ -5,6 +5,15 @@ from collections.abc import Iterator
 from pathlib import Path
 
 
+def _decode(line_bytes: bytes) -> str:
+    """A line as text, with invalid UTF-8 bytes as U+FFFD.
+
+    The whole line used to be dropped; compressed files and follow mode
+    already kept it like this.
+    """
+    return line_bytes.decode("utf-8", errors="replace").rstrip("\n\r")
+
+
 def read_lines_backward(
     *, filepath: Path, size: int | None = None
 ) -> Iterator[tuple[int, str]]:
@@ -47,22 +56,13 @@ def read_lines_backward(
                 )
                 if newline_pos == -1:
                     line_bytes = mm[0:position]
-                    try:
-                        line_text = line_bytes.decode("utf-8").rstrip("\n\r")
-                    except UnicodeDecodeError:
-                        position = 0
-                        continue
+                    line_text = _decode(line_bytes)
                     if line_text:
                         yield (1, line_text)
                     break
                 else:
                     line_bytes = mm[newline_pos + 1 : position]
-                    try:
-                        line_text = line_bytes.decode("utf-8").rstrip("\n\r")
-                    except UnicodeDecodeError:
-                        position = newline_pos + 1
-                        line_num -= 1
-                        continue
+                    line_text = _decode(line_bytes)
                     if line_text:
                         yield (line_num, line_text)
                     line_num -= 1

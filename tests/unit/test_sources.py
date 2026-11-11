@@ -84,3 +84,24 @@ def test_utf8_bom_doesnt_hide_the_first_line(tmp_path: Path) -> None:
         logs, _ = read_source(path=str(path))
         assert [log.data["a"] for log in logs] == [1, 2]
         assert logs[0].raw_json == '{"a": 1}'
+
+
+def test_invalid_utf8_line_is_kept_like_everywhere_else(
+    tmp_path: Path,
+) -> None:
+    """The line shows with the bad byte replaced, in every kind of file.
+
+    It used to vanish from plain files only.
+    """
+    import gzip
+
+    content = b'{"n": 1}\n{"n": 2, "m": "caf\xe9"}\n{"n": 3}\n'
+    plain = tmp_path / "latin1.jsonl"
+    plain.write_bytes(content)
+    packed = tmp_path / "latin1.jsonl.gz"
+    packed.write_bytes(gzip.compress(content))
+
+    for path in (plain, packed):
+        logs, _ = read_source(path=str(path))
+        assert [log.data["n"] for log in logs] == [1, 2, 3]
+        assert logs[1].data["m"] == "caf�"

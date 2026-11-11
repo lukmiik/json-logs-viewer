@@ -197,8 +197,9 @@ follow mode says it can't follow). The file picker lists names like
 For a plain file, `read_source()` calls `read_lines_backward()`
 (log_reader.py). It mmaps the
 file, counts lines forward with `mm.find(b"\n")`, then walks backwards with
-`mm.rfind` to yield `(line_number, text)` pairs. Empty lines and lines that
-are not valid UTF-8 are skipped. Each line is parsed with `json.loads`.
+`mm.rfind` to yield `(line_number, text)` pairs. Empty lines are skipped;
+invalid UTF-8 bytes become U+FFFD (as in follow mode and compressed files).
+Each line is parsed with `json.loads`.
 Invalid JSON is logged and skipped. The list is reversed into file order,
 assigned to `logs`, and the cursor is placed on the last entry.
 
