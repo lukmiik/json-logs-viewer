@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from json_logs_viewer.app import LogViewerApp
+from json_logs_viewer.widgets.log_list import LogList
 
 
 @pytest.mark.asyncio
@@ -90,3 +91,12 @@ async def test_odd_lines_in_follow_mode(tmp_path: Path) -> None:
 
         assert app.is_running
         assert [log.line_number for log in app.logs] == [1, 2, 3, 4, 8]
+
+
+@pytest.mark.asyncio
+async def test_log_list_has_focus_on_start(sample_jsonl_file: Path) -> None:
+    """Keys like c and / need the list focused, not the search bar."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert app.focused is app.query_one("#logs", LogList)

@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import IO, Any
 
 from textual.app import App, ComposeResult, SystemCommand
+from textual.containers import Vertical
 from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import Screen
@@ -37,6 +38,7 @@ from json_logs_viewer.models import (
     appended_entries,
     parse_log_line,
 )
+from json_logs_viewer.widgets.column_header import ColumnHeader
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
@@ -44,6 +46,17 @@ from json_logs_viewer.widgets.status_bar import StatusBar
 
 def _line_number(entry: LogEntry) -> int:
     return entry.line_number
+
+
+class MainScreen(Screen[None]):
+    """The app's default screen: starts with the log list focused.
+
+    Textual focuses the first focusable widget by screen position, which
+    is the search bar once the list sits inside the bordered pane. Set
+    here rather than on the App, where every modal would inherit it.
+    """
+
+    AUTO_FOCUS = "#logs"
 
 
 class LogViewerApp(App):
@@ -143,8 +156,14 @@ class LogViewerApp(App):
         # Identifies the running follow session; set when it stops.
         self._follow_session: threading.Event | None = None
 
+    def get_default_screen(self) -> Screen[None]:
+        return MainScreen(id="_default")
+
     def compose(self) -> ComposeResult:
-        yield LogList(id="logs")
+        # The pane carries the border so the header sits inside it.
+        with Vertical(id="logs-pane"):
+            yield ColumnHeader(id="column-header")
+            yield LogList(id="logs")
         yield SearchBar(id="search", select_on_focus=False)
         yield StatusBar(id="status")
 

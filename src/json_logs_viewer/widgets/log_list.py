@@ -245,6 +245,9 @@ class LogList(ScrollView):
             self._recalculate_wrap()
         self._update_max_width_for_visible_range()
         self._update_virtual_size()
+        # A shorter list (column header shown, terminal resized) can hide
+        # the cursor or eat its margin; keep it in view like a cursor move.
+        self._scroll_cursor_into_view()
 
     def _on_scroll_y_changed(self, _: float) -> None:
         """Handle vertical scroll position changes."""
@@ -286,6 +289,17 @@ class LogList(ScrollView):
                     unsettled.discard(col)
 
         return widths
+
+    def header_text(self) -> str:
+        """Column names laid out like the column prefix of every row."""
+        columns = self._app.columns
+        if not columns:
+            return ""
+        if not self._column_widths:
+            self._column_widths = self._calculate_column_widths()
+        widths = self._column_widths
+        names = [col.ljust(widths.get(col, len(col))) for col in columns]
+        return COLUMN_SEPARATOR.join(names) + COLUMN_SEPARATOR
 
     def _on_columns_changed(self, _: list[str]) -> None:
         """Handle column configuration changes."""

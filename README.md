@@ -21,8 +21,8 @@ An interactive terminal viewer for JSONL log files, built with
 - Copy to the clipboard via OSC 52: `y` copies the log as pretty JSON, `Y`
   copies it plus up to 5 entries before and after as raw JSONL.
 - Columns: show any of the 20 most common fields as aligned columns in front
-  of each line. Nested fields are offered by their dotted path
-  (`attributes.level`, `http.status_code`).
+  of each line, under a header row with their names. Nested fields are
+  offered by their dotted path (`attributes.level`, `http.status_code`).
 - Follow mode (like `tail -F`) for files that are still being written. If
   the file is truncated or rotated (e.g. by logrotate), it is reloaded.
 - File picker to open another file without restarting.

@@ -23,6 +23,7 @@ src/json_logs_viewer/
 ├── styles.tcss            app-level CSS
 ├── widgets/
 │   ├── log_list.py        LogList: virtual ScrollView, the main list
+│   ├── column_header.py   ColumnHeader: column names above the list
 │   ├── search_bar.py      SearchBar: Input bound to filter_query
 │   └── status_bar.py      StatusBar: file/count labels, toggle buttons,
 │                          Footer
@@ -38,8 +39,10 @@ src/json_logs_viewer/
 
 ```
 ┌──────────────────────────────────────────────┐
-│ LogList (#logs)                     1fr      │
-│   [col1 | col2 | ] {"raw": "json line"}      │
+│ #logs-pane (Vertical, carries the border)    │
+│   ColumnHeader  col1 | col2 |  (if columns)  │
+│   LogList (#logs)                   1fr      │
+│     [v1   | v2   | ] {"raw": "json line"}    │
 ├──────────────────────────────────────────────┤
 │ SearchBar (#search)    shown only while      │
 │                        focused               │
@@ -51,6 +54,10 @@ src/json_logs_viewer/
 │   Footer (keybindings)                       │
 └──────────────────────────────────────────────┘
 ```
+
+The default screen is `MainScreen`, whose `AUTO_FOCUS = "#logs"` starts
+with the list focused. Textual otherwise focuses the first focusable widget
+by screen position, which would be the search bar.
 
 Modals are pushed with `push_screen(..., callback=...)`. Their result is
 handled in an `_on_*_selected` callback on the app.
@@ -186,6 +193,13 @@ Only visible rows are rendered, so file size does not affect drawing cost.
   `leaf_paths` (dotted paths to values; objects are descended, lists are
   values). Counting walks every object, so it runs lazily when the modal
   asks, and `_counted_logs` lets follow-mode appends count only new logs.
+- `ColumnHeader` is a separate one-line widget above the list (not a row
+  inside it, so scrolling and click maths are unchanged). It shows
+  `LogList.header_text()`, built with the rows' widths and separator,
+  cropped to the list's `scroll_x`, and hides when no columns are set.
+- `on_resize` scrolls the cursor back into view (with its `SCROLLOFF`
+  margin), since a shorter list (header shown, terminal resized) can
+  otherwise hide it.
 - `_style_for_entry` colours a whole row by its level, using the component
   classes `loglist--level-error/warning/debug` (theme colours `$text-error`,
   `$text-warning`, `$text-muted`), then applies highlight mode's bold/dim.
