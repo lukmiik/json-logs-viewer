@@ -21,9 +21,15 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import Screen
 
+from json_logs_viewer.constants import SEARCH_HISTORY_LIMIT
 from json_logs_viewer.export import default_export_path, write_jsonl
 from json_logs_viewer.field_paths import leaf_paths
 from json_logs_viewer.filter_engine import FilterError, parse_filter
+from json_logs_viewer.history_store import (
+    default_history_path,
+    load_history,
+    save_history,
+)
 from json_logs_viewer.log_reader import (
     find_line_boundary,
     read_lines_backward,
@@ -136,12 +142,17 @@ class LogViewerApp(App):
         file: str | None = None,
         follow: bool = False,
         show_picker_on_start: bool = False,
+        history_path: Path | None = None,
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
         super().__init__(**kwargs)
         self.initial_file = file
         self._initial_follow = follow
         self._show_picker_on_start = show_picker_on_start
+        # Where the search history is kept across runs; None keeps it in
+        # memory only (tests, --no-history). main() passes the real path.
+        self._history_path = history_path
+        self._history_save_warned = False
         self._last_selected_log_entry: LogEntry | None = None
         # Field path counts for the columns modal, filled lazily by
         # discover_fields: logs[:_counted_logs] are already counted.
@@ -175,6 +186,10 @@ class LogViewerApp(App):
 
     def on_mount(self) -> None:
         """Load file if provided via CLI, otherwise open file picker."""
+        if self._history_path is not None:
+            self.search_history = load_history(
+                path=self._history_path, limit=SEARCH_HISTORY_LIMIT
+            )
         self._update_search_bar_visibility()
         if self.initial_file:
             self.load_file(filepath=self.initial_file)
@@ -466,6 +481,40 @@ class LogViewerApp(App):
         self.logs = []
         self.selected_index = 0
 
+    def watch_search_history(self, history: list[str]) -> None:
+        if self._history_path is None:
+            return
+        try:
+            save_history(path=self._history_path, history=history)
+        except OSError as error:
+            # Warn once: searching still works, only persistence doesn't.
+            if not self._history_save_warned:
+                self._history_save_warned = True
+                self.notify(
+                    f"Couldn't save the search history: {error}",
+                    severity="warning",
+                )
+
+    def action_clear_history(self) -> None:
+        if isinstance(self.screen, ConfirmModal):
+            return
+        if not self.search_history:
+            self.notify("The search history is empty")
+            return
+        count = len(self.search_history)
+        noun = "query" if count == 1 else "queries"
+        self.push_screen(
+            ConfirmModal(
+                title="Clear search history",
+                question=f"Forget {count} saved {noun}?",
+            ),
+            callback=self._on_clear_history_confirmed,
+        )
+
+    def _on_clear_history_confirmed(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self.search_history = []
+
     def action_show_history(self) -> None:
         if isinstance(self.screen, HistoryModal):
             return
@@ -497,7 +546,7 @@ class LogViewerApp(App):
         self.highlight_matches = False
         self.wrap_log_lines = False
         self.columns = []
-        self.search_history = []
+        # The search history is shared by all files, so it is kept.
         search_bar = self.query_one("#search", SearchBar)
         search_bar.value = ""
         self._update_search_bar_visibility()
@@ -721,6 +770,11 @@ class LogViewerApp(App):
             self.action_clear_view,
         )
         yield SystemCommand(
+            "Clear search history",
+            "Forget the saved search queries",
+            self.action_clear_history,
+        )
+        yield SystemCommand(
             "Configure columns",
             "Select which fields to display as columns",
             self.action_show_columns,
@@ -750,6 +804,7 @@ SERVE_FILE_ENV = "JLV_SERVE_FILE"
 def build_serve_command(
     *,
     follow: bool,
+    no_history: bool = False,
     posix: bool = os.name == "posix",
     executable: str = sys.executable,
 ) -> str:
@@ -766,6 +821,8 @@ def build_serve_command(
     argv = [executable, "-m", "json_logs_viewer"]
     if follow:
         argv.append("--follow")
+    if no_history:
+        argv.append("--no-history")
     return shlex.join(argv) if posix else subprocess.list2cmdline(argv)
 
 
@@ -781,6 +838,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--serve", action="store_true", help="Serve app in browser"
+    )
+    parser.add_argument(
+        "--no-history",
+        action="store_true",
+        help="Don't read or save the search history file",
     )
     args = parser.parse_args()
 
@@ -798,7 +860,9 @@ def main() -> None:
         if args.file:
             os.environ[SERVE_FILE_ENV] = args.file
         Server(
-            build_serve_command(follow=args.follow),
+            build_serve_command(
+                follow=args.follow, no_history=args.no_history
+            ),
             # Shown on the served page; it defaults to the command string.
             title=f"jlv {Path(args.file).name}" if args.file else "jlv",
         ).serve()
@@ -810,6 +874,7 @@ def main() -> None:
         file=file,
         follow=args.follow,
         show_picker_on_start=file is None,
+        history_path=None if args.no_history else default_history_path(),
     )
     app.run()
 

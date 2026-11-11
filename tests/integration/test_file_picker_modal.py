@@ -256,11 +256,11 @@ async def test_open_file_resets_search_bar(
 
 
 @pytest.mark.asyncio
-async def test_open_file_resets_search_history(
+async def test_open_file_keeps_search_history(
     sample_jsonl_file: Path,
     tmp_path: Path,
 ) -> None:
-    """Test that opening a new file clears search history."""
+    """The search history is shared by all files, so opening one keeps it."""
     other_file = tmp_path / "other.jsonl"
     other_file.write_text('{"msg": "new"}\n')
 
@@ -274,7 +274,7 @@ async def test_open_file_resets_search_history(
         app._on_file_selected(str(other_file))
         await pilot.pause()
 
-        assert app.search_history == []
+        assert app.search_history == ["query1", "query2"]
 
 
 @pytest.mark.asyncio

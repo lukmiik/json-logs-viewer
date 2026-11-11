@@ -89,6 +89,7 @@ class HelpModal(ModalScreen[None]):
             "History & Columns\n"
             "  H            Open search history modal\n"
             "               Select a past query to reapply it\n"
+            "               Saved across runs (--no-history: off)\n"
             "  c            Open column configuration modal\n"
             "               Select fields (a.b for nested) as columns"
         )

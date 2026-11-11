@@ -18,6 +18,8 @@ src/json_logs_viewer/
 ├── log_watcher.py         follow-mode watcher threads
 ├── clipboard.py           formatting helpers for copy actions
 ├── export.py              default_export_path, write_jsonl (atomic)
+├── atomic_file.py         atomic_open: temp file + os.replace
+├── history_store.py       search history file: path, load, save
 ├── selection_copier.py    SelectionCopier: copy a selection once it settles
 ├── constants.py           history limit, copy context size, column width,
 │                          selection copy delay
@@ -102,6 +104,15 @@ with the query still in it.
 `search_history` (skipping an immediate repeat). `HistoryModal` shows the
 history newest first.
 
+The history is global and persistent when the app gets a `history_path`
+(`main()` passes `history_store.default_history_path()`, from
+`platformdirs`, unless `--no-history`; tests pass none, so they never touch
+the real file). It is loaded in `on_mount` and saved by
+`watch_search_history` on every change: versioned JSON, written through
+`atomic_open` (temp file + `os.replace`, mode 0600 since queries can hold
+user IDs or tokens). A missing or damaged file loads as empty; a failed save
+warns once.
+
 `logs`, `filter_query`, `case_sensitive` and `highlight_matches` all trigger
 `apply_filter()`. In filter mode `filtered_logs` is the matching subset. In
 highlight mode `filtered_logs` is `logs` and LogList computes per-row match
@@ -157,8 +168,8 @@ number of file lines before it. An unterminated last line counts as consumed
 only if it parsed as JSON. A half-written object can't parse, so follow mode
 re-reads it once the writer finishes it.
 
-Opening another file through the picker resets the query, toggles, columns
-and history first.
+Opening another file through the picker resets the query, toggles and
+columns first. The search history is kept (it's shared by all files).
 
 ## Filtering
 

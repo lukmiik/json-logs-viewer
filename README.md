@@ -32,7 +32,10 @@ An interactive terminal viewer for JSONL log files, built with
 - Follow mode (like `tail -F`) for files that are still being written. If
   the file is truncated or rotated (e.g. by logrotate), it is reloaded.
 - File picker to open another file without restarting.
-- In-memory search history.
+- Search history (`H`), saved across runs and shared by all files in your
+  user data folder (`~/.local/share/json-logs-viewer/history.json` on
+  Linux). `--no-history` turns saving off; "Clear search history" in the
+  command palette forgets it.
 - Can be served in a browser via `textual-serve` (optional `serve` extra).
 
 ## Installation
@@ -59,6 +62,7 @@ jlv app.jsonl            # open a file
 jlv app.jsonl -f         # open and follow new lines
 jlv                      # start with the file picker
 jlv app.jsonl --serve    # serve the app in a browser
+jlv app.jsonl --no-history  # don't read or save the search history
 ```
 
 Each line must be one JSON object. Blank lines and lines that are not valid

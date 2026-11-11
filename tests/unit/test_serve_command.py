@@ -123,14 +123,21 @@ def test_main_child_reads_file_from_environment(
         def run(self) -> None:
             pass
 
+    history = Path("/tmp/history.json")
     monkeypatch.setattr(app_module, "LogViewerApp", FakeApp)
+    monkeypatch.setattr(app_module, "default_history_path", lambda: history)
     monkeypatch.setenv(SERVE_FILE_ENV, "a & b.jsonl")
     monkeypatch.setattr(sys, "argv", ["jlv", "--follow"])
 
     app_module.main()
 
     assert created == [
-        {"file": "a & b.jsonl", "follow": True, "show_picker_on_start": False}
+        {
+            "file": "a & b.jsonl",
+            "follow": True,
+            "show_picker_on_start": False,
+            "history_path": history,
+        }
     ]
     # Consumed, so programs started from the app don't inherit it.
     assert SERVE_FILE_ENV not in os.environ
@@ -161,3 +168,26 @@ def test_serve_without_extra_explains_how_to_install(
 
     message = str(exc_info.value.code)
     assert "json-logs-viewer[serve]" in message
+
+
+def test_no_history_flag(monkeypatch: pytest.MonkeyPatch) -> None:
+    created: list[dict[str, Any]] = []
+
+    class FakeApp:
+        def __init__(self, **kwargs: Any) -> None:  # noqa: ANN401
+            created.append(kwargs)
+
+        def run(self) -> None:
+            pass
+
+    monkeypatch.setattr(app_module, "LogViewerApp", FakeApp)
+    monkeypatch.setattr(sys, "argv", ["jlv", "--no-history", "x.jsonl"])
+
+    app_module.main()
+
+    assert created[0]["history_path"] is None
+
+
+def test_serve_command_passes_no_history_on() -> None:
+    command = build_serve_command(follow=False, no_history=True, posix=True)
+    assert shlex.split(command)[-1] == "--no-history"
