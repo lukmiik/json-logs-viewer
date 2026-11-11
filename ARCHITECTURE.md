@@ -129,12 +129,14 @@ and history first.
 2. `Parser` is recursive descent:
    ```
    expr    := term (OR term)*
-   term    := factor (AND factor)*
+   term    := factor ([AND] factor)*
    factor  := NOT factor | primary
-   primary := "(" expr ")" | FIELD [VALUE|QUOTED] | (VALUE|QUOTED)+
+   primary := "(" expr ")" | FIELD [VALUE|QUOTED] | VALUE | QUOTED
    ```
-   There is no implicit AND. Two terms without an operator raise
-   `FilterError`.
+   `AND` is optional: in `_term`, a token that can start a term (`FIELD`,
+   `VALUE`, `QUOTED`, `NOT`, `(`) right after a term means implicit AND, at
+   the same precedence as `AND`. Each bare word is its own `FullText` term;
+   quotes make a phrase.
 3. AST nodes:
    - `FieldMatch`: substring match on `str(data[field])`.
    - `FieldExists`: `field in data`.

@@ -185,13 +185,20 @@ class TestParser:
         assert isinstance(ast.left.child, Or)
 
     def test_parse_fulltext(self) -> None:
-        """Test parsing full-text search."""
+        """Bare words are separate full-text terms joined by implicit AND."""
         tokens = Tokenizer("error timeout").tokenize()
         parser = Parser(tokens)
         ast = parser.parse()
 
-        assert isinstance(ast, FullText)
-        assert ast.value == "error timeout"
+        assert ast == And(
+            left=FullText(value="error"), right=FullText(value="timeout")
+        )
+
+    def test_parse_quoted_phrase(self) -> None:
+        """Quotes keep words together as one phrase."""
+        tokens = Tokenizer('"error timeout"').tokenize()
+
+        assert Parser(tokens).parse() == FullText(value="error timeout")
 
     def test_parse_error_unexpected_token(self) -> None:
         """Test parser error on unexpected token."""
@@ -475,3 +482,94 @@ class TestParseFilter:
 
         assert matcher_insensitive(log) is True
         assert matcher_sensitive(log) is False
+
+
+class TestImplicitAnd:
+    """Adjacent terms without an operator are joined with AND."""
+
+    @pytest.mark.parametrize(
+        ("query", "expected"),
+        [
+            (
+                "level:error service:api",
+                And(
+                    left=FieldMatch(field="level", value="error"),
+                    right=FieldMatch(field="service", value="api"),
+                ),
+            ),
+            (
+                "error level:warn",
+                And(
+                    left=FullText(value="error"),
+                    right=FieldMatch(field="level", value="warn"),
+                ),
+            ),
+            (
+                "NOT debug level:error",
+                And(
+                    left=Not(child=FullText(value="debug")),
+                    right=FieldMatch(field="level", value="error"),
+                ),
+            ),
+            (
+                "a OR b c",
+                Or(
+                    left=FullText(value="a"),
+                    right=And(
+                        left=FullText(value="b"), right=FullText(value="c")
+                    ),
+                ),
+            ),
+            (
+                "level: (a OR b)",
+                And(
+                    left=FieldExists(field="level"),
+                    right=Group(
+                        child=Or(
+                            left=FullText(value="a"),
+                            right=FullText(value="b"),
+                        )
+                    ),
+                ),
+            ),
+        ],
+    )
+    def test_ast(self, query: str, expected: object) -> None:
+        assert Parser(Tokenizer(query).tokenize()).parse() == expected
+
+    def test_readme_example_parses_and_matches(self) -> None:
+        """The README example that used to raise "Unexpected token: NOT"."""
+        matcher = parse_filter(
+            query="level:error AND (service:api OR service:web) NOT debug",
+            case_sensitive=False,
+        )
+
+        assert matcher(make_log(level="ERROR", service="api")) is True
+        assert (
+            matcher(make_log(level="ERROR", service="web", message="debug"))
+            is False
+        )
+        assert matcher(make_log(level="ERROR", service="db")) is False
+
+    def test_words_match_in_any_order_and_position(self) -> None:
+        matcher = parse_filter(
+            query="refused connection", case_sensitive=False
+        )
+
+        assert matcher(make_log(message="connection was refused")) is True
+        assert matcher(make_log(message="connection ok")) is False
+
+    def test_quoted_phrase_needs_exact_sequence(self) -> None:
+        matcher = parse_filter(
+            query='"connection refused"', case_sensitive=False
+        )
+
+        assert matcher(make_log(message="connection refused")) is True
+        assert matcher(make_log(message="connection was refused")) is False
+
+    @pytest.mark.parametrize(
+        "query", ["level:error AND", "a OR", "NOT", "( a"]
+    )
+    def test_dangling_operators_still_error(self, query: str) -> None:
+        with pytest.raises(FilterError):
+            parse_filter(query=query, case_sensitive=False)

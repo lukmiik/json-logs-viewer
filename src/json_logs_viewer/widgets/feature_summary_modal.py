@@ -60,8 +60,9 @@ class FeatureSummaryModal(ModalScreen[None]):
             "  text         Full-text match\n"
             "  field:val    Field-specific match\n"
             "  field:       Field existence check\n"
-            "  AND/OR/NOT   Boolean operators (required\n"
-            "               between terms)\n"
+            "  a b          Both terms (space means AND)\n"
+            '  "a b"        Exact phrase\n'
+            "  AND/OR/NOT   Boolean operators\n"
             "  ()           Grouping\n"
             "  C            Toggle case sensitivity\n"
             "  m            Toggle filter/highlight mode\n"

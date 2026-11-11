@@ -235,10 +235,30 @@ class Parser:
             node = Or(left=node, right=right)
         return node
 
+    # Tokens that can begin a term. If one follows a term directly, the
+    # two are joined by an implicit AND ("level:error service:api").
+    _TERM_START = frozenset(
+        {
+            TokenType.FIELD,
+            TokenType.VALUE,
+            TokenType.QUOTED,
+            TokenType.NOT,
+            TokenType.LPAREN,
+        }
+    )
+
     def _term(self) -> ASTNode:
+        """Parse terms joined by explicit or implicit AND.
+
+        Implicit AND lives here, at the same precedence as AND, so
+        "a OR b c" means "a OR (b AND c)".
+        """
         node = self._factor()
-        while self._current().type == TokenType.AND:
-            self._advance()
+        while True:
+            if self._current().type == TokenType.AND:
+                self._advance()
+            elif self._current().type not in self._TERM_START:
+                break
             right = self._factor()
             node = And(left=node, right=right)
         return node
@@ -279,12 +299,9 @@ class Parser:
         return FieldExists(field=field)
 
     def _fulltext(self) -> ASTNode:
-        token = self._advance()
-        value = token.value
-        while self._current().type in (TokenType.VALUE, TokenType.QUOTED):
-            next_token = self._advance()
-            value += " " + next_token.value
-        return FullText(value=value)
+        # One word or one quoted phrase. Adjacent words become separate
+        # terms joined by implicit AND in _term; quote them for a phrase.
+        return FullText(value=self._advance().value)
 
 
 def parse_filter(

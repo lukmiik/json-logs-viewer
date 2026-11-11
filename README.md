@@ -60,11 +60,13 @@ Submit an empty query to clear the filter.
 | Query                                          | Matches                                    |
 |------------------------------------------------|--------------------------------------------|
 | `error`                                        | `error` anywhere in the log (full text)    |
-| `connection refused`                           | the phrase `connection refused`            |
+| `connection refused`                           | both words, anywhere in the log            |
+| `"connection refused"`                         | the exact phrase                           |
 | `level:error`                                  | field `level` contains `error`             |
 | `message:"connection refused"`                 | quoted value with spaces                   |
 | `level:`                                       | entries that have a `level` field          |
-| `level:error AND service:api`                  | both conditions                            |
+| `level:error service:api`                      | both conditions (space means AND)          |
+| `level:error AND service:api`                  | the same, with explicit `AND`              |
 | `level:error OR level:warn`                    | either condition                           |
 | `NOT level:debug`                              | negation                                   |
 | `(level:error OR level:warn) AND service:api`  | grouping                                   |
@@ -73,8 +75,8 @@ Rules:
 
 - Matching is substring-based and case-insensitive by default (`C` toggles).
 - Precedence: `NOT` > `AND` > `OR`. Operators are case-insensitive.
-- Terms must be joined with an operator: `level:error service:api` is an
-  error, use `level:error AND service:api`.
+- A space between terms means `AND`, at the same precedence as `AND`:
+  `a OR b c` is `a OR (b AND c)`. Quote words to match them as a phrase.
 - Field names match top-level keys only. `user.id:42` looks for a key literally
   named `user.id`, not for `id` nested inside `user`.
 - An invalid query shows an error toast and leaves the list unfiltered.
