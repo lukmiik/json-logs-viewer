@@ -33,6 +33,49 @@ if TYPE_CHECKING:
 _console = Console()
 
 
+def _fast_wrap(*, text: str, width: int) -> list[str] | None:
+    """Word-wrap simple ASCII text exactly like Rich, or return None.
+
+    Wrap mode wraps every entry to count rows, and Rich's general wrapper
+    costs ~1.7 s per 100k lines. For ASCII text with single spaces this
+    greedy rfind loop produces identical lines (checked against Rich by
+    fuzzing) far faster, and compact JSON (no spaces) is folded into
+    width-sized chunks as Rich does. Anything else (non-ASCII widths, tabs,
+    runs of spaces, leading/trailing spaces, a long word among spaced text)
+    returns None so the caller falls back to Rich.
+    """
+    if (
+        not text.isascii()
+        or "  " in text
+        or text[:1] == " "
+        or text[-1:] == " "
+        or "\t" in text
+        or "\r" in text
+        or "\n" in text
+        or "\x0b" in text
+        or "\x0c" in text
+    ):
+        return None
+    if " " not in text:
+        # Compact JSON: one long "word", which Rich folds into width chunks.
+        return [text[i : i + width] for i in range(0, len(text), width)] or [
+            ""
+        ]
+    lines: list[str] = []
+    pos = 0
+    length = len(text)
+    while length - pos > width:
+        cut = text.rfind(" ", pos, pos + width + 1)
+        if cut <= pos:
+            return None  # a word longer than the width: Rich hard-breaks
+        # Rich keeps the breaking space on the line when it still fits.
+        end = cut + 1 if cut + 1 - pos <= width else cut
+        lines.append(text[pos:end])
+        pos = cut + 1
+    lines.append(text[pos:])
+    return lines
+
+
 def _wrap_text(*, text: str, width: int) -> list[str]:
     """Wrap text to given width using Rich's word-aware wrapping.
 
@@ -46,6 +89,9 @@ def _wrap_text(*, text: str, width: int) -> list[str]:
     if width <= 0:
         return [text]
 
+    fast = _fast_wrap(text=text, width=width)
+    if fast is not None:
+        return fast
     rich_text = Text(text)
     wrapped = rich_text.wrap(_console, width=width)
     return [line.plain for line in wrapped]
@@ -222,13 +268,6 @@ class LogList(ScrollView):
         if width <= 0:
             return
 
-        # Build a temporary dict so we don't evict from LRU
-        all_texts: dict[int, str] = {}
-        for entry_idx, log in enumerate(self._log_entries):
-            text = log.raw_json
-            all_texts[entry_idx] = text
-            self._line_cache[entry_idx] = text
-
         columns = self._app.columns
         column_width = 0
         if columns:
@@ -237,24 +276,26 @@ class LogList(ScrollView):
                 COLUMN_SEPARATOR
             ) * len(columns)
 
-        def build_wrapped_lines(*, content_width: int) -> int:
+        def needs_scrollbar(*, content_width: int) -> bool:
+            # Only "more rows than fit?" matters, so stop counting as soon
+            # as the screen is full instead of wrapping every entry twice.
             total = 0
-            for entry_idx in range(len(self._log_entries)):
-                text = all_texts[entry_idx]
-                wrapped = _wrap_text(text=text, width=content_width)
+            for log in self._log_entries:
+                wrapped = _wrap_text(text=log.raw_json, width=content_width)
                 total += len(wrapped)
-            return total
+                if total > self.size.height:
+                    return True
+            return False
 
         json_content_width = max(1, width - column_width)
-        estimated_lines = build_wrapped_lines(content_width=json_content_width)
-        needs_scrollbar = estimated_lines > self.size.height
-        content_width = width - 1 if needs_scrollbar else width
+        has_scrollbar = needs_scrollbar(content_width=json_content_width)
+        content_width = width - 1 if has_scrollbar else width
         json_content_width = max(1, content_width - column_width)
 
         current_row = 0
         for entry_idx in range(len(self._log_entries)):
             self._entry_start_rows[entry_idx] = current_row
-            text = all_texts[entry_idx]
+            text = self._log_entries[entry_idx].raw_json
             wrapped = _wrap_text(text=text, width=json_content_width)
             for sub_line in range(len(wrapped)):
                 self._wrapped_lines.append((entry_idx, sub_line))

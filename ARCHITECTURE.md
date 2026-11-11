@@ -158,7 +158,11 @@ Only visible rows are rendered, so file size does not affect drawing cost.
   capped at `MAX_COL_WIDTH`) followed by `raw_json`.
 - `virtual_size` width is the longest line, which gives horizontal scrolling.
   In wrap mode each entry is pre-wrapped to the viewport width and
-  `_entry_start_rows` maps entries to screen rows.
+  `_entry_start_rows` maps entries to screen rows. `_wrap_text` matches
+  Rich's word wrap, but uses `_fast_wrap` (an `rfind` loop, or fixed chunks
+  for compact JSON) for plain ASCII lines. That's ~40x faster on 100k lines
+  and fuzz-tested to give identical output; other text falls back to Rich.
+  The scrollbar check stops counting rows once the screen is full.
 - An `LRUCache` (2000 entries) caches each entry's raw line text.
 - The cursor keeps `SCROLLOFF = 3` rows of margin.
 - Clicking moves the cursor. Double-click or `enter` posts
