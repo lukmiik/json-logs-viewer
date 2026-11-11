@@ -196,22 +196,32 @@ class TestEdgeCases:
         with pytest.raises(ValidationError):
             LogEntry(**data)
 
-    def test_non_string_level_value(self) -> None:
-        """Level field expects string; non-string raises ValidationError."""
-        data: dict[str, Any] = {"line_number": 1, "data": {"level": 2}}
+    @pytest.mark.parametrize(
+        ("data", "level", "message"),
+        [
+            ({"level": 30, "message": 5}, "30", "5"),
+            ({"level": 2.5}, "2.5", None),
+            ({"level": True, "message": False}, None, None),
+            ({"level": {"name": "x"}, "message": ["a"]}, None, None),
+        ],
+    )
+    def test_non_string_level_and_message_never_reject_the_entry(
+        self, data: dict[str, Any], level: str | None, message: str | None
+    ) -> None:
+        """Numbers become text; objects, lists and booleans become None."""
+        log_entry = LogEntry(line_number=1, data=data)
 
-        with pytest.raises(ValidationError):
-            LogEntry(**data)
+        assert log_entry.level == level
+        assert log_entry.message == message
+        assert log_entry.data == data
 
-    def test_invalid_datetime_string(self) -> None:
-        """Invalid datetime string should raise ValidationError."""
-        data: dict[str, Any] = {
-            "line_number": 1,
-            "data": {"timestamp": "not-a-datetime"},
-        }
+    @pytest.mark.parametrize(
+        "value", ["not-a-datetime", True, {"a": 1}, [2024, 1, 1]]
+    )
+    def test_unparseable_timestamp_is_none(self, value: object) -> None:
+        log_entry = LogEntry(line_number=1, data={"timestamp": value})
 
-        with pytest.raises(ValidationError):
-            LogEntry(**data)
+        assert log_entry.timestamp is None
 
     def test_original_data_preserved(self) -> None:
         """All original fields in data should be preserved unchanged."""

@@ -4,7 +4,7 @@ from datetime import datetime
 from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, TypeAdapter, ValidationError, model_validator
 
 TIMESTAMP_FIELDS = ["Timestamp", "timestamp", "time", "ts", "Time", "@t"]
 LEVEL_FIELDS = [
@@ -16,6 +16,28 @@ LEVEL_FIELDS = [
     "loglevel",
 ]
 MESSAGE_FIELDS = ["message", "msg", "Message", "body", "event", "@m"]
+
+
+_DATETIME = TypeAdapter(datetime)
+
+
+def _as_datetime(*, value: Any) -> datetime | None:  # noqa: ANN401
+    """Parse `value` like Pydantic would, or None if it isn't a datetime."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return _DATETIME.validate_python(value)
+    except ValidationError:
+        return None
+
+
+def _as_text(*, value: Any) -> str | None:  # noqa: ANN401
+    """Text for a scalar (`30` -> "30"); None for objects, lists, booleans."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return str(value)
+    return None
 
 
 class LogEntry(BaseModel):
@@ -39,14 +61,22 @@ class LogEntry(BaseModel):
         if not isinstance(log_data, dict):
             return data
 
+        # These fields are conveniences detected from any logger's format, so
+        # a value of an unexpected type becomes None (or text) instead of
+        # rejecting the whole entry: one `"level": 30` line used to make
+        # the entire file fail to load.
         return {
             **data,
-            "timestamp": cls._find_first(
-                data=log_data, candidates=TIMESTAMP_FIELDS
+            "timestamp": _as_datetime(
+                value=cls._find_first(
+                    data=log_data, candidates=TIMESTAMP_FIELDS
+                )
             ),
-            "level": cls._find_first(data=log_data, candidates=LEVEL_FIELDS),
-            "message": cls._find_first(
-                data=log_data, candidates=MESSAGE_FIELDS
+            "level": _as_text(
+                value=cls._find_first(data=log_data, candidates=LEVEL_FIELDS)
+            ),
+            "message": _as_text(
+                value=cls._find_first(data=log_data, candidates=MESSAGE_FIELDS)
             ),
         }
 
@@ -91,3 +121,19 @@ def appended_entries(
     if not all(map(operator.is_, old, new)):
         return None
     return new[len(old) :]
+
+
+def parse_log_line(*, line: str, line_number: int) -> LogEntry | None:
+    """Parse one JSONL line, or None if it isn't a JSON object.
+
+    Invalid JSON and valid JSON that isn't an object (`[1, 2]`, `"text"`)
+    are both skipped by the callers, so one odd line never stops a file
+    from loading.
+    """
+    try:
+        data = json.loads(line)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict):
+        return None
+    return LogEntry(line_number=line_number, data=data, raw_json=line)

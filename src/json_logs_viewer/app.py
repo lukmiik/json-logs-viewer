@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import shlex
 import subprocess
@@ -31,7 +30,11 @@ from json_logs_viewer.modals.detail_modal import DetailModal
 from json_logs_viewer.modals.file_picker_modal import FilePickerModal
 from json_logs_viewer.modals.help_modal import HelpModal
 from json_logs_viewer.modals.history_modal import HistoryModal
-from json_logs_viewer.models import LogEntry, appended_entries
+from json_logs_viewer.models import (
+    LogEntry,
+    appended_entries,
+    parse_log_line,
+)
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
@@ -295,15 +298,11 @@ class LogViewerApp(App):
             for line_num, line_text in read_lines_backward(
                 filepath=path, size=size
             ):
-                try:
-                    data = json.loads(line_text)
-                    log = LogEntry(
-                        line_number=line_num, data=data, raw_json=line_text
-                    )
-                    logs.append(log)
-                except json.JSONDecodeError as e:
-                    self.log.warning(f"Line {line_num}: invalid JSON: {e}")
+                log = parse_log_line(line=line_text, line_number=line_num)
+                if log is None:
+                    self.log.warning(f"Line {line_num}: not a JSON object")
                     continue
+                logs.append(log)
             logs.reverse()
             offset, line_count = find_line_boundary(filepath=path, size=size)
         except Exception as e:
@@ -554,16 +553,11 @@ class LogViewerApp(App):
             line = raw_line.decode("utf-8", errors="replace").strip()
             if not line:
                 continue
-            try:
-                data = json.loads(line)
-                log = LogEntry(
-                    line_number=self._last_line_number,
-                    data=data,
-                    raw_json=line,
-                )
-                new_logs.append(log)
-            except json.JSONDecodeError:
-                self.log.warning(f"Follow: invalid JSON: {line[:80]}")
+            log = parse_log_line(line=line, line_number=self._last_line_number)
+            if log is None:
+                self.log.warning(f"Follow: not a JSON object: {line[:80]}")
+                continue
+            new_logs.append(log)
 
         if new_logs:
             was_on_last = self.selected_index == len(self.filtered_logs) - 1
