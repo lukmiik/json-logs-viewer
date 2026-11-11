@@ -17,7 +17,8 @@ Run lint, format, types and tests before calling a change done. CI runs
   called with keywords. Textual overrides/handlers (`compose`, `on_*`,
   `watch_*`, `action_*`) and the `filter_engine` classes are exempt.
 - Type every function and non-obvious variable. Docstrings only where the code
-  isn't self-explanatory.
+  isn't self-explanatory; when present they use Google style (ruff `D`,
+  `Args:`/`Returns:` sections optional).
 - Line length is 79.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:` ...).

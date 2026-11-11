@@ -52,11 +52,23 @@ select = [
     "I",
     # flake8-annotations (Enforces type hinting)
     "ANN",
+    # pydocstyle: docstrings that exist must follow Google style
+    "D",
+]
+ignore = [
+    # Docstrings are optional: only write one when the code needs it
+    "D1",
+    # Google sections (Args:, Returns:, ...) are optional, so don't demand
+    # every parameter be documented
+    "D417",
 ]
 # Add the `line-too-long` rule to the enforced rule set. By default, Ruff omits rules that
 # overlap with the use of a formatter, like Black, but we can override this behavior by
 # explicitly adding the rule.
 extend-select = ["E501"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [project.scripts]
 json-logs-viewer = "json_logs_viewer:main"
