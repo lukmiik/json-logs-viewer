@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, cast
 
@@ -25,6 +26,7 @@ from json_logs_viewer.constants import (
     COPY_CONTEXT_SIZE,
     MAX_COL_WIDTH,
 )
+from json_logs_viewer.field_paths import resolve_field
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.models import (
     LogEntry,
@@ -100,6 +102,28 @@ def _wrap_text(*, text: str, width: int) -> list[str]:
     rich_text = Text(text)
     wrapped = rich_text.wrap(_console, width=width)
     return [line.plain for line in wrapped]
+
+
+_MISSING = object()
+
+
+def column_text(*, data: dict[str, Any], column: str) -> str:
+    """Text shown in a column: a (dotted) field's value, or "" if absent.
+
+    Strings are shown as they are; anything else as JSON (null, true,
+    [1, 2]), matching the line next to it rather than Python's repr.
+    """
+    if column in data:
+        value = data[column]
+    elif "." in column:
+        value = next(resolve_field(value=data, path=column), _MISSING)
+    else:
+        value = _MISSING
+    if value is _MISSING:
+        return ""
+    if isinstance(value, str):
+        return value
+    return json.dumps(value, ensure_ascii=False)
 
 
 class LogList(ScrollView):
@@ -256,7 +280,7 @@ class LogList(ScrollView):
             if not unsettled:
                 break
             for col in list(unsettled):
-                value = str(log.data.get(col, ""))
+                value = column_text(data=log.data, column=col)
                 widths[col] = max(widths[col], min(len(value), MAX_COL_WIDTH))
                 if widths[col] >= MAX_COL_WIDTH:
                     unsettled.discard(col)
@@ -497,7 +521,9 @@ class LogList(ScrollView):
                 self._column_widths = self._calculate_column_widths()
             column_parts = []
             for col in columns:
-                value = str(self._log_entries[line_index].data.get(col, ""))
+                value = column_text(
+                    data=self._log_entries[line_index].data, column=col
+                )
                 width = self._column_widths.get(col, len(col))
                 truncated = value[:width]
                 column_parts.append(truncated.ljust(width))
@@ -549,7 +575,9 @@ class LogList(ScrollView):
             if sub_line == 0:
                 column_parts = []
                 for col in columns:
-                    value = str(self._log_entries[entry_idx].data.get(col, ""))
+                    value = column_text(
+                        data=self._log_entries[entry_idx].data, column=col
+                    )
                     col_w = self._column_widths.get(col, len(col))
                     truncated = value[:col_w]
                     column_parts.append(truncated.ljust(col_w))

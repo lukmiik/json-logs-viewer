@@ -12,7 +12,7 @@ src/json_logs_viewer/
 ├── app.py                 LogViewerApp: state, file loading, filtering,
 │                          follow mode, command palette, CLI (main)
 ├── models.py              LogEntry (pydantic), parse_log_line, level_category
-├── field_paths.py         resolve_field: dotted paths into nested JSON
+├── field_paths.py         resolve_field, leaf_paths: dotted paths in JSON
 ├── filter_engine.py       query tokenizer, parser, AST matchers
 ├── log_reader.py          mmap-based backward line reader
 ├── log_watcher.py         follow-mode watcher threads
@@ -29,7 +29,7 @@ src/json_logs_viewer/
 └── modals/
     ├── detail_modal.py    DetailModal: pretty, highlighted JSON of one entry
     ├── history_modal.py   HistoryModal: OptionList of past queries
-    ├── columns_modal.py   ColumnsModal: SelectionList of fields
+    ├── columns_modal.py   ColumnsModal: SelectionList of field paths
     ├── file_picker_modal.py   FilePickerModal: DirectoryTree
     └── help_modal.py      HelpModal: key reference (`?`)
 ```
@@ -179,7 +179,13 @@ elements. A node matches if any yielded value does.
 Only visible rows are rendered, so file size does not affect drawing cost.
 
 - Each row is the optional column prefix (`value.ljust(width) | ...`, widths
-  capped at `MAX_COL_WIDTH`) followed by `raw_json`.
+  capped at `MAX_COL_WIDTH`) followed by `raw_json`. `column_text` reads a
+  column, dotted paths through `resolve_field`, and shows non-strings as
+  JSON (`null`, `true`).
+- The columns modal offers `discover_fields()`: the 20 most common
+  `leaf_paths` (dotted paths to values; objects are descended, lists are
+  values). Counting walks every object, so it runs lazily when the modal
+  asks, and `_counted_logs` lets follow-mode appends count only new logs.
 - `_style_for_entry` colours a whole row by its level, using the component
   classes `loglist--level-error/warning/debug` (theme colours `$text-error`,
   `$text-warning`, `$text-muted`), then applies highlight mode's bold/dim.
@@ -212,8 +218,9 @@ re-reads anything not yet processed.
 
 Appends are incremental. `models.appended_entries` detects that a new list is
 the old one plus a tail, comparing by identity so a reload with equal content
-still counts as new. Then `watch_logs` counts fields and filters only the
-tail with the cached `_active_matcher`, and `LogList.set_logs` extends the
+still counts as new. Then `watch_logs` keeps the field counts (anything
+else resets them) and filters only the tail with the cached
+`_active_matcher`, and `LogList.set_logs` extends the
 highlight flags and wrapped rows. Wrap does a full pass instead when the
 new entries could change the wrap width: no scrollbar yet, or columns
 shown. A follow batch costs ~2 ms at 100k lines instead of re-filtering

@@ -11,6 +11,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable
 from contextlib import ExitStack
 from functools import partial
+from itertools import islice
 from pathlib import Path
 from typing import IO, Any
 
@@ -19,6 +20,7 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.screen import Screen
 
+from json_logs_viewer.field_paths import leaf_paths
 from json_logs_viewer.filter_engine import FilterError, parse_filter
 from json_logs_viewer.log_reader import (
     find_line_boundary,
@@ -122,7 +124,10 @@ class LogViewerApp(App):
         self._initial_follow = follow
         self._show_picker_on_start = show_picker_on_start
         self._last_selected_log_entry: LogEntry | None = None
+        # Field path counts for the columns modal, filled lazily by
+        # discover_fields: logs[:_counted_logs] are already counted.
         self._field_counts: Counter[str] = Counter()
+        self._counted_logs: int = 0
         # The matcher behind filtered_logs; None means every log is shown
         # (no query, highlight mode, or an invalid query).
         self._active_matcher: Callable[[LogEntry], bool] | None = None
@@ -159,7 +164,10 @@ class LogViewerApp(App):
         self, old_logs: list[LogEntry], logs: list[LogEntry]
     ) -> None:
         appended = appended_entries(old=old_logs, new=logs)
-        self._update_field_counts(logs=logs, appended=appended)
+        if appended is None:
+            # Not an append: the old counts belong to other logs.
+            self._field_counts = Counter()
+            self._counted_logs = 0
         if appended is None:
             self.apply_filter()
         else:
@@ -239,18 +247,17 @@ class LogViewerApp(App):
         if selected_log_entry is not None:
             self._last_selected_log_entry = selected_log_entry
 
-    def _update_field_counts(
-        self, *, logs: list[LogEntry], appended: list[LogEntry] | None
-    ) -> None:
-        """Count field names: only the appended logs, or all of them."""
-        if appended is None:
-            self._field_counts = Counter()
-            appended = logs
-        for log in appended:
-            self._field_counts.update(log.data.keys())
-
     def discover_fields(self) -> list[str]:
-        """Return top 20 fields by frequency."""
+        """Return the 20 most common field paths, nested ones dotted.
+
+        Counting walks every object in every log (~0.3 s for 100k nested
+        logs), and only the columns modal needs it, so it happens here on
+        demand instead of on every load. Logs counted before stay counted:
+        a follow-mode append only counts the new ones.
+        """
+        for log in islice(self.logs, self._counted_logs, None):
+            self._field_counts.update(leaf_paths(value=log.data))
+        self._counted_logs = len(self.logs)
         return [f for f, _ in self._field_counts.most_common(20)]
 
     def _restore_selected_log_entry(

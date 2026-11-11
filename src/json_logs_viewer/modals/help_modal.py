@@ -88,7 +88,7 @@ class HelpModal(ModalScreen[None]):
             "  H            Open search history modal\n"
             "               Select a past query to reapply it\n"
             "  c            Open column configuration modal\n"
-            "               Select fields to show as columns"
+            "               Select fields (a.b for nested) as columns"
         )
         yield TextArea(text, id="feature-summary-content", read_only=True)
 

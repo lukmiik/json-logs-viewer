@@ -1,11 +1,13 @@
 """Unit tests for column customization feature."""
 
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.models import LogEntry
+from json_logs_viewer.widgets.log_list import LogList
 
 
 @pytest.mark.asyncio
@@ -72,7 +74,7 @@ async def test_discover_fields_empty_logs() -> None:
 
 @pytest.mark.asyncio
 async def test_discover_fields_with_nested_values() -> None:
-    """Test that discover_fields only returns top-level keys."""
+    """Nested values are offered by their full dotted path."""
     app = LogViewerApp()
     async with app.run_test():
         logs = [
@@ -92,7 +94,8 @@ async def test_discover_fields_with_nested_values() -> None:
 
         assert "level" in fields
         assert "timestamp" in fields
-        assert "metadata" in fields
+        assert "metadata.nested" in fields
+        assert "metadata" not in fields
         assert "nested" not in fields
 
 
@@ -127,9 +130,11 @@ async def test_appending_logs_counts_only_new_entries() -> None:
             LogEntry(line_number=1, data={"a": 1}),
             LogEntry(line_number=2, data={"a": 1, "b": 2}),
         ]
+        app.discover_fields()
         counter = app._field_counts
 
         app.logs = [*app.logs, LogEntry(line_number=3, data={"b": 1, "c": 2})]
+        app.discover_fields()
 
         assert app._field_counts is counter
         assert app._field_counts == Counter({"a": 2, "b": 2, "c": 1})
@@ -141,10 +146,66 @@ async def test_replacing_logs_recounts_from_scratch() -> None:
     app = LogViewerApp()
     async with app.run_test():
         app.logs = [LogEntry(line_number=1, data={"old": 1})]
+        app.discover_fields()
 
         app.logs = [
             LogEntry(line_number=1, data={"new": 1}),
             LogEntry(line_number=2, data={"new": 2}),
         ]
 
+        assert app.discover_fields() == ["new"]
         assert app._field_counts == Counter({"new": 2})
+
+
+@pytest.mark.asyncio
+async def test_loading_logs_does_not_count_fields() -> None:
+    """Counting waits until the columns modal asks for fields."""
+    app = LogViewerApp()
+    async with app.run_test():
+        app.logs = [LogEntry(line_number=1, data={"a": {"b": 1}})]
+
+        assert app._field_counts == Counter()
+        assert app.discover_fields() == ["a.b"]
+
+
+@pytest.mark.asyncio
+async def test_discover_fields_offers_nested_paths() -> None:
+    """Nested objects are offered as dotted paths to their values."""
+    app = LogViewerApp()
+    async with app.run_test():
+        app.logs = [
+            LogEntry(
+                line_number=i,
+                data={
+                    "message": "m",
+                    "attributes": {"level": "error", "http": {"status": 502}},
+                },
+            )
+            for i in range(3)
+        ]
+
+        fields = app.discover_fields()
+
+        assert "attributes.level" in fields
+        assert "attributes.http.status" in fields
+        assert "attributes" not in fields
+
+
+@pytest.mark.asyncio
+async def test_nested_column_is_rendered(tmp_path: Path) -> None:
+    log_file = tmp_path / "app.jsonl"
+    log_file.write_text(
+        '{"msg": "a", "http": {"status": 504}}\n{"msg": "b"}\n'
+    )
+    app = LogViewerApp(file=str(log_file))
+    async with app.run_test(size=(100, 10)) as pilot:
+        await pilot.pause()
+        app.columns = ["http.status"]
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+
+        def row(y: int) -> str:
+            return "".join(s.text for s in log_list.render_line(y)._segments)
+
+        assert row(0).startswith("504         | ")
+        assert row(1).startswith("            | ")

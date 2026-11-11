@@ -56,10 +56,15 @@ def test_wrap_mode(snap_compare: SnapCompare, app: LogViewerApp) -> None:
 
 def test_columns(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     async def show_columns(pilot: Pilot) -> None:
-        app.columns = ["level", "service"]
+        app.columns = ["level", "service", "http.status_code"]
         await pilot.pause()
 
     assert snap_compare(app, run_before=show_columns, terminal_size=SIZE)
+
+
+def test_columns_modal(snap_compare: SnapCompare, app: LogViewerApp) -> None:
+    """Nested fields are offered by their dotted path."""
+    assert snap_compare(app, press=["c"], terminal_size=SIZE)
 
 
 def test_detail_view(snap_compare: SnapCompare, app: LogViewerApp) -> None:

@@ -638,13 +638,16 @@ async def test_appends_update_state_like_a_full_recompute(
             filtered = list(app.filtered_logs)
             flags = list(log_list._match_flags)
             wrapped = list(log_list._wrapped_lines)
+            app.discover_fields()  # counts only the new logs
             counts = dict(app._field_counts)
 
             app.apply_filter()
             log_list._recompute_match_flags()
             if log_list._wrap_mode:
                 log_list._recalculate_wrap()
-            app._update_field_counts(logs=app.logs, appended=None)
+            app._field_counts.clear()
+            app._counted_logs = 0
+            app.discover_fields()
 
             assert filtered == app.filtered_logs
             assert flags == log_list._match_flags
