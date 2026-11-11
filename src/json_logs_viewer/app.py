@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shlex
+import subprocess
+import sys
 import threading
 from collections import Counter
 from collections.abc import Iterable
@@ -612,9 +616,39 @@ class LogViewerApp(App):
         self.push_screen(modal)
 
 
+# The served child gets its file through this variable, never through the
+# command string (see build_serve_command).
+SERVE_FILE_ENV = "JLV_SERVE_FILE"
+
+
+def build_serve_command(
+    *,
+    follow: bool,
+    posix: bool = os.name == "posix",
+    executable: str = sys.executable,
+) -> str:
+    """Build the command textual-serve runs for each browser session.
+
+    textual-serve only takes a command string and runs it through a shell
+    (`/bin/sh -c` on POSIX, `cmd.exe /c` on Windows). Rather than escape the
+    filename for two very different shells, it isn't in the command at all:
+    main() passes it in the SERVE_FILE_ENV environment variable, which the
+    child inherits. The command holds only fixed arguments plus our own
+    interpreter path, quoted for the platform's shell. `-m` runs the same
+    interpreter and venv as this process.
+    """
+    argv = [executable, "-m", "json_logs_viewer"]
+    if follow:
+        argv.append("--follow")
+    return shlex.join(argv) if posix else subprocess.list2cmdline(argv)
+
+
 def main() -> None:
     """Entry point."""
-    parser = argparse.ArgumentParser(description="JSON Logs Viewer")
+    # prog: under `python -m` argparse would otherwise print "__main__.py".
+    parser = argparse.ArgumentParser(
+        prog="jlv", description="JSON Logs Viewer"
+    )
     parser.add_argument("file", nargs="?", help="JSONL file to view")
     parser.add_argument(
         "-f", "--follow", action="store_true", help="Follow mode"
@@ -627,18 +661,21 @@ def main() -> None:
     if args.serve:
         from textual_serve.server import Server
 
-        cmd = "json-logs-viewer"
         if args.file:
-            cmd += f" {args.file}"
-        if args.follow:
-            cmd += " --follow"
-        Server(cmd).serve()
+            os.environ[SERVE_FILE_ENV] = args.file
+        Server(
+            build_serve_command(follow=args.follow),
+            # Shown on the served page; it defaults to the command string.
+            title=f"jlv {Path(args.file).name}" if args.file else "jlv",
+        ).serve()
         return
 
+    # Pop, so programs started from the app don't inherit it.
+    file = args.file or os.environ.pop(SERVE_FILE_ENV, None)
     app = LogViewerApp(
-        file=args.file,
+        file=file,
         follow=args.follow,
-        show_picker_on_start=args.file is None,
+        show_picker_on_start=file is None,
     )
     app.run()
 

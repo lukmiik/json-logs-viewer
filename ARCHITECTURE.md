@@ -209,6 +209,14 @@ Toggle follow mode.
 ## CLI
 
 `main()` (also exposed as `jlv` and `json-logs-viewer`) uses argparse:
-`file` (optional), `-f/--follow`, `--serve`. `--serve` builds a command
-string and hands it to `textual_serve.server.Server`. Without a file the app
-starts with the file picker.
+`file` (optional), `-f/--follow`, `--serve`. Without a file the app starts
+with the file picker.
+
+`--serve` hands `textual_serve.server.Server` a command string, which it runs
+through a shell (`/bin/sh -c`, or `cmd.exe /c` on Windows) for every browser
+session. The filename is never put in that string. `main()` stores it in the
+`JLV_SERVE_FILE` environment variable, which the child inherits and pops on
+start. `build_serve_command` only contains fixed arguments
+(`sys.executable -m json_logs_viewer [--follow]`), quoted with `shlex.join`
+on POSIX or `subprocess.list2cmdline` on Windows. So no filename can be
+parsed as shell syntax on either platform.
