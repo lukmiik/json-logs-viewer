@@ -40,3 +40,12 @@ ToastRack {
     margin-top: 1;
     margin-bottom: 0;
 }
+
+/* Textual's command palette is full width by default; on a wide terminal
+   that stretches every entry across the screen. Centre it at a readable
+   width instead (the palette already centres its contents). */
+CommandPalette > Vertical {
+    width: 75%;
+    min-width: 60;
+    max-width: 100;
+}

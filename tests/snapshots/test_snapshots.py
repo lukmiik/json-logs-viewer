@@ -77,6 +77,14 @@ def test_clear_confirm(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     assert snap_compare(app, press=["x"], terminal_size=SIZE)
 
 
+def test_command_palette(snap_compare: SnapCompare, app: LogViewerApp) -> None:
+    async def open_palette(pilot: Pilot) -> None:
+        await pilot.press("ctrl+p")
+        await pilot.pause(0.5)  # the palette shows itself once ready
+
+    assert snap_compare(app, run_before=open_palette, terminal_size=SIZE)
+
+
 def test_detail_view(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     # The cursor starts on the last line: go to the top, then to the entry
     # with a nested object.

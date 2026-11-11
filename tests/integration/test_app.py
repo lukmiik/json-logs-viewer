@@ -100,3 +100,25 @@ async def test_log_list_has_focus_on_start(sample_jsonl_file: Path) -> None:
     async with app.run_test() as pilot:
         await pilot.pause()
         assert app.focused is app.query_one("#logs", LogList)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("width", "expected"), [(160, 100), (100, 75), (70, 60)]
+)
+async def test_command_palette_is_centred_not_full_width(
+    sample_jsonl_file: Path, width: int, expected: int
+) -> None:
+    """75% of the screen, kept between 60 and 100 columns, centred."""
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test(size=(width, 30)) as pilot:
+        await pilot.pause()
+        await pilot.press("ctrl+p")
+        # The palette shows its container only once it's ready.
+        await pilot.pause(0.5)
+
+        # The container itself is visibility: hidden (only its contents are
+        # drawn, so it has no region); the input row spans its width.
+        box = app.screen.query_one("#--input").region
+        assert box.width == expected
+        assert box.x == (width - expected) // 2
