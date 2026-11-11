@@ -113,3 +113,27 @@ async def test_cursor_keeps_its_margin_when_the_header_appears(
 
         assert app.columns
         assert bottom_margin() >= LogList.SCROLLOFF
+
+
+@pytest.mark.asyncio
+async def test_applying_columns_scrolls_back_to_show_them(
+    log_file: Path,
+) -> None:
+    """After scrolling right, applying columns returns to the left edge.
+
+    Columns are drawn at the start of each line, so they'd be off-screen.
+    """
+    app = LogViewerApp(file=str(log_file))
+    async with app.run_test(size=(80, 12)) as pilot:
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+        await pilot.press(*"l" * 15)
+        await pilot.pause()
+        assert log_list.scroll_offset.x > 0
+
+        await pilot.press("c", "space", "enter")
+        await pilot.pause()
+
+        assert app.columns
+        assert log_list.scroll_offset.x == 0
+        assert _text(app.query_one(ColumnHeader)).startswith(app.columns[0])

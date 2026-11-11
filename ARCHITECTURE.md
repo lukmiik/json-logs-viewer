@@ -197,6 +197,8 @@ Only visible rows are rendered, so file size does not affect drawing cost.
   inside it, so scrolling and click maths are unchanged). It shows
   `LogList.header_text()`, built with the rows' widths and separator,
   cropped to the list's `scroll_x`, and hides when no columns are set.
+- Changing the columns scrolls the list back to the left edge, where the
+  columns are drawn.
 - `on_resize` scrolls the cursor back into view (with its `SCROLLOFF`
   margin), since a shorter list (header shown, terminal resized) can
   otherwise hide it.

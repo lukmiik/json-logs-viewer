@@ -308,6 +308,9 @@ class LogList(ScrollView):
         if self._wrap_mode:
             self._recalculate_wrap()
         self._update_virtual_size()
+        # Columns are drawn at the start of each line: if the view was
+        # scrolled right, the new columns would be off-screen to the left.
+        self.scroll_to(x=0, animate=False)
         self._scroll_cursor_into_view()
         self.refresh()
 
