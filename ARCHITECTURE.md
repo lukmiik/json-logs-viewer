@@ -30,6 +30,7 @@ src/json_logs_viewer/
 ├── widgets/
 │   ├── log_list.py        LogList: virtual ScrollView, the main list
 │   ├── column_header.py   ColumnHeader: column names above the list
+│   ├── new_lines_badge.py NewLinesBadge: "↓ N new lines" while following
 │   ├── search_bar.py      SearchBar: Input bound to filter_query
 │   └── status_bar.py      StatusBar: file/count labels, toggle buttons,
 │                          Footer
@@ -323,7 +324,11 @@ cut between reads stays intact), keeps the trailing partial line in the
 source's `buffer`, counts every line (blank and invalid ones too) for
 `line_number`, and appends the parsed entries to `logs` as they arrive (new
 lines from several files are not re-sorted). If the cursor was on the last
-entry, it follows the new tail. The source's `offset` only advances past
+entry, it follows the new tail; otherwise the newly shown lines are added
+to `pending_lines`, which `NewLinesBadge` ("↓ N new lines", on its own
+`badge` layer at the pane's bottom-right) displays. Reaching the last line
+(`watch_selected_index`), a click on the badge (`action_jump_to_end`) or a
+full re-filter resets it. The source's `offset` only advances past
 consumed lines, so resuming re-reads anything not yet processed.
 
 Appends are incremental. `models.appended_entries` detects that a new list is

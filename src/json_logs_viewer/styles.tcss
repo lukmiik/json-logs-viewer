@@ -8,7 +8,25 @@ Screen {
    listed too: a layer missing from this list sorts to the bottom, which
    would put toasts and tooltips under the search bar. */
 MainScreen {
-    layers: default search _loading _toastrack _tooltips;
+    layers: default search badge _loading _toastrack _tooltips;
+}
+
+/* The "↓ N new lines" badge floats at the bottom-right of the list on its
+   own layer (the pane's align places it; the list doesn't move). The
+   margin keeps the list's scrollbars visible. */
+#logs-pane {
+    align: right bottom;
+}
+
+#new-lines {
+    layer: badge;
+    width: auto;
+    height: 1;
+    margin: 0 1 1 0;
+    padding: 0 1;
+    background: $primary;
+    color: $text;
+    text-style: bold;
 }
 
 #search {

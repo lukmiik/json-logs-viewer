@@ -92,6 +92,8 @@ class HelpModal(ModalScreen[None]):
             "               Several files merge by timestamp; @file\n"
             "               column shows each line's file\n"
             "  f            Toggle follow mode (tail -f)\n"
+            "               Reading above the end: '↓ N new lines'\n"
+            "               badge; G or a click jumps to the end\n"
             "  w            Toggle soft-wrap for long lines\n\n"
             "History & Columns\n"
             "  H            Open search history modal\n"

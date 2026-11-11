@@ -67,6 +67,7 @@ from json_logs_viewer.stdin_pipe import (
 )
 from json_logs_viewer.widgets.column_header import ColumnHeader
 from json_logs_viewer.widgets.log_list import LogList
+from json_logs_viewer.widgets.new_lines_badge import NewLinesBadge
 from json_logs_viewer.widgets.search_bar import SearchBar
 from json_logs_viewer.widgets.status_bar import StatusBar
 
@@ -158,6 +159,8 @@ class LogViewerApp(App):
     logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
     filtered_logs: reactive[list[LogEntry]] = reactive(list)  # type: ignore[assignment]
     filter_query: reactive[str] = reactive("")
+    # Follow mode: lines that arrived below a cursor not on the last line.
+    pending_lines: reactive[int] = reactive(0)
     selected_index: reactive[int] = reactive(0)
     search_history: reactive[list[str]] = reactive(list)  # type: ignore[assignment]
     # The first open file (None if none); filepaths lists all of them.
@@ -216,6 +219,7 @@ class LogViewerApp(App):
         with Vertical(id="logs-pane"):
             yield ColumnHeader(id="column-header")
             yield LogList(id="logs")
+            yield NewLinesBadge(id="new-lines")
         yield SearchBar(id="search", select_on_focus=False)
         yield StatusBar(id="status")
 
@@ -274,6 +278,8 @@ class LogViewerApp(App):
 
     def apply_filter(self) -> None:
         """Apply current filter based on mode."""
+        # A new filter or new logs: counted lines no longer mean anything.
+        self.pending_lines = 0
         selected_log_entry = (
             self._get_selected_log_entry() or self._last_selected_log_entry
         )
@@ -343,6 +349,17 @@ class LogViewerApp(App):
         selected_log_entry = self._get_selected_log_entry()
         if selected_log_entry is not None:
             self._last_selected_log_entry = selected_log_entry
+        if self.selected_index >= len(self.filtered_logs) - 1:
+            self.pending_lines = 0  # at the end: nothing unseen below
+
+    def watch_pending_lines(self, pending_lines: int) -> None:
+        self.query_one(NewLinesBadge).count = pending_lines
+
+    def action_jump_to_end(self) -> None:
+        """Go to the last line (the new-lines badge's click)."""
+        log_list = self.query_one("#logs", LogList)
+        log_list.focus()
+        log_list.action_scroll_bottom()
 
     def _count_fields(self) -> None:
         """Count field paths of the logs not counted yet (see discover)."""
@@ -902,9 +919,15 @@ class LogViewerApp(App):
                 not self.filtered_logs
                 or self.selected_index == len(self.filtered_logs) - 1
             )
+            shown_before = len(self.filtered_logs)
             self.logs = [*self.logs, *new_logs]
             if self.follow_mode and was_on_last:
                 self.selected_index = len(self.filtered_logs) - 1
+            else:
+                # Reading older lines: don't move, but count what the
+                # filter shows below (the "↓ N new lines" badge).
+                arrived = len(self.filtered_logs) - shown_before
+                self.pending_lines += max(0, arrived)
 
     def on_unmount(self) -> None:
         self._stop_follow()

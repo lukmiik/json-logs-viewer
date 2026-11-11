@@ -40,7 +40,10 @@ An interactive terminal viewer for JSONL log files, built with
 - Piped input (`... | jlv`, or `-` among the files): read and followed like a
   file, shown as `stdin`. POSIX terminals only (not Windows yet).
 - Follow mode (like `tail -F`) for files that are still being written. If
-  the file is truncated or rotated (e.g. by logrotate), it is reloaded.
+  the file is truncated or rotated (e.g. by logrotate), it is reloaded. The
+  cursor follows new lines while it's on the last one; if you've moved up to
+  read, a "↓ N new lines" badge counts them instead (`G` or a click jumps to
+  the end).
 - File picker to open another file without restarting.
 - Search history (`H`), saved across runs and shared by all files in your
   user data folder (`~/.local/share/json-logs-viewer/history.json` on

@@ -99,6 +99,19 @@ def test_two_files_merged(
     assert snap_compare(app, run_before=show_file_column, terminal_size=SIZE)
 
 
+def test_new_lines_badge(snap_compare: SnapCompare, app: LogViewerApp) -> None:
+    """Lines arriving below the cursor show the badge; nothing moves."""
+
+    async def read_older_lines_then_append(pilot: Pilot) -> None:
+        await pilot.press("k", "k", "k")
+        app._process_chunk(b'{"level": "INFO", "message": "new"}\n' * 3)
+        await pilot.pause()
+
+    assert snap_compare(
+        app, run_before=read_older_lines_then_append, terminal_size=SIZE
+    )
+
+
 def test_detail_view(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     # The cursor starts on the last line: go to the top, then to the entry
     # with a nested object.
