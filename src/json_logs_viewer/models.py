@@ -46,17 +46,20 @@ DETECTED_COLUMNS = {
 
 
 def find_first(*, data: dict[str, Any], candidates: list[str]) -> Any | None:  # noqa: ANN401
-    """The value of the first candidate field present in `data`, or None.
+    """The first non-null value of the candidate fields, or None.
 
-    Dotted candidates (attributes.level) reach into nested objects.
+    Dotted candidates (attributes.level) reach into nested objects. A null
+    value is skipped, not taken: {"timestamp": null, "time": "..."} has a
+    timestamp.
     """
     for candidate in candidates:
-        if candidate in data:
-            return data[candidate]
+        value = data.get(candidate)
+        if value is not None:
+            return value
         if "." in candidate:
-            found = next(resolve_field(value=data, path=candidate), None)
-            if found is not None:
-                return found
+            for found in resolve_field(value=data, path=candidate):
+                if found is not None:
+                    return found
     return None
 
 

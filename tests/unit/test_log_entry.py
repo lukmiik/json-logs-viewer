@@ -406,3 +406,31 @@ class TestAppendedEntries:
 )
 def test_level_category(level: str | None, category: str | None) -> None:
     assert level_category(level=level) == category
+
+
+class TestDetectionSkipsNulls:
+    """A null candidate doesn't stop detection; the next one is used."""
+
+    def test_falls_back_past_null_fields(self) -> None:
+        log = LogEntry(
+            line_number=1,
+            data={
+                "timestamp": None,
+                "time": "2024-01-01T00:00:00Z",
+                "message": None,
+                "msg": "hi",
+                "level": None,
+                "severity": "warn",
+            },
+        )
+        assert log.timestamp is not None
+        assert log.message == "hi"
+        assert log.level == "warn"
+
+    def test_dotted_candidate_skips_null_readings(self) -> None:
+        data = {"log": [{"level": None}, {"level": "warn"}]}
+        assert LogEntry(line_number=1, data=data).level == "warn"
+
+    def test_all_null_is_still_none(self) -> None:
+        log = LogEntry(line_number=1, data={"level": None, "severity": None})
+        assert log.level is None
