@@ -6,10 +6,13 @@ import asyncio
 import json
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any, BinaryIO
 
 import pytest
 
+from json_logs_viewer import app as app_module
 from json_logs_viewer.app import LogViewerApp
+from json_logs_viewer.log_watcher import PollWatcher
 from json_logs_viewer.widgets.log_list import LogList
 from json_logs_viewer.widgets.status_bar import StatusInfo
 
@@ -421,3 +424,60 @@ async def test_process_chunk_utf8_char_split_across_chunks(
         await pilot.pause()
 
         assert app.logs[-1].message == "caf\u00e9"
+
+
+@pytest.mark.asyncio
+async def test_follow_on_deleted_file_disables_follow_without_crash(
+    tmp_path: Path,
+) -> None:
+    """Pressing f after the file was removed shows an error, no crash."""
+    path = tmp_path / "app.log"
+    _write_lines(path=path, tag="a", count=2, mode="w")
+    app = LogViewerApp(file=str(path))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        path.unlink()
+
+        app.follow_mode = True
+        await pilot.pause()
+
+        assert app.follow_mode is False
+        assert app._watcher is None
+        assert app._watch_file is None
+        assert len(app.logs) == 2
+
+
+@pytest.mark.asyncio
+async def test_follow_setup_failure_closes_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """If the watcher can't be set up, the opened file is closed again."""
+    path = tmp_path / "app.log"
+    _write_lines(path=path, tag="a", count=2, mode="w")
+
+    class BrokenWatcher(PollWatcher):
+        def watch(self, **_: object) -> None:
+            raise OSError("cannot watch")
+
+    monkeypatch.setattr(app_module, "get_watcher", BrokenWatcher)
+    opened: list[BinaryIO] = []
+    real_open = open
+
+    def tracking_open(*args: Any, **kwargs: Any) -> BinaryIO:  # noqa: ANN401
+        handle = real_open(*args, **kwargs)
+        opened.append(handle)
+        return handle
+
+    monkeypatch.setattr("builtins.open", tracking_open)
+    app = LogViewerApp(file=str(path))
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        opened.clear()
+
+        app.follow_mode = True
+        await pilot.pause()
+
+        assert app.follow_mode is False
+        assert app._watch_file is None
+        assert len(opened) == 1
+        assert opened[0].closed

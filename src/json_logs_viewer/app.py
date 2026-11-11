@@ -4,6 +4,7 @@ import argparse
 import json
 from collections import Counter
 from collections.abc import Iterable
+from contextlib import ExitStack
 from pathlib import Path
 from typing import IO, Any
 
@@ -374,18 +375,31 @@ class LogViewerApp(App):
         if not self.filepath or self._watcher is not None:
             return
         self._follow_buffer = b""
-        self._watch_file = open(self.filepath, "rb")  # noqa: SIM115
-        self._watch_file.seek(self._follow_offset)
-
-        self._watcher = get_watcher()
-        self._watcher.watch(
-            fileno=self._watch_file.fileno(),
-            path=self.filepath,
-            callback=self._on_watcher_data,
-            error_callback=self._on_watcher_error,
-            reset_callback=self._on_watcher_reset,
-        )
-        self._watcher.start()
+        try:
+            # The file must stay open after this method returns, so `with`
+            # can't own it. ExitStack closes it if any later step fails;
+            # pop_all() keeps it open once everything succeeded.
+            with ExitStack() as stack:
+                watch_file = stack.enter_context(open(self.filepath, "rb"))
+                watch_file.seek(self._follow_offset)
+                watcher = get_watcher()
+                stack.callback(watcher.close)
+                watcher.watch(
+                    fileno=watch_file.fileno(),
+                    path=self.filepath,
+                    callback=self._on_watcher_data,
+                    error_callback=self._on_watcher_error,
+                    reset_callback=self._on_watcher_reset,
+                )
+                watcher.start()
+                stack.pop_all()
+        except OSError as error:
+            self.notify(f"Can't follow file: {error}", severity="error")
+            self.follow_mode = False
+            return
+        # Only store state once setup fully succeeded.
+        self._watch_file = watch_file
+        self._watcher = watcher
 
     def _stop_follow(self) -> None:
         if self._watcher is not None:
@@ -420,7 +434,8 @@ class LogViewerApp(App):
         self._stop_follow()
         self.load_file(filepath=self.filepath)
         self._start_follow()
-        self.notify("File was truncated or rotated; reloaded")
+        if self.follow_mode:
+            self.notify("File was truncated or rotated; reloaded")
 
     def _stop_follow_and_update(self) -> None:
         self.follow_mode = False
