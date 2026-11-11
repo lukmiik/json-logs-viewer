@@ -8,7 +8,7 @@ Each test drives the app and compares the screen with an approved SVG in
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 
 import pytest
@@ -20,6 +20,23 @@ DATA_DIR = Path(__file__).parent / "data"
 SIZE = (100, 24)
 
 SnapCompare = Callable[..., bool]
+
+
+def _keys(*keys: str) -> Callable[[Pilot], Awaitable[None]]:
+    """Press keys, then let the screen settle before the screenshot.
+
+    Opening a modal or focusing the search bar rebuilds the footer a moment
+    later; without the wait the screenshot sometimes caught the footer half
+    drawn (about 1 run in 15), making these snapshots flaky.
+    """
+
+    async def press(pilot: Pilot) -> None:
+        await pilot.press(*keys)
+        await pilot.pause(0.3)
+        await pilot.wait_for_scheduled_animations()
+        await pilot.pause()
+
+    return press
 
 
 @pytest.fixture
@@ -35,23 +52,27 @@ def test_main_screen(snap_compare: SnapCompare, app: LogViewerApp) -> None:
 
 
 def test_search_bar_open(snap_compare: SnapCompare, app: LogViewerApp) -> None:
-    assert snap_compare(app, press=["/", *"level:err"], terminal_size=SIZE)
+    assert snap_compare(
+        app, run_before=_keys("/", *"level:err"), terminal_size=SIZE
+    )
 
 
 def test_filter_applied(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     assert snap_compare(
-        app, press=["/", *"level:error", "enter"], terminal_size=SIZE
+        app, run_before=_keys("/", *"level:error", "enter"), terminal_size=SIZE
     )
 
 
 def test_highlight_mode(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     assert snap_compare(
-        app, press=["/", *"level:error", "enter", "m"], terminal_size=SIZE
+        app,
+        run_before=_keys("/", *"level:error", "enter", "m"),
+        terminal_size=SIZE,
     )
 
 
 def test_wrap_mode(snap_compare: SnapCompare, app: LogViewerApp) -> None:
-    assert snap_compare(app, press=["w"], terminal_size=(60, 24))
+    assert snap_compare(app, run_before=_keys("w"), terminal_size=(60, 24))
 
 
 def test_columns(snap_compare: SnapCompare, app: LogViewerApp) -> None:
@@ -64,23 +85,27 @@ def test_columns(snap_compare: SnapCompare, app: LogViewerApp) -> None:
 
 def test_columns_modal(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     """Nested fields are offered by their dotted path."""
-    assert snap_compare(app, press=["c"], terminal_size=SIZE)
+    assert snap_compare(app, run_before=_keys("c"), terminal_size=SIZE)
 
 
 def test_export_modal(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     assert snap_compare(
-        app, press=["/", *"level:error", "enter", "e"], terminal_size=SIZE
+        app,
+        run_before=_keys("/", *"level:error", "enter", "e"),
+        terminal_size=SIZE,
     )
 
 
 def test_clear_confirm(snap_compare: SnapCompare, app: LogViewerApp) -> None:
-    assert snap_compare(app, press=["x"], terminal_size=SIZE)
+    assert snap_compare(app, run_before=_keys("x"), terminal_size=SIZE)
 
 
 def test_command_palette(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     async def open_palette(pilot: Pilot) -> None:
         await pilot.press("ctrl+p")
         await pilot.pause(0.5)  # the palette shows itself once ready
+        await pilot.wait_for_scheduled_animations()
+        await pilot.pause()
 
     assert snap_compare(app, run_before=open_palette, terminal_size=SIZE)
 
@@ -115,11 +140,15 @@ def test_new_lines_badge(snap_compare: SnapCompare, app: LogViewerApp) -> None:
 def test_detail_view(snap_compare: SnapCompare, app: LogViewerApp) -> None:
     # The cursor starts on the last line: go to the top, then to the entry
     # with a nested object.
-    assert snap_compare(app, press=["g", *"jjjj", "enter"], terminal_size=SIZE)
+    assert snap_compare(
+        app, run_before=_keys("g", *"jjjj", "enter"), terminal_size=SIZE
+    )
 
 
 def test_help_modal(snap_compare: SnapCompare, app: LogViewerApp) -> None:
-    assert snap_compare(app, press=["question_mark"], terminal_size=SIZE)
+    assert snap_compare(
+        app, run_before=_keys("question_mark"), terminal_size=SIZE
+    )
 
 
 def test_narrow_status_bar(
@@ -127,5 +156,7 @@ def test_narrow_status_bar(
 ) -> None:
     """At 80 columns the file name shrinks first (ellipsis)."""
     assert snap_compare(
-        app, press=["/", *"level:error", "enter"], terminal_size=(80, 24)
+        app,
+        run_before=_keys("/", *"level:error", "enter"),
+        terminal_size=(80, 24),
     )
