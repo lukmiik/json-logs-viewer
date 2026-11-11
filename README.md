@@ -21,7 +21,7 @@ An interactive terminal viewer for JSONL log files, built with
   the file is truncated or rotated (e.g. by logrotate), it is reloaded.
 - File picker to open another file without restarting.
 - In-memory search history.
-- Can be served in a browser via `textual-serve`.
+- Can be served in a browser via `textual-serve` (optional `serve` extra).
 
 ## Installation
 
@@ -32,6 +32,13 @@ uv tool install .
 ```
 
 This installs two equivalent commands: `jlv` and `json-logs-viewer`.
+
+`--serve` (browser mode) needs the optional `serve` extra, which adds a web
+server stack most users don't need:
+
+```bash
+uv tool install '.[serve]'
+```
 
 ## Usage
 

@@ -20,11 +20,20 @@ dependencies = [
     "pydantic>=2.12.5",
     "rich>=14.3.1",
     "textual>=7.3.0",
-    "textual-dev>=1.8.0",
+]
+
+[project.optional-dependencies]
+# `jlv --serve` (browser mode). Optional: it adds an aiohttp web server stack.
+serve = [
     "textual-serve>=1.1.3",
 ]
+
 [dependency-groups]
 dev = [
+    # `textual run --dev` / `textual console` for live CSS and debug logs
+    "textual-dev>=1.8.0",
+    # so `uv sync` can run the --serve tests without --extra serve
+    "textual-serve>=1.1.3",
     "ruff>=0.13.2",
     "ty>=0.0.1a21",
     "pre-commit>=4.3.0",

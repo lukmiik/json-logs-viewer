@@ -40,7 +40,5 @@ already has. Clear `dist/` or pass the specific files.
 ## Before the first PyPI release
 
 - Add `project.urls` (repository, issues) once a public remote exists.
-- `textual-dev` is a runtime dependency but only needed for development
-  (see `.notes/analysis/05-bug-dev-deps-in-production.md`).
 - Update the Installation section of README.md to `uv tool install
-  json-logs-viewer`.
+  json-logs-viewer` (and `'json-logs-viewer[serve]'` for `--serve`).

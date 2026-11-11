@@ -212,6 +212,8 @@ Toggle follow mode.
 `file` (optional), `-f/--follow`, `--serve`. Without a file the app starts
 with the file picker.
 
+`textual-serve` is an optional extra (`pip install 'json-logs-viewer[serve]'`).
+Without it, `--serve` exits with an install hint instead of a traceback.
 `--serve` hands `textual_serve.server.Server` a command string, which it runs
 through a shell (`/bin/sh -c`, or `cmd.exe /c` on Windows) for every browser
 session. The filename is never put in that string. `main()` stores it in the

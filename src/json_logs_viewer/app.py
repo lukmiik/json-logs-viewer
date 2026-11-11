@@ -659,7 +659,15 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.serve:
-        from textual_serve.server import Server
+        try:
+            # Optional extra: it pulls in a web server most users don't need.
+            from textual_serve.server import Server
+        except ImportError:
+            sys.exit(
+                "jlv: --serve needs the optional 'serve' extra. Install it "
+                "with:\n  uv tool install 'json-logs-viewer[serve]'\nor:\n"
+                "  pip install 'json-logs-viewer[serve]'"
+            )
 
         if args.file:
             os.environ[SERVE_FILE_ENV] = args.file

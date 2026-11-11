@@ -145,3 +145,19 @@ def test_module_is_runnable_with_python_m() -> None:
     )
 
     assert "--serve" in result.stdout
+
+
+def test_serve_without_extra_explains_how_to_install(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Without the [serve] extra, --serve exits with an install hint."""
+    # A None entry in sys.modules makes `import textual_serve...` fail.
+    monkeypatch.setitem(sys.modules, "textual_serve", None)
+    monkeypatch.setitem(sys.modules, "textual_serve.server", None)
+    monkeypatch.setattr(sys, "argv", ["jlv", "--serve"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        app_module.main()
+
+    message = str(exc_info.value.code)
+    assert "json-logs-viewer[serve]" in message
