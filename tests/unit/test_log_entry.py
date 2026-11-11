@@ -12,6 +12,7 @@ from json_logs_viewer.models import (
     TIMESTAMP_FIELDS,
     LogEntry,
     appended_entries,
+    level_category,
 )
 
 
@@ -94,6 +95,24 @@ class TestLevelDetection:
         log_entry = LogEntry(**data)
 
         assert log_entry.level == "ERROR"
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            {"attributes": {"level": "error"}},
+            {"attributes": {"severity": "error"}},
+            {"log": {"level": "error"}},
+            {"log.level": "error"},
+        ],
+        ids=["otel", "otel-severity", "ecs-nested", "ecs-dotted"],
+    )
+    def test_detects_nested_level(self, data: dict[str, Any]) -> None:
+        """Nested level fields (OpenTelemetry attributes, Elastic ECS)."""
+        assert LogEntry(line_number=1, data=data).level == "error"
+
+    def test_top_level_field_beats_nested(self) -> None:
+        data = {"level": "info", "attributes": {"level": "error"}}
+        assert LogEntry(line_number=1, data=data).level == "info"
 
     def test_missing_level_returns_none(
         self, base_log_data: dict[str, Any]
@@ -358,3 +377,32 @@ class TestAppendedEntries:
 
     def test_empty_old_is_not_an_append(self) -> None:
         assert appended_entries(old=[], new=self._logs(2)) is None
+
+
+@pytest.mark.parametrize(
+    ("level", "category"),
+    [
+        ("ERROR", "error"),
+        ("error", "error"),
+        (" Fatal ", "error"),
+        ("CRITICAL", "error"),
+        ("panic", "error"),
+        ("WARN", "warning"),
+        ("Warning", "warning"),
+        ("DEBUG", "debug"),
+        ("trace", "debug"),
+        ("INFO", None),
+        ("notice", None),
+        ("something else", None),
+        (None, None),
+        # pino's numeric levels, stored as text
+        ("10", "debug"),
+        ("20", "debug"),
+        ("30", None),
+        ("40", "warning"),
+        ("50", "error"),
+        ("60", "error"),
+    ],
+)
+def test_level_category(level: str | None, category: str | None) -> None:
+    assert level_category(level=level) == category

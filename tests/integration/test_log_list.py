@@ -1510,3 +1510,40 @@ async def test_wrap_toggle_keeps_cursor_visible(tmp_path: Path) -> None:
         cursor_row = log_list._get_cursor_row()
         top = log_list.scroll_offset.y
         assert top <= cursor_row < top + log_list.size.height
+
+
+@pytest.mark.asyncio
+async def test_rows_are_coloured_by_level(sample_jsonl_file: Path) -> None:
+    """Rows take their level's theme colour, except the cursor row.
+
+    ERROR and WARN use the error and warning colours, DEBUG is muted, INFO
+    keeps the default.
+    """
+    app = LogViewerApp(file=str(sample_jsonl_file))
+    async with app.run_test(size=(120, 20)) as pilot:
+        await pilot.pause()
+        log_list = app.query_one("#logs", LogList)
+        levels = [log.level for log in log_list._log_entries]
+        assert levels == ["INFO", "ERROR", "WARN", "DEBUG"]
+
+        def colour(row: int) -> object:
+            style = log_list.render_line(row)._segments[0].style
+            assert style is not None
+            return style.color
+
+        def theme(name: str) -> object:
+            return log_list.get_component_rich_style(name).color
+
+        default = log_list.rich_style.color
+        assert colour(0) == default
+        # Every level colour must really differ from normal text (a
+        # translucent theme colour once rendered as plain white).
+        for name in ("error", "warning", "debug"):
+            assert theme(f"loglist--level-{name}") != default
+        assert colour(1) == theme("loglist--level-error")
+        assert colour(2) == theme("loglist--level-warning")
+        assert colour(3) != theme("loglist--level-debug")  # cursor row
+
+        await pilot.press("k")
+        assert colour(3) == theme("loglist--level-debug")
+        assert colour(2) != theme("loglist--level-warning")  # cursor row

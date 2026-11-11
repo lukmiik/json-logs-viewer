@@ -11,7 +11,8 @@ src/json_logs_viewer/
 ├── __init__.py            exports main()
 ├── app.py                 LogViewerApp: state, file loading, filtering,
 │                          follow mode, command palette, CLI (main)
-├── models.py              LogEntry (pydantic)
+├── models.py              LogEntry (pydantic), parse_log_line, level_category
+├── field_paths.py         resolve_field: dotted paths into nested JSON
 ├── filter_engine.py       query tokenizer, parser, AST matchers
 ├── log_reader.py          mmap-based backward line reader
 ├── log_watcher.py         follow-mode watcher threads
@@ -106,9 +107,17 @@ class LogEntry(BaseModel):
 ```
 
 A `model_validator` fills `timestamp`, `level` and `message` from the first
-matching key in `TIMESTAMP_FIELDS`, `LEVEL_FIELDS` and `MESSAGE_FIELDS`. The
-UI does not use these fields yet: filtering, display and copy all work on
-`data` and `raw_json`.
+matching key in `TIMESTAMP_FIELDS`, `LEVEL_FIELDS` and `MESSAGE_FIELDS`.
+Dotted candidates (`attributes.level`, `log.level`) go through
+`resolve_field`, after the top-level names. These are conveniences, so a value
+of an unexpected type never rejects the entry: numbers become text (`30` ->
+`"30"`), anything else unusable becomes `None`. `parse_log_line` (used by
+both loading and follow mode) skips lines that aren't JSON objects.
+
+Only `level` is used so far: `level_category` maps it to `error`, `warning`,
+`debug` or `None` (case-insensitive, plus pino's numeric levels) for the
+row colours in `LogList`. Filtering, display and copy work on `data` and
+`raw_json`.
 
 ## Loading a file
 
@@ -171,6 +180,12 @@ Only visible rows are rendered, so file size does not affect drawing cost.
 
 - Each row is the optional column prefix (`value.ljust(width) | ...`, widths
   capped at `MAX_COL_WIDTH`) followed by `raw_json`.
+- `_style_for_entry` colours a whole row by its level, using the component
+  classes `loglist--level-error/warning/debug` (theme colours `$text-error`,
+  `$text-warning`, `$text-muted`), then applies highlight mode's bold/dim.
+  The cursor row keeps the cursor style. The full (non-partial) component
+  style is used so translucent theme colours are blended with the
+  background.
 - `virtual_size` width is the longest line, which gives horizontal scrolling.
   In wrap mode each entry is pre-wrapped to the viewport width and
   `_entry_start_rows` maps entries to screen rows. `_wrap_text` matches

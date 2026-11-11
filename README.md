@@ -10,6 +10,9 @@ An interactive terminal viewer for JSONL log files, built with
 - Filter queries with field matching, full-text search and `AND`/`OR`/`NOT`.
 - Filter mode (hide non-matches) or highlight mode (dim non-matches, jump
   between matches with `n`/`N`).
+- Rows coloured by log level: errors red, warnings yellow, debug/trace
+  dimmed. The level is detected from common field names, including
+  nested ones like `attributes.level` and `log.level`.
 - Case-sensitive toggle.
 - Soft-wrap toggle for long lines (horizontal scrolling otherwise).
 - Detail view with pretty-printed JSON. Selected text (mouse or

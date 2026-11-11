@@ -26,7 +26,11 @@ from json_logs_viewer.constants import (
     MAX_COL_WIDTH,
 )
 from json_logs_viewer.filter_engine import FilterError, parse_filter
-from json_logs_viewer.models import LogEntry, appended_entries
+from json_logs_viewer.models import (
+    LogEntry,
+    appended_entries,
+    level_category,
+)
 
 if TYPE_CHECKING:
     from json_logs_viewer.app import LogViewerApp
@@ -107,11 +111,24 @@ class LogList(ScrollView):
 
     COMPONENT_CLASSES = {
         "loglist--cursor",
+        "loglist--level-error",
+        "loglist--level-warning",
+        "loglist--level-debug",
     }
 
+    # Level colours come from the theme, so they follow theme changes.
     DEFAULT_CSS = """
     LogList .loglist--cursor {
         background: $block-cursor-background;
+    }
+    LogList .loglist--level-error {
+        color: $text-error;
+    }
+    LogList .loglist--level-warning {
+        color: $text-warning;
+    }
+    LogList .loglist--level-debug {
+        color: $text-muted;
     }
     """
 
@@ -406,6 +423,16 @@ class LogList(ScrollView):
         return [self._flag_matcher(log_entry) for log_entry in entries]
 
     def _style_for_entry(self, *, entry_idx: int, base: Style) -> Style:
+        """Style of a non-cursor row: level colour, then highlight mode."""
+        category = level_category(level=self._log_entries[entry_idx].level)
+        if category is not None:
+            # Not partial: a full style blends translucent theme colours
+            # ($text-muted is white at 60%) with the background. A partial
+            # style drops the alpha, which turned muted text bright white.
+            base = base + self.get_component_rich_style(
+                f"loglist--level-{category}"
+            )
+
         if not self._highlight_mode or not self._active_query:
             return base
 
