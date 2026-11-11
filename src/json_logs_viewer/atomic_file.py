@@ -18,9 +18,14 @@ def atomic_open(*, path: Path) -> Iterator[TextIO]:
     the temporary file is removed. The file is created readable by the
     owner only (mkstemp's 0600).
 
+    A symlink is followed: its target gets the new content and the link
+    stays (os.replace on the link itself would swap the link for a plain
+    file, e.g. breaking a dotfile manager's link).
+
     Raises:
         OSError: The directory doesn't exist or can't be written.
     """
+    path = Path(os.path.realpath(path))
     fd, tmp_name = tempfile.mkstemp(
         dir=path.parent, prefix=f".{path.name}.", suffix=".tmp"
     )
