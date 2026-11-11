@@ -402,10 +402,12 @@ class Compare(ASTNode):
 
     def match(self, log_entry: LogEntry, case_sensitive: bool) -> bool:
         data = log_entry.data
-        if self.field in data:
-            values: Any = (data[self.field],)
-        elif "." in self.field:
-            values = resolve_field(value=data, path=self.field)
+        if "." in self.field:
+            # Every reading of the path (a literal "a.b" key and nested
+            # a -> b), as FieldMatch does.
+            values: Any = resolve_field(value=data, path=self.field)
+        elif self.field in data:
+            values = (data[self.field],)
         else:
             return False
         for value in values:

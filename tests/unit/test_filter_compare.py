@@ -181,3 +181,10 @@ class TestLastOutOfRange:
     def test_absurd_duration_is_a_filter_error(self, query: str) -> None:
         with pytest.raises(FilterError, match="too long"):
             parse_filter(query=query, newest_timestamp=lambda: self.NEWEST)
+
+
+def test_dotted_comparison_reads_every_meaning_of_the_path() -> None:
+    """Like a.b:10, a.b>5 checks the literal key and the nested one."""
+    log = entry(**{"a.b": "not a number", "a": {"b": 10}})
+    assert parse_filter(query="a.b>5")(log)
+    assert parse_filter(query="a.b:10")(log)
