@@ -56,20 +56,21 @@ An interactive terminal viewer for JSONL log files, built with
 
 ## Installation
 
-The package is not on PyPI yet. Install from a clone:
-
 ```bash
-uv tool install .
+uv tool install json-logs-viewer
 ```
 
-This installs two equivalent commands: `jlv` and `json-logs-viewer`.
+This installs two equivalent commands: `jlv` and `json-logs-viewer`
+(`pipx install json-logs-viewer` works too). Python 3.11 or newer.
 
 `--serve` (browser mode) needs the optional `serve` extra, which adds a web
 server stack most users don't need:
 
 ```bash
-uv tool install '.[serve]'
+uv tool install 'json-logs-viewer[serve]'
 ```
+
+From a clone: `uv tool install .` (or `'.[serve]'`).
 
 ## Usage
 
