@@ -42,4 +42,4 @@ already has. Clear `dist/` or pass the specific files.
 
 ## Before the first PyPI release
 
-- Add `project.urls` (repository, issues) once a public remote exists.
+- Make the GitHub repository public, so the project links work.

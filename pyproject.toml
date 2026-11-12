@@ -102,6 +102,11 @@ extend-select = ["E501"]
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+[project.urls]
+Homepage = "https://github.com/lukmiik/json-logs-viewer"
+Repository = "https://github.com/lukmiik/json-logs-viewer"
+Issues = "https://github.com/lukmiik/json-logs-viewer/issues"
+
 [project.scripts]
 json-logs-viewer = "json_logs_viewer:main"
 jlv = "json_logs_viewer:main"
