@@ -160,6 +160,12 @@ Press `?` in the app for the full list.
 Detail view: `j`/`k` next/previous log, `y`/`Y` copy, `ctrl+d`/`ctrl+u`
 scroll, `g`/`G` top/bottom, `esc`/`q` close.
 
+File picker: `j`/`k` move, `l`/`h` expand/collapse a folder, `enter` open,
+`a` add the file to the open ones, `.` show hidden files, `esc` close.
+
+Columns: `j`/`k` move, `space` toggle a field, `enter` apply, `r` remove
+all columns, `esc` cancel.
+
 ## Development
 
 ```bash
@@ -183,9 +189,9 @@ uv run ty check
 uv run pytest
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how the code is organised,
-[TESTING.md](TESTING.md) for the test suite, and [RELEASING.md](RELEASING.md)
-for publishing.
+See [ARCHITECTURE.md](https://github.com/lukmiik/json-logs-viewer/blob/main/ARCHITECTURE.md) for how the code is
+organised, [TESTING.md](https://github.com/lukmiik/json-logs-viewer/blob/main/TESTING.md) for the test suite, and
+[RELEASING.md](https://github.com/lukmiik/json-logs-viewer/blob/main/RELEASING.md) for publishing.
 
 ## License
 
