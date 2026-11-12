@@ -39,7 +39,10 @@ class FilteredDirectoryTree(DirectoryTree):
     async def _reload_for_path(self) -> None:
         await super().watch_path()
 
-    def watch_path(self) -> None:  # type: ignore[override]
+    # Textual's async watch_path is left un-awaited ("coroutine was never
+    # awaited") when the picker closes before it runs; a sync watcher that
+    # schedules it avoids that.
+    def watch_path(self) -> None:  # ty: ignore[incompatible-method-override]
         self.call_next(self._reload_for_path)
 
     def filter_paths(self, paths: Iterable[Path]) -> Iterable[Path]:

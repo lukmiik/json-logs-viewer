@@ -67,7 +67,7 @@ Each has a matching `*_entry_count` fixture. Files are written to
 async def test_filter_hides_non_matching(sample_jsonl_file: Path) -> None:
     app = LogViewerApp(file=str(sample_jsonl_file))
     async with app.run_test() as pilot:
-        await pilot.pause()            # let on_mount load the file
+        await pilot.pause()  # let on_mount load the file
         await pilot.press("/")
         await pilot.press(*"level:error", "enter")
         await pilot.pause()

@@ -36,7 +36,7 @@ async def test_query_with_brackets(log_file: Path) -> None:
         await pilot.pause()
 
         assert len(app.filtered_logs) == 1
-        assert app.query_one(StatusInfo).query == f'"{ODD}"'
+        assert app.query_one(StatusInfo).active_query == f'"{ODD}"'
 
 
 @pytest.mark.asyncio

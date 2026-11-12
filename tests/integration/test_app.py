@@ -48,7 +48,7 @@ async def test_q_quits_app(sample_jsonl_file: Path) -> None:
         await pilot.pause()
         assert log_list.has_focus
         await pilot.press("q")
-    assert app._shutdown
+        assert app._exit  # q asked the app to quit
 
 
 ODD_LINES = [

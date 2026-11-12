@@ -43,6 +43,3 @@ already has. Clear `dist/` or pass the specific files.
 ## Before the first PyPI release
 
 - Add `project.urls` (repository, issues) once a public remote exists.
-- Textual 8 renders two greys in the command palette slightly lighter, so
-  `test_command_palette` fails against it while `uv.lock` pins 7.5:
-  upgrade the lock (`uv lock --upgrade`) and refresh that snapshot.

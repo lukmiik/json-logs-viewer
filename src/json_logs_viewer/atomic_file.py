@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import stat
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TextIO
@@ -19,7 +19,7 @@ def _umask_mode() -> int:
 @contextmanager
 def atomic_open(
     *, path: Path, new_file_mode: int | None = None
-) -> Iterator[TextIO]:
+) -> Generator[TextIO]:
     """Open a text file whose content replaces `path` only on success.
 
     Writes go to a temporary file in the same directory (a rename is only

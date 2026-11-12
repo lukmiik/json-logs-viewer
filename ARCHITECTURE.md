@@ -153,9 +153,9 @@ fire (e.g. follow mode does `self.logs = [*self.logs, *new_logs]`).
 
 ```python
 class LogEntry(BaseModel):
-    line_number: int          # 1-based line in the file
-    data: dict[str, Any]      # parsed JSON object
-    raw_json: str = ""        # original line, used for display and copy
+    line_number: int  # 1-based line in the file
+    data: dict[str, Any]  # parsed JSON object
+    raw_json: str = ""  # original line, used for display and copy
     timestamp: datetime | None = None
     level: str | None = None
     message: str | None = None

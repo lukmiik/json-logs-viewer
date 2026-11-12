@@ -201,7 +201,9 @@ class TestEdgeCases:
     def test_validator_receives_non_dict_input(self) -> None:
         """When validator receives non-dict input, return it unchanged."""
         # This directly tests the first guard clause
-        result = LogEntry.extract_normalized_fields("not a dict")  # type: ignore[arg-type]
+        result = LogEntry.extract_normalized_fields(  # ty: ignore[call-non-callable]
+            "not a dict"
+        )
         assert result == "not a dict"
 
     def test_data_field_not_dict(self) -> None:

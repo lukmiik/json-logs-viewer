@@ -65,6 +65,8 @@ dev = [
 
 [tool.ruff]
 line-length = 79
+# Vendored agent skill docs: ruff 0.17 formats code blocks in Markdown.
+extend-exclude = [".agents"]
 
 [tool.ruff.lint]
 select = [
@@ -110,6 +112,8 @@ markers = [
     "performance: performance tests (deselected by default, run with -m performance)",
 ]
 addopts = "-m 'not performance'"
+# Every test gets its own event loop (pytest-asyncio warns when unset).
+asyncio_default_fixture_loop_scope = "function"
 
 [[tool.uv.index]]
 name = "pypi"

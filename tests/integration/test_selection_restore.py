@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from textual.pilot import Pilot
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.models import LogEntry
@@ -19,14 +20,14 @@ def _logs(*, keep: set[int]) -> list[LogEntry]:
 
 
 async def _select_line_then_filter(
-    *, app: LogViewerApp, pilot: object, line: int, query: str
+    *, app: LogViewerApp, pilot: Pilot, line: int, query: str
 ) -> int:
     app.filter_query = ""
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.pause()
     app.selected_index = line - 1
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.pause()
     app.filter_query = query
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.pause()
     return app.filtered_logs[app.selected_index].line_number
 
 

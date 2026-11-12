@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from textual.pilot import Pilot
 from textual.widgets import OptionList
 
 from json_logs_viewer.app import LogViewerApp
@@ -12,15 +13,15 @@ from json_logs_viewer.widgets.search_bar import SearchBar
 
 
 async def _submit_query(
-    *, app: LogViewerApp, pilot: object, query: str
+    *, app: LogViewerApp, pilot: Pilot, query: str
 ) -> None:
     """Helper to submit a search query."""
     search_bar = app.query_one("#search", SearchBar)
     search_bar.value = query
     app.action_focus_search()
-    await pilot.pause()  # type: ignore[attr-defined]
-    await pilot.press("enter")  # type: ignore[attr-defined]
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.pause()
+    await pilot.press("enter")
+    await pilot.pause()
 
 
 @pytest.mark.asyncio

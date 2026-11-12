@@ -77,7 +77,8 @@ class StatusInfo(Horizontal):
     case_sensitive: reactive[bool] = reactive(False)
     highlight_matches: reactive[bool] = reactive(False)
     follow_mode: reactive[bool] = reactive(False)
-    query: reactive[str] = reactive("")
+    # Not `query`: that would hide Widget.query().
+    active_query: reactive[str] = reactive("")
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="status-left"):
@@ -104,9 +105,9 @@ class StatusInfo(Horizontal):
         follow_label = self.query_one("#status-follow", Label)
         follow_label.update("⏺ FOLLOW" if self.follow_mode else "")
         query_label = self.query_one("#status-query", Label)
-        if self.query:
+        if self.active_query:
             mode = "Highlight" if self.highlight_matches else "Filter"
-            query_label.update(Content(f"{mode}: {self.query}"))
+            query_label.update(Content(f"{mode}: {self.active_query}"))
         else:
             query_label.update("")
 
@@ -131,7 +132,7 @@ class StatusInfo(Horizontal):
             self._update_labels()
             self._update_toggles()
 
-    def watch_query(self) -> None:
+    def watch_active_query(self) -> None:
         if self.is_mounted:
             self._update_labels()
 
@@ -219,4 +220,4 @@ class StatusBar(Widget):
         info.case_sensitive = app.case_sensitive
         info.highlight_matches = app.highlight_matches
         info.follow_mode = app.follow_mode
-        info.query = app.filter_query.strip()
+        info.active_query = app.filter_query.strip()

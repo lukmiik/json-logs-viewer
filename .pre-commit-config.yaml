@@ -8,7 +8,7 @@ repos:
         stages: [ post-checkout, post-merge, post-rewrite ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.17.4
     hooks:
       - id: ruff-check
         stages: [ pre-commit ]

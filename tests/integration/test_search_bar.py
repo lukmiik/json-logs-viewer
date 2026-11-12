@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from textual import events
+from textual.pilot import Pilot
 
 from json_logs_viewer.app import LogViewerApp
 from json_logs_viewer.widgets import search_bar as search_bar_module
@@ -287,12 +288,12 @@ async def test_submit_notifies_search_history_watchers(
         assert seen == [["error"]]
 
 
-async def _submit(*, app: LogViewerApp, pilot: object, query: str) -> None:
+async def _submit(*, app: LogViewerApp, pilot: Pilot, query: str) -> None:
     app.action_focus_search()
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.pause()
     app.query_one("#search", SearchBar).value = query
-    await pilot.press("enter")  # type: ignore[attr-defined]
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.press("enter")
+    await pilot.pause()
 
 
 @pytest.mark.asyncio

@@ -3,6 +3,7 @@
 import json
 import time
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -110,8 +111,8 @@ async def test_line_cache_prevents_reserialization(
     dumps_calls: list[str] = []
     original_dumps = json.dumps
 
-    def counting_dumps(obj: object, **kwargs: object) -> str:  # noqa: ANN401
-        result = original_dumps(obj, **kwargs)  # type: ignore[arg-type]
+    def counting_dumps(obj: object, **kwargs: Any) -> str:  # noqa: ANN401
+        result = original_dumps(obj, **kwargs)
         dumps_calls.append(result[:50])
         return result
 

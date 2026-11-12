@@ -265,7 +265,7 @@ class FullText(ASTNode):
         return self._lowered in log_entry.search_text.lower()
 
 
-def _chain(node: ASTNode, kind: type[ASTNode]) -> list[ASTNode]:
+def _chain(node: ASTNode, kind: type[And | Or]) -> list[ASTNode]:
     """The operands of a left-deep chain of `kind`, left to right.
 
     "a b c" parses to And(And(a, b), c). Walking that chain recursively
@@ -274,8 +274,8 @@ def _chain(node: ASTNode, kind: type[ASTNode]) -> list[ASTNode]:
     """
     rights: list[ASTNode] = []
     while isinstance(node, kind):
-        rights.append(node.right)  # type: ignore[attr-defined]
-        node = node.left  # type: ignore[attr-defined]
+        rights.append(node.right)
+        node = node.left
     return [node, *reversed(rights)]
 
 

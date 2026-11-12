@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 import pytest
+from textual.pilot import Pilot
 
 from json_logs_viewer import app as app_module
 from json_logs_viewer import log_watcher as log_watcher_module
@@ -253,14 +254,14 @@ async def test_auto_scroll_with_filter_active(
 
 
 async def _wait_for_logs(
-    *, app: LogViewerApp, pilot: object, predicate: Callable[[], bool]
+    *, app: LogViewerApp, pilot: Pilot, predicate: Callable[[], bool]
 ) -> None:
     """Let the watcher thread and the app's message loop catch up."""
     for _ in range(40):
         await asyncio.sleep(0.05)
         if predicate():
             break
-    await pilot.pause()  # type: ignore[attr-defined]
+    await pilot.pause()
 
 
 def _write_lines(*, path: Path, tag: str, count: int, mode: str) -> None:
@@ -283,8 +284,9 @@ async def test_follow_reloads_after_truncation(tmp_path: Path) -> None:
         await _wait_for_logs(
             app=app,
             pilot=pilot,
-            predicate=lambda: [log.data["tag"] for log in app.logs]
-            == ["new"] * 3,
+            predicate=lambda: (
+                [log.data["tag"] for log in app.logs] == ["new"] * 3
+            ),
         )
 
         assert [log.data["i"] for log in app.logs] == [0, 1, 2]
@@ -313,8 +315,9 @@ async def test_follow_reloads_after_rotation(tmp_path: Path) -> None:
         await _wait_for_logs(
             app=app,
             pilot=pilot,
-            predicate=lambda: [log.data["tag"] for log in app.logs]
-            == ["new"] * 3,
+            predicate=lambda: (
+                [log.data["tag"] for log in app.logs] == ["new"] * 3
+            ),
         )
 
         assert [log.data["tag"] for log in app.logs] == ["new"] * 3
@@ -322,7 +325,7 @@ async def test_follow_reloads_after_rotation(tmp_path: Path) -> None:
 
 
 async def _wait_for_tags(
-    *, app: LogViewerApp, pilot: object, tags: list[str]
+    *, app: LogViewerApp, pilot: Pilot, tags: list[str]
 ) -> None:
     await _wait_for_logs(
         app=app,
