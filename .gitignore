@@ -174,3 +174,5 @@ cython_debug/
 
 # pytest-textual-snapshot diff report (written on failures)
 snapshot_report.html
+# Intermediate recording of docs/demo/render.py
+docs/demo/raw.gif

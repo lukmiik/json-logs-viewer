@@ -3,6 +3,10 @@
 An interactive terminal viewer for JSONL log files, built with
 [Textual](https://textual.textualize.io/).
 
+<!-- Absolute URL: this README is also the PyPI page. Re-record with
+`uv run python docs/demo/render.py` (script: docs/demo/demo.tape). -->
+![jlv demo: merged files, columns, filtering, detail view and follow mode](https://raw.githubusercontent.com/lukmiik/json-logs-viewer/main/docs/demo/demo.gif)
+
 ## Features
 
 - Virtual-scrolling log list that stays fast on 100k+ line files.

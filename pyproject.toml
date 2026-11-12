@@ -61,6 +61,8 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.0.0",
     "pytest-textual-snapshot>=1.0.0",
+    # draws the caption bar of the README recording (docs/demo/render.py)
+    "pillow>=13.0.0",
 ]
 
 [tool.ruff]
