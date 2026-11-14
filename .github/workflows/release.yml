@@ -1,0 +1,64 @@
+name: release
+
+# Push a tag to release: git tag v0.2.0 && git push origin v0.2.0
+# PyPI trusts this workflow (trusted publishing): no API token is stored.
+on:
+  push:
+    tags: [ "v*" ]
+
+jobs:
+  checks:
+    uses: ./.github/workflows/main.yml
+
+  build:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: "0.8.22"
+
+      # A tag that doesn't match the version would publish under the wrong
+      # number, and PyPI never lets a version be uploaded twice.
+      - name: Check the tag matches pyproject.toml
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::tag $GITHUB_REF_NAME but pyproject.toml has $version"
+            exit 1
+          fi
+
+      - name: Build
+        run: uv build
+
+      - name: Validate the package metadata
+        run: uv tool run twine check dist/*
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # The environment PyPI's trusted publisher names; its required reviewer
+    # approves each release before this job runs.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/json-logs-viewer/
+    permissions:
+      # Lets the job get the short-lived OIDC identity PyPI checks.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      # Also uploads attestations: PyPI shows the files were built here.
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.14.3

@@ -1,6 +1,13 @@
 name: ci
 
-on: [ push, pull_request ]
+on:
+  # Branches only: a pushed v* tag runs these checks inside release.yml
+  # instead, so they don't run twice.
+  push:
+    branches: [ "**" ]
+  pull_request:
+  # release.yml calls this workflow so a release runs the very same checks.
+  workflow_call:
 
 jobs:
   tests:
